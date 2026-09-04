@@ -1,5 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Order, ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
@@ -17,6 +18,8 @@ export class OrderConfirmation implements OnInit {
   readonly statusLabels = ORDER_STATUS_LABELS;
   readonly statusFlow = ORDER_STATUS_FLOW;
 
+  private readonly title = inject(Title);
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly orderService: OrderService,
@@ -28,6 +31,7 @@ export class OrderConfirmation implements OnInit {
       next: (order) => {
         this.order.set(order);
         this.loading.set(false);
+        this.title.setTitle(`Pedido #${order.id.slice(0, 8)} — Ateliê Bebê`);
       },
       error: () => {
         this.notFound.set(true);

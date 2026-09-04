@@ -1,6 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
@@ -19,6 +20,9 @@ export class ProductDetail implements OnInit {
   readonly quantity = signal(1);
   readonly addedFeedback = signal(false);
 
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly productService: ProductService,
@@ -31,6 +35,10 @@ export class ProductDetail implements OnInit {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
+        this.title.setTitle(`${product.name} — Ateliê Bebê`);
+        if (product.description) {
+          this.meta.updateTag({ name: 'description', content: product.description });
+        }
       },
       error: () => {
         this.notFound.set(true);
