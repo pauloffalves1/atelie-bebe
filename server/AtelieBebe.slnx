@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AtelieBebe.Api/AtelieBebe.Api.csproj" />
+    <Project Path="src/AtelieBebe.Application/AtelieBebe.Application.csproj" />
+    <Project Path="src/AtelieBebe.Domain/AtelieBebe.Domain.csproj" />
+    <Project Path="src/AtelieBebe.Infrastructure/AtelieBebe.Infrastructure.csproj" />
+  </Folder>
+</Solution>

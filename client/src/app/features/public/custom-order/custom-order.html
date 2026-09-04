@@ -1,0 +1,81 @@
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="text-center mb-5">
+          <span class="badge-soft mb-3 d-inline-block"><i class="bi bi-magic me-1"></i>Sob medida</span>
+          <h1 class="section-title text-center">Encomenda personalizada</h1>
+          <p class="text-secondary mt-3">
+            Conte pra gente os detalhes da peça dos seus sonhos. Depois de enviar, entramos em contato
+            para confirmar valores, prazo e forma de pagamento.
+          </p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="stat-card">
+          <h5 class="mb-3"><i class="bi bi-person me-2"></i>Seus dados</h5>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nome completo</label>
+              <input type="text" class="form-control" formControlName="customerName">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">E-mail</label>
+              <input type="email" class="form-control" formControlName="customerEmail">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Telefone / WhatsApp</label>
+              <input type="text" class="form-control" formControlName="customerPhone">
+            </div>
+          </div>
+
+          <h5 class="mb-3"><i class="bi bi-palette me-2"></i>Detalhes da peça</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tipo de peça</label>
+              <select class="form-select" formControlName="tipoPeca">
+                @for (type of pieceTypes; track type) {
+                  <option [value]="type">{{ type }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tamanho</label>
+              <select class="form-select" formControlName="tamanho">
+                @for (size of sizes; track size) {
+                  <option [value]="size">{{ size }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tecido desejado</label>
+              <input type="text" class="form-control" formControlName="tecido" placeholder="Ex: algodão pima, tricot, soft...">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Cor</label>
+              <input type="text" class="form-control" formControlName="cor" placeholder="Ex: rosa claro, verde sálvia...">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Nome para bordar (opcional)</label>
+              <input type="text" class="form-control" formControlName="nomeBordado">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Observações</label>
+              <textarea class="form-control" rows="4" formControlName="observacoes" placeholder="Conte mais detalhes, referências ou inspirações..."></textarea>
+            </div>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger small rounded-4 mt-4">{{ errorMessage() }}</div>
+          }
+
+          <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill mt-4" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Enviar pedido de encomenda
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

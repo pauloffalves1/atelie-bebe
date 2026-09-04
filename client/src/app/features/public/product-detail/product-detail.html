@@ -1,0 +1,59 @@
+@if (loading()) {
+  <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+} @else if (notFound()) {
+  <div class="container py-5 text-center">
+    <i class="bi bi-emoji-frown fs-1 d-block mb-3 text-secondary"></i>
+    <h3>Produto não encontrado</h3>
+    <a routerLink="/loja" class="btn btn-primary rounded-pill mt-3">Voltar para a loja</a>
+  </div>
+} @else if (product(); as p) {
+  <section class="py-5">
+    <div class="container">
+      <nav class="small text-secondary mb-4">
+        <a routerLink="/loja" class="text-secondary">Loja</a> <i class="bi bi-chevron-right small mx-1"></i> {{ p.category }}
+      </nav>
+
+      <div class="row g-5 align-items-start">
+        <div class="col-lg-6">
+          <div class="ratio ratio-1x1 rounded-5 overflow-hidden shadow-sm">
+            <img [src]="p.imageUrl" [alt]="p.name" class="w-100 h-100 object-fit-cover">
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <span class="badge-soft mb-3 d-inline-block">{{ p.category }}</span>
+          <h1 class="mb-3">{{ p.name }}</h1>
+          <p class="fs-3 fw-bold text-blush mb-4">{{ p.price | currency:'BRL' }}</p>
+          <p class="text-secondary">{{ p.description }}</p>
+
+          @if (p.stock === 0) {
+            <div class="alert alert-warning rounded-4 mt-4"><i class="bi bi-exclamation-triangle me-2"></i>Produto esgotado no momento.</div>
+          } @else {
+            <div class="d-flex align-items-center gap-3 my-4">
+              <label class="fw-semibold small">Quantidade</label>
+              <input type="number" class="form-control" style="width: 90px" [min]="1" [max]="p.stock" [ngModel]="quantity()" (ngModelChange)="quantity.set($event)">
+              <span class="small text-secondary">{{ p.stock }} em estoque</span>
+            </div>
+
+            <button class="btn btn-primary btn-lg rounded-pill px-5" (click)="addToCart()">
+              <i class="bi bi-bag-plus me-2"></i>Adicionar ao carrinho
+            </button>
+
+            @if (addedFeedback()) {
+              <div class="alert alert-success rounded-4 mt-3 py-2 small">
+                <i class="bi bi-check-circle me-2"></i>Adicionado ao carrinho!
+                <a routerLink="/carrinho" class="alert-link ms-1">Ver carrinho</a>
+              </div>
+            }
+          }
+
+          <ul class="list-unstyled small text-secondary mt-4 border-top pt-4">
+            <li class="mb-2"><i class="bi bi-shield-check me-2"></i>Tecidos testados e seguros para bebês</li>
+            <li class="mb-2"><i class="bi bi-truck me-2"></i>Envio para todo o Brasil</li>
+            <li><i class="bi bi-heart me-2"></i>Costurado à mão no nosso ateliê</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+}

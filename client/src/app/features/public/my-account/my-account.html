@@ -1,0 +1,36 @@
+<section class="py-5">
+  <div class="container">
+    <div class="mb-5">
+      <h1 class="section-title">Minha conta</h1>
+      <p class="text-secondary mt-3">Olá, {{ auth.currentUser()?.name }}! Aqui estão suas encomendas.</p>
+    </div>
+
+    @if (loading()) {
+      <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    } @else if (orders().length === 0) {
+      <div class="text-center py-5 text-secondary">
+        <i class="bi bi-bag fs-1 d-block mb-3"></i>
+        <p>Você ainda não fez nenhuma encomenda.</p>
+        <a routerLink="/loja" class="btn btn-primary rounded-pill mt-2">Ir para a loja</a>
+      </div>
+    } @else {
+      <div class="row g-4">
+        @for (order of orders(); track order.id) {
+          <div class="col-12">
+            <div class="stat-card d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <span class="status-pill" [class]="'status-' + order.status">{{ statusLabels[order.status] }}</span>
+                <h6 class="mt-2 mb-1">Pedido #{{ order.id.slice(0, 8) }} · {{ order.type === 'Loja' ? 'Compra na loja' : 'Encomenda personalizada' }}</h6>
+                <span class="small text-secondary">{{ order.createdAt | date:'dd/MM/yyyy HH:mm' }} · {{ order.items.length }} item(ns)</span>
+              </div>
+              <div class="text-end">
+                <p class="fw-bold text-blush fs-5 mb-1">{{ order.total | currency:'BRL' }}</p>
+                <a [routerLink]="['/pedido', order.id]" class="btn btn-sm btn-outline-secondary rounded-pill">Ver detalhes</a>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,67 @@
+<section class="py-5">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-5">
+        <h1 class="section-title mb-4">Fale com o ateliê</h1>
+        <p class="text-secondary mb-4">
+          Tem alguma dúvida sobre prazos, tecidos ou quer combinar uma encomenda especial?
+          Preencha o formulário ou fale direto pelo WhatsApp.
+        </p>
+        <ul class="list-unstyled">
+          <li class="mb-3 d-flex align-items-center gap-3">
+            <span class="avatar-icon bg-blush text-blush"><i class="bi bi-whatsapp"></i></span>
+            <span>(11) 91234-5678</span>
+          </li>
+          <li class="mb-3 d-flex align-items-center gap-3">
+            <span class="avatar-icon bg-sage-light text-sage"><i class="bi bi-envelope"></i></span>
+            <span>contato&#64;ateliebebe.com.br</span>
+          </li>
+          <li class="mb-3 d-flex align-items-center gap-3">
+            <span class="avatar-icon bg-blush text-blush"><i class="bi bi-geo-alt"></i></span>
+            <span>São Paulo · SP</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="stat-card">
+          @if (submitted()) {
+            <div class="text-center py-5">
+              <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
+              <h5>Mensagem enviada!</h5>
+              <p class="text-secondary">Obrigada pelo contato, retornaremos em breve.</p>
+            </div>
+          } @else {
+            <form [formGroup]="form" (ngSubmit)="submit()">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Nome</label>
+                  <input type="text" class="form-control" formControlName="name">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">E-mail</label>
+                  <input type="email" class="form-control" formControlName="email">
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">Mensagem</label>
+                  <textarea class="form-control" rows="5" formControlName="message"></textarea>
+                </div>
+              </div>
+
+              @if (errorMessage()) {
+                <div class="alert alert-danger small rounded-4 mt-3">{{ errorMessage() }}</div>
+              }
+
+              <button type="submit" class="btn btn-primary btn-lg rounded-pill px-4 mt-4" [disabled]="submitting()">
+                @if (submitting()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Enviar mensagem
+              </button>
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

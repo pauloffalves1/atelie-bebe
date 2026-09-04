@@ -1,0 +1,110 @@
+<div class="p-4 p-lg-5">
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a routerLink="/admin/encomendas" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-arrow-left"></i></a>
+    <h2 class="mb-0">Detalhes da encomenda</h2>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+  } @else if (order(); as o) {
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="stat-card mb-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div>
+              <span class="small text-secondary d-block">Pedido #{{ o.id.slice(0, 8) }}</span>
+              <span class="small text-secondary">{{ o.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <span class="status-pill" [class]="'status-' + o.status">{{ statusLabels[o.status] }}</span>
+          </div>
+
+          <h6 class="mb-2">Itens</h6>
+          <ul class="list-unstyled mb-0">
+            @for (item of o.items; track item.id) {
+              <li class="d-flex justify-content-between border-bottom py-2">
+                <span>{{ item.quantity }}x {{ item.productName }}</span>
+                <span>{{ item.subtotal | currency:'BRL' }}</span>
+              </li>
+            }
+          </ul>
+          <div class="d-flex justify-content-between fw-bold fs-5 mt-3">
+            <span>Total</span>
+            <span class="text-blush">{{ o.total | currency:'BRL' }}</span>
+          </div>
+
+          @if (o.notes) {
+            <div class="alert alert-light border rounded-4 mt-3 small mb-0">
+              <i class="bi bi-info-circle me-1"></i>{{ o.notes }}
+            </div>
+          }
+        </div>
+
+        @if (parsedCustomDetails(); as details) {
+          <div class="stat-card mb-4">
+            <h6 class="mb-3"><i class="bi bi-palette me-2"></i>Detalhes da personalização</h6>
+            <dl class="row small mb-0">
+              <dt class="col-4 text-secondary">Tipo de peça</dt><dd class="col-8">{{ details.tipoPeca }}</dd>
+              <dt class="col-4 text-secondary">Tamanho</dt><dd class="col-8">{{ details.tamanho }}</dd>
+              <dt class="col-4 text-secondary">Tecido</dt><dd class="col-8">{{ details.tecido }}</dd>
+              <dt class="col-4 text-secondary">Cor</dt><dd class="col-8">{{ details.cor }}</dd>
+              @if (details.nomeBordado) {
+                <dt class="col-4 text-secondary">Nome bordado</dt><dd class="col-8">{{ details.nomeBordado }}</dd>
+              }
+              @if (details.observacoes) {
+                <dt class="col-4 text-secondary">Observações</dt><dd class="col-8">{{ details.observacoes }}</dd>
+              }
+            </dl>
+          </div>
+        }
+
+        @if (parsedShippingAddress(); as address) {
+          <div class="stat-card">
+            <h6 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Endereço de entrega</h6>
+            <p class="small mb-0">
+              {{ address.street }}, {{ address.number }} @if (address.complement) { - {{ address.complement }} }<br>
+              {{ address.neighborhood }} — {{ address.city }}/{{ address.state }}<br>
+              CEP {{ address.zipCode }}
+            </p>
+          </div>
+        }
+      </div>
+
+      <div class="col-lg-4">
+        <div class="stat-card mb-4">
+          <h6 class="mb-3"><i class="bi bi-person me-2"></i>Cliente</h6>
+          <p class="small mb-1"><strong>{{ o.customerName }}</strong></p>
+          <p class="small mb-1">{{ o.customerEmail }}</p>
+          @if (o.customerPhone) { <p class="small mb-0">{{ o.customerPhone }}</p> }
+        </div>
+
+        <div class="stat-card">
+          <h6 class="mb-3">Atualizar status</h6>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger small rounded-4">{{ errorMessage() }}</div>
+          }
+
+          @if (availableTransitions.length === 0) {
+            <p class="small text-secondary mb-0">Este pedido não possui mais transições de status disponíveis.</p>
+          } @else {
+            <div class="d-grid gap-2">
+              @for (status of availableTransitions; track status) {
+                <button
+                  class="btn rounded-pill"
+                  [class.btn-primary]="status !== 'Cancelado'"
+                  [class.btn-outline-danger]="status === 'Cancelado'"
+                  [disabled]="updating()"
+                  (click)="changeStatus(status)">
+                  @if (updating()) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                  }
+                  Marcar como "{{ statusLabels[status] }}"
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

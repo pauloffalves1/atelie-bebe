@@ -1,0 +1,16 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+
+# SQLite runtime files
+*.db
+*.db-shm
+*.db-wal
+
+# Rider / VS Code
+.idea/
+.vscode/

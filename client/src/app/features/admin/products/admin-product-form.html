@@ -1,0 +1,71 @@
+<div class="p-4 p-lg-5">
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a routerLink="/admin/produtos" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-arrow-left"></i></a>
+    <h2 class="mb-0">{{ isEditMode() ? 'Editar produto' : 'Novo produto' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="row g-4">
+      <div class="col-lg-8">
+        <div class="stat-card">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold">Nome</label>
+              <input type="text" class="form-control" formControlName="name">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Categoria</label>
+              <input type="text" class="form-control" formControlName="category" placeholder="Ex: Bodies">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Preço (R$)</label>
+              <input type="number" step="0.01" class="form-control" formControlName="price">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Estoque</label>
+              <input type="number" class="form-control" formControlName="stock">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="featured" formControlName="featured">
+                <label class="form-check-label small fw-semibold" for="featured">Produto em destaque</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">URL da imagem</label>
+              <input type="text" class="form-control" formControlName="imageUrl" placeholder="https://...">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Descrição</label>
+              <textarea class="form-control" rows="4" formControlName="description"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="stat-card">
+          <h6 class="mb-3">Pré-visualização</h6>
+          <div class="ratio ratio-1x1 rounded-4 overflow-hidden bg-light mb-3">
+            @if (form.value.imageUrl) {
+              <img [src]="form.value.imageUrl" alt="Prévia" class="w-100 h-100 object-fit-cover">
+            }
+          </div>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger small rounded-4">{{ errorMessage() }}</div>
+          }
+
+          <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Salvar produto
+          </button>
+        </div>
+      </div>
+    </form>
+  }
+</div>

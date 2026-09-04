@@ -1,0 +1,97 @@
+<section class="py-5">
+  <div class="container">
+    <h1 class="section-title mb-5">Finalizar compra</h1>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="row g-5">
+      <div class="col-lg-8">
+        <div class="stat-card mb-4">
+          <h5 class="mb-3"><i class="bi bi-person me-2"></i>Seus dados</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nome completo</label>
+              <input type="text" class="form-control" formControlName="customerName">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">E-mail</label>
+              <input type="email" class="form-control" formControlName="customerEmail">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Telefone / WhatsApp</label>
+              <input type="text" class="form-control" formControlName="customerPhone">
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card mb-4">
+          <h5 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Endereço de entrega</h5>
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold">Rua</label>
+              <input type="text" class="form-control" formControlName="street">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Número</label>
+              <input type="text" class="form-control" formControlName="number">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Complemento</label>
+              <input type="text" class="form-control" formControlName="complement">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Bairro</label>
+              <input type="text" class="form-control" formControlName="neighborhood">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold">Cidade</label>
+              <input type="text" class="form-control" formControlName="city">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Estado</label>
+              <input type="text" class="form-control" formControlName="state" maxlength="2" placeholder="UF">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">CEP</label>
+              <input type="text" class="form-control" formControlName="zipCode">
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <label class="form-label small fw-semibold">Observações (opcional)</label>
+          <textarea class="form-control" rows="3" formControlName="notes" placeholder="Alguma instrução especial para a entrega?"></textarea>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="stat-card">
+          <h5 class="mb-3">Seu pedido</h5>
+          <ul class="list-unstyled small">
+            @for (item of cart.items(); track item.product.id) {
+              <li class="d-flex justify-content-between mb-2">
+                <span>{{ item.quantity }}x {{ item.product.name }}</span>
+                <span>{{ item.product.price * item.quantity | currency:'BRL' }}</span>
+              </li>
+            }
+          </ul>
+          <hr>
+          <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+            <span>Total</span>
+            <span class="text-blush">{{ cart.totalPrice() | currency:'BRL' }}</span>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger small rounded-4">{{ errorMessage() }}</div>
+          }
+
+          <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Confirmar pedido
+          </button>
+          <a routerLink="/carrinho" class="btn btn-link w-100 mt-2 text-secondary">Voltar ao carrinho</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,30 @@
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-dark py-5">
+  <div class="stat-card" style="width: 100%; max-width: 420px;">
+    <div class="text-center mb-4">
+      <span class="fw-script fs-2 text-blush">Ateliê Bebê</span>
+      <h5 class="mt-2 text-secondary">Painel administrativo</h5>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">E-mail</label>
+        <input type="email" class="form-control" formControlName="email" autocomplete="username">
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Senha</label>
+        <input type="password" class="form-control" formControlName="password" autocomplete="current-password">
+      </div>
+
+      @if (errorMessage()) {
+        <div class="alert alert-danger small rounded-4">{{ errorMessage() }}</div>
+      }
+
+      <button type="submit" class="btn btn-dark btn-lg w-100 rounded-pill mt-3" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+        }
+        Entrar
+      </button>
+    </form>
+  </div>
+</div>
