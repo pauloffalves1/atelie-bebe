@@ -13,7 +13,7 @@ There is no root-level build; each project is built/run/tested from its own dire
 
 Git repo hosted at `github.com/pauloffalves1/atelie-bebe` (remote `origin`, branch `master`). Ignore rules are split per project: root `.gitignore` (OS cruft only), `client/.gitignore` (Angular defaults: `node_modules`, `dist`, `.angular/cache`), `server/.gitignore` (.NET: `bin/`, `obj/`, `.vs/`, `*.user`, the local SQLite `*.db*` files).
 
-`README.md` at the repo root is the canonical, detailed reference for architecture diagrams (Mermaid), the full business-rule catalog, and numbered functional/non-functional requirements (RF01–RF27, RNF01–RNF08) — read it for anything beyond the condensed architecture notes below rather than re-deriving it from source.
+`README.md` at the repo root is the canonical, detailed reference for architecture diagrams (Mermaid), the full business-rule catalog, and numbered functional/non-functional requirements (RF01–RF25, RNF01–RNF08) — read it for anything beyond the condensed architecture notes below rather than re-deriving it from source.
 
 ## Commands
 
@@ -64,11 +64,13 @@ Angular 22, standalone components (no `NgModule`s), lazy-loaded routes (`loadCom
 
 `src/app/` is split into:
 - **`core/`** — singletons: `services/` (one `HttpClient` wrapper per backend feature, mirroring the Application-layer split — e.g. `product.service.ts` calls both the public `/api/products` and admin `/api/admin/products` endpoints), `models/` (DTO interfaces matching the backend's), `guards/` (`adminGuard`, `customerGuard`, checked in `app.routes.ts`), `interceptors/` (`auth.interceptor.ts` attaches a Bearer token — picks the admin or customer token based on whether the request URL contains `/admin/`).
-- **`features/`** — route-level components, split into `public/` (storefront: home, shop, product detail, cart, checkout, auth, account, contact, gallery, custom orders) and `admin/` (dashboard, product/order/contact-message management, all behind `admin/` routes gated by `adminGuard`).
+- **`features/`** — route-level components, split into `public/` (storefront: home, shop, product detail, cart, checkout, auth, account, contact, gallery) and `admin/` (dashboard, product/order/contact-message management, all behind `admin/` routes gated by `adminGuard`).
 - **`shared/components/`** — reserved for cross-feature reusable components; currently empty.
 
 Two parallel auth services (`auth.service.ts` for customers, `admin-auth.service.ts` for admins) each hold their own token, matching the backend's two independent auth flows.
 
-Routing convention: public-facing route paths are in Portuguese (`/loja`, `/produto/:slug`, `/carrinho`, `/encomenda-personalizada`, `/minha-conta`, etc.) while admin routes are under `/admin/...` also in Portuguese (`/admin/produtos`, `/admin/encomendas`). `LOCALE_ID` is set to `pt-BR` in `app.config.ts`. Match this locale/language convention for any new user-facing route, label, or seed data — the whole app (including seeded product data and validation/error messages in the backend) is in Brazilian Portuguese.
+Routing convention: public-facing route paths are in Portuguese (`/loja`, `/produto/:slug`, `/carrinho`, `/minha-conta`, etc.) while admin routes are under `/admin/...` also in Portuguese (`/admin/produtos`, `/admin/encomendas`). `LOCALE_ID` is set to `pt-BR` in `app.config.ts`. Match this locale/language convention for any new user-facing route, label, or seed data — the whole app (including seeded product data and validation/error messages in the backend) is in Brazilian Portuguese.
+
+`features/public/contact` (`/contato`) merges general contact and custom-order requests into one page: a toggle reveals the piece-detail fields, and on submit the component builds a message client-side and opens `https://wa.me/<number>?text=...` — it does **not** call `OrderService.createCustomOrder` or `ContactService.submit` (both still exist and work, just unused by this page). The old `/encomenda-personalizada` route now `redirectTo: 'contato'` in `app.routes.ts` for backward-compat links. The WhatsApp number is a hardcoded placeholder (`WHATSAPP_NUMBER` in `contact.ts`) — swap it for the real number before deploying.
 
 Code style: Prettier config (`.prettierrc`) enforces 100-char width, single quotes, and the Angular parser for `.html` templates. New components use `style: "scss"` per `angular.json` schematics defaults, with the `app` selector prefix.

@@ -56,10 +56,7 @@ export const routes: Routes = [
       },
       { path: 'carrinho', loadComponent: () => import('./features/public/cart/cart-page').then((m) => m.CartPage) },
       { path: 'checkout', loadComponent: () => import('./features/public/checkout/checkout').then((m) => m.Checkout) },
-      {
-        path: 'encomenda-personalizada',
-        loadComponent: () => import('./features/public/custom-order/custom-order').then((m) => m.CustomOrder),
-      },
+      { path: 'encomenda-personalizada', redirectTo: 'contato', pathMatch: 'full' },
       { path: 'sobre', loadComponent: () => import('./features/public/about/about').then((m) => m.About) },
       { path: 'galeria', loadComponent: () => import('./features/public/gallery/gallery').then((m) => m.Gallery) },
       { path: 'contato', loadComponent: () => import('./features/public/contact/contact').then((m) => m.Contact) },

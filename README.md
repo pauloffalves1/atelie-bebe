@@ -111,13 +111,13 @@ graph TD
 src/app/
 ├── core/            Serviços singleton, models/DTOs, guards de rota, interceptor HTTP
 ├── features/
-│   ├── public/      Loja: home, catálogo, produto, carrinho, checkout, login/cadastro, minha conta, contato, galeria, encomenda personalizada
+│   ├── public/      Loja: home, catálogo, produto, carrinho, checkout, login/cadastro, minha conta, contato e encomendas (unificado), galeria
 │   └── admin/       Painel: dashboard, produtos, encomendas, mensagens de contato
 └── shared/
     └── components/  Reservado para componentes reutilizáveis entre features
 ```
 
-Cada serviço em `core/services/` espelha uma feature do backend (ex.: `product.service.ts` fala com `/api/products` e `/api/admin/products`). O `authInterceptor` decide automaticamente qual token Bearer anexar (admin ou cliente) com base na URL da requisição. Toda a UI e as rotas públicas estão em português (`/loja`, `/carrinho`, `/minha-conta`, `/encomenda-personalizada`...), com `LOCALE_ID` fixado em `pt-BR`.
+Cada serviço em `core/services/` espelha uma feature do backend (ex.: `product.service.ts` fala com `/api/products` e `/api/admin/products`). O `authInterceptor` decide automaticamente qual token Bearer anexar (admin ou cliente) com base na URL da requisição. Toda a UI e as rotas públicas estão em português (`/loja`, `/carrinho`, `/minha-conta`, `/contato`...), com `LOCALE_ID` fixado em `pt-BR`.
 
 ### Eventos de domínio, Outbox e notificações
 
@@ -236,28 +236,26 @@ npm test        # testes unitários (Vitest)
 | RF03 | O sistema deve permitir listar as categorias de produtos disponíveis | Visitante |
 | RF04 | O sistema deve permitir consultar o detalhe de um produto pelo seu slug | Visitante |
 | RF05 | O sistema deve permitir finalizar um pedido de loja (checkout) a partir do carrinho, com ou sem autenticação | Visitante / Cliente |
-| RF06 | O sistema deve permitir solicitar uma encomenda personalizada, informando detalhes livres e valor estimado | Visitante / Cliente |
+| RF06 | O sistema deve oferecer uma página única de "Contato e Encomendas" que reúne dúvidas gerais e pedidos de encomenda personalizada; ao enviar, monta uma mensagem com os dados informados e abre uma conversa no WhatsApp do ateliê (nenhum dado é persistido pelo backend nesse fluxo) | Visitante / Cliente |
 | RF07 | O sistema deve permitir consultar um pedido específico pelo seu ID, sem exigir autenticação (página de confirmação) | Visitante / Cliente |
 | RF08 | O sistema deve permitir que um cliente autenticado liste todos os pedidos vinculados à sua conta | Cliente |
 | RF09 | O sistema deve permitir o cadastro de uma nova conta de cliente, validando e-mail único e senha com no mínimo 6 caracteres | Visitante |
 | RF10 | O sistema deve permitir login de cliente por e-mail e senha, retornando um token de acesso (JWT) | Cliente |
 | RF11 | O sistema deve permitir login de administrador por e-mail e senha, retornando um token de acesso (JWT) com papel administrativo | Administrador |
-| RF12 | O sistema deve permitir o envio de mensagens pelo formulário público de contato | Visitante |
-| RF13 | O sistema deve permitir listar todo o catálogo de produtos, incluindo inativos | Administrador |
-| RF14 | O sistema deve permitir cadastrar novos produtos no catálogo | Administrador |
-| RF15 | O sistema deve permitir editar os dados de um produto existente (nome, descrição, preço, categoria, imagem, destaque) | Administrador |
-| RF16 | O sistema deve permitir ajustar manualmente o estoque de um produto | Administrador |
-| RF17 | O sistema deve permitir ativar ou inativar um produto, removendo-o (ou não) da vitrine pública | Administrador |
-| RF18 | O sistema deve permitir listar pedidos, com filtro opcional por status | Administrador |
-| RF19 | O sistema deve permitir alterar o status de um pedido, respeitando a máquina de estados definida | Administrador |
-| RF20 | O sistema deve permitir consultar as mensagens de contato recebidas | Administrador |
-| RF21 | O sistema deve exibir um painel com indicadores consolidados: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, produtos com estoque baixo, total de clientes, distribuição de pedidos por status e pedidos recentes | Administrador |
-| RF22 | O sistema deve reservar automaticamente o estoque de um produto ao confirmar um pedido de loja, recusando a reserva quando o estoque for insuficiente | Sistema |
-| RF23 | O sistema deve registrar um evento de estoque baixo sempre que o estoque de um produto atingir 3 unidades ou menos | Sistema |
-| RF24 | O sistema deve notificar o cliente sempre que o status de um pedido for alterado | Sistema |
-| RF25 | O sistema deve notificar o cliente na confirmação de criação de um pedido | Sistema |
-| RF26 | O sistema deve notificar o remetente na confirmação de recebimento de uma mensagem de contato | Sistema |
-| RF27 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
+| RF12 | O sistema deve permitir listar todo o catálogo de produtos, incluindo inativos | Administrador |
+| RF13 | O sistema deve permitir cadastrar novos produtos no catálogo | Administrador |
+| RF14 | O sistema deve permitir editar os dados de um produto existente (nome, descrição, preço, categoria, imagem, destaque) | Administrador |
+| RF15 | O sistema deve permitir ajustar manualmente o estoque de um produto | Administrador |
+| RF16 | O sistema deve permitir ativar ou inativar um produto, removendo-o (ou não) da vitrine pública | Administrador |
+| RF17 | O sistema deve permitir listar pedidos, com filtro opcional por status | Administrador |
+| RF18 | O sistema deve permitir alterar o status de um pedido, respeitando a máquina de estados definida | Administrador |
+| RF19 | O sistema deve permitir consultar as mensagens de contato recebidas pela API (canal reservado para uso administrativo/futuro — o formulário público atual não envia mais mensagens por aqui, ver RF06) | Administrador |
+| RF20 | O sistema deve exibir um painel com indicadores consolidados: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, produtos com estoque baixo, total de clientes, distribuição de pedidos por status e pedidos recentes | Administrador |
+| RF21 | O sistema deve reservar automaticamente o estoque de um produto ao confirmar um pedido de loja, recusando a reserva quando o estoque for insuficiente | Sistema |
+| RF22 | O sistema deve registrar um evento de estoque baixo sempre que o estoque de um produto atingir 3 unidades ou menos | Sistema |
+| RF23 | O sistema deve notificar o cliente sempre que o status de um pedido for alterado | Sistema |
+| RF24 | O sistema deve notificar o cliente na confirmação de criação de um pedido | Sistema |
+| RF25 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
 
 ### Requisitos não funcionais
 
@@ -289,7 +287,8 @@ npm test        # testes unitários (Vitest)
   - **Personalizado** (`Personalizada`): encomenda sob medida, representada como um único item com o valor estimado informado pelo cliente e detalhes livres em JSON (`CustomDetailsJson`).
 - Pedidos de loja exigem pelo menos um item; a validação ocorre tanto na camada de aplicação quanto no domínio (`Order.Submit`).
 - Itens só podem ser adicionados a um pedido enquanto ele está no status inicial `Recebido`; qualquer tentativa de alterar itens após isso é rejeitada — o conteúdo do pedido é imutável a partir do momento em que entra em processamento.
-- O checkout (`/api/orders/store` e `/api/orders/custom`) é aberto a visitantes não autenticados; quando a requisição vem de um cliente logado, o pedido é automaticamente vinculado à conta (`CustomerId`). Consultar um pedido específico por ID (`GET /api/orders/{id}`) não exige autenticação — é assim que a página de confirmação de pedido funciona para convidados.
+- O checkout de loja (`/api/orders/store`, a partir do carrinho) é aberto a visitantes não autenticados; quando a requisição vem de um cliente logado, o pedido é automaticamente vinculado à conta (`CustomerId`). Consultar um pedido específico por ID (`GET /api/orders/{id}`) não exige autenticação — é assim que a página de confirmação de pedido funciona para convidados.
+- O endpoint `/api/orders/custom` (criação de encomenda personalizada via API) continua implementado, mas **a página pública de contato/encomenda não o chama mais** — ela monta a solicitação como mensagem de WhatsApp em vez de criar um pedido no backend (ver seção [Contato](#contato)).
 - O total do pedido nunca é armazenado: é sempre recalculado como a soma dos subtotais dos itens (`preço unitário × quantidade`) no momento da leitura.
 - O status segue uma máquina de estados estrita, sem pular etapas nem retroceder:
 
@@ -319,8 +318,11 @@ npm test        # testes unitários (Vitest)
 
 ### Contato
 
-- Mensagens enviadas pelo formulário público de contato exigem nome e mensagem não vazios; são persistidas e disparam `ContactMessageReceivedDomainEvent`, que hoje gera um log de confirmação (sem envio real de e-mail).
-- Mensagens ficam visíveis apenas no painel administrativo (`/api/admin/*`), ordenadas da mais recente para a mais antiga.
+- A página pública **"Contato e Encomendas"** (`/contato`) unifica dúvida geral e pedido de encomenda personalizada em um único formulário. Um alternador ("É uma encomenda personalizada") revela os campos específicos da peça (tipo, tamanho, tecido, cor, nome para bordar); os demais campos (nome, e-mail e telefone) são compartilhados pelos dois casos.
+- Ao enviar, o formulário **não chama a API** — ele monta uma mensagem de texto a partir dos campos preenchidos e abre `https://wa.me/<número-do-ateliê>?text=<mensagem>` em uma nova aba, iniciando a conversa diretamente no WhatsApp. Nenhum dado do formulário é persistido pelo backend nesse fluxo.
+- A rota antiga `/encomenda-personalizada` foi mantida como redirecionamento (`redirectTo`) para `/contato`, preservando links e favoritos existentes.
+- O número de WhatsApp usado no link (`WHATSAPP_NUMBER` em `contact.ts`) é o mesmo já exibido publicamente na página e no rodapé — **é um número de exemplo e deve ser substituído pelo número real do ateliê antes de qualquer publicação em produção**.
+- O endpoint `POST /api/contact` e o serviço `ContactService` continuam implementados e funcionais (persistem a mensagem e disparam `ContactMessageReceivedDomainEvent`), mas não são mais chamados por nenhuma tela pública — ficam disponíveis para um canal futuro (ex.: um formulário alternativo, ou integração server-side) sem exigir mudança de backend.
 
 ### Valores monetários
 
