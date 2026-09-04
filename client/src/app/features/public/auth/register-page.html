@@ -10,21 +10,34 @@
 
           <form [formGroup]="form" (ngSubmit)="submit()">
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Nome completo</label>
-              <input type="text" class="form-control" formControlName="name">
+              <label for="register-name" class="form-label small fw-semibold">Nome completo</label>
+              <input type="text" id="register-name" class="form-control" formControlName="name"
+                [class.is-invalid]="form.controls.name.invalid && form.controls.name.touched">
+              @if (form.controls.name.invalid && form.controls.name.touched) {
+                <div class="invalid-feedback">Nome é obrigatório.</div>
+              }
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold">E-mail</label>
-              <input type="email" class="form-control" formControlName="email">
+              <label for="register-email" class="form-label small fw-semibold">E-mail</label>
+              <input type="email" id="register-email" class="form-control" formControlName="email"
+                [class.is-invalid]="form.controls.email.invalid && form.controls.email.touched">
+              @if (form.controls.email.invalid && form.controls.email.touched) {
+                <div class="invalid-feedback">Informe um e-mail válido.</div>
+              }
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Telefone (opcional)</label>
-              <input type="text" class="form-control" formControlName="phone">
+              <label for="register-phone" class="form-label small fw-semibold">Telefone (opcional)</label>
+              <input type="text" id="register-phone" class="form-control" formControlName="phone">
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Senha</label>
-              <input type="password" class="form-control" formControlName="password">
-              <span class="form-text">Mínimo de 6 caracteres.</span>
+              <label for="register-password" class="form-label small fw-semibold">Senha</label>
+              <input type="password" id="register-password" class="form-control" formControlName="password"
+                [class.is-invalid]="form.controls.password.invalid && form.controls.password.touched"
+                aria-describedby="register-password-help">
+              @if (form.controls.password.invalid && form.controls.password.touched) {
+                <div class="invalid-feedback">A senha deve ter pelo menos 6 caracteres.</div>
+              }
+              <span id="register-password-help" class="form-text">Mínimo de 6 caracteres.</span>
             </div>
 
             @if (errorMessage()) {
