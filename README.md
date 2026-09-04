@@ -18,6 +18,9 @@ Monorepo com dois projetos independentes:
   - [Eventos de domínio, Outbox e notificações](#eventos-de-domínio-outbox-e-notificações)
   - [Autenticação e autorização](#autenticação-e-autorização)
 - [Como executar](#como-executar)
+- [Requisitos](#requisitos)
+  - [Requisitos funcionais](#requisitos-funcionais)
+  - [Requisitos não funcionais](#requisitos-não-funcionais)
 - [Regras de negócio](#regras-de-negócio)
   - [Catálogo e estoque](#catálogo-e-estoque)
   - [Pedidos e ciclo de vida](#pedidos-e-ciclo-de-vida)
@@ -188,6 +191,61 @@ npm test        # testes unitários (Vitest)
 ```
 
 `client/src/environments/environment.ts` aponta `apiUrl` para `http://localhost:5120/api`. Se o backend rodar em outra porta, ajuste esse arquivo e a lista `Cors:AllowedOrigins` em `appsettings.json`.
+
+## Requisitos
+
+### Atores
+
+| Ator | Descrição |
+|---|---|
+| Visitante | Usuário não autenticado navegando na loja pública |
+| Cliente | Visitante autenticado (`customer`), com acesso à área "Minha Conta" |
+| Administrador | Usuário autenticado (`admin`), com acesso ao painel de gestão |
+
+### Requisitos funcionais
+
+| ID | Requisito | Ator |
+|---|---|---|
+| RF01 | O sistema deve permitir listar produtos ativos do catálogo, com filtro opcional por categoria | Visitante |
+| RF02 | O sistema deve permitir listar produtos em destaque | Visitante |
+| RF03 | O sistema deve permitir listar as categorias de produtos disponíveis | Visitante |
+| RF04 | O sistema deve permitir consultar o detalhe de um produto pelo seu slug | Visitante |
+| RF05 | O sistema deve permitir finalizar um pedido de loja (checkout) a partir do carrinho, com ou sem autenticação | Visitante / Cliente |
+| RF06 | O sistema deve permitir solicitar uma encomenda personalizada, informando detalhes livres e valor estimado | Visitante / Cliente |
+| RF07 | O sistema deve permitir consultar um pedido específico pelo seu ID, sem exigir autenticação (página de confirmação) | Visitante / Cliente |
+| RF08 | O sistema deve permitir que um cliente autenticado liste todos os pedidos vinculados à sua conta | Cliente |
+| RF09 | O sistema deve permitir o cadastro de uma nova conta de cliente, validando e-mail único e senha com no mínimo 6 caracteres | Visitante |
+| RF10 | O sistema deve permitir login de cliente por e-mail e senha, retornando um token de acesso (JWT) | Cliente |
+| RF11 | O sistema deve permitir login de administrador por e-mail e senha, retornando um token de acesso (JWT) com papel administrativo | Administrador |
+| RF12 | O sistema deve permitir o envio de mensagens pelo formulário público de contato | Visitante |
+| RF13 | O sistema deve permitir listar todo o catálogo de produtos, incluindo inativos | Administrador |
+| RF14 | O sistema deve permitir cadastrar novos produtos no catálogo | Administrador |
+| RF15 | O sistema deve permitir editar os dados de um produto existente (nome, descrição, preço, categoria, imagem, destaque) | Administrador |
+| RF16 | O sistema deve permitir ajustar manualmente o estoque de um produto | Administrador |
+| RF17 | O sistema deve permitir ativar ou inativar um produto, removendo-o (ou não) da vitrine pública | Administrador |
+| RF18 | O sistema deve permitir listar pedidos, com filtro opcional por status | Administrador |
+| RF19 | O sistema deve permitir alterar o status de um pedido, respeitando a máquina de estados definida | Administrador |
+| RF20 | O sistema deve permitir consultar as mensagens de contato recebidas | Administrador |
+| RF21 | O sistema deve exibir um painel com indicadores consolidados: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, produtos com estoque baixo, total de clientes, distribuição de pedidos por status e pedidos recentes | Administrador |
+| RF22 | O sistema deve reservar automaticamente o estoque de um produto ao confirmar um pedido de loja, recusando a reserva quando o estoque for insuficiente | Sistema |
+| RF23 | O sistema deve registrar um evento de estoque baixo sempre que o estoque de um produto atingir 3 unidades ou menos | Sistema |
+| RF24 | O sistema deve notificar o cliente sempre que o status de um pedido for alterado | Sistema |
+| RF25 | O sistema deve notificar o cliente na confirmação de criação de um pedido | Sistema |
+| RF26 | O sistema deve notificar o remetente na confirmação de recebimento de uma mensagem de contato | Sistema |
+| RF27 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
+
+### Requisitos não funcionais
+
+| ID | Requisito |
+|---|---|
+| RNF01 | A comunicação entre cliente e servidor deve ocorrer por uma API RESTful, documentada via OpenAPI em ambiente de desenvolvimento |
+| RNF02 | Senhas de clientes e administradores devem ser armazenadas apenas como hash (BCrypt), nunca em texto plano |
+| RNF03 | O acesso às rotas administrativas deve exigir um token JWT válido com papel `admin` |
+| RNF04 | O acesso às rotas exclusivas de cliente deve exigir um token JWT válido com papel `customer` |
+| RNF05 | Erros da aplicação devem ser retornados em um formato padronizado (`ProblemDetails`), sem expor detalhes internos em falhas inesperadas (HTTP 500) |
+| RNF06 | O disparo de notificações não deve bloquear a resposta da requisição que originou o evento (processamento assíncrono via outbox) |
+| RNF07 | A persistência de um evento de domínio deve ser atômica em relação à alteração de dados que o originou (mesma transação) |
+| RNF08 | A interface deve ser responsiva e totalmente localizada em português brasileiro (pt-BR) |
 
 ## Regras de negócio
 
