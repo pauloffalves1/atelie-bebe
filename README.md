@@ -52,14 +52,36 @@ Monorepo com dois projetos independentes:
 
 Clean Architecture em quatro projetos, com dependências fluindo sempre para dentro (`Api` → `Application` / `Infrastructure` → `Domain`; `Domain` não depende de nenhum outro projeto):
 
-```
-AtelieBebe.Api              Composição da aplicação e endpoints HTTP (Program.cs, Endpoints/*)
-    ↓ depende de
-AtelieBebe.Application      Casos de uso por feature (Products, Orders, Auth, Contact, Dashboard)
-    ↓ depende de
-AtelieBebe.Domain            Entidades, value objects e eventos de domínio — núcleo sem dependências externas
-    ↑ implementado por
-AtelieBebe.Infrastructure    EF Core, repositórios, JWT, hashing, outbox
+```mermaid
+graph TD
+    subgraph Api["AtelieBebe.Api"]
+        Program["Program.cs<br/>(composition root)"]
+        Endpoints["Endpoints/*<br/>Products · Orders · Auth · Contact · Dashboard"]
+        ExHandler["AppExceptionHandler"]
+    end
+
+    subgraph Application["AtelieBebe.Application"]
+        Services["Services<br/>ProductService · OrderService<br/>CustomerAuthService · AdminAuthService · ContactService"]
+        Abstractions["Abstractions<br/>IUnitOfWork · IJwtTokenGenerator<br/>IPasswordHasher · INotificationSender"]
+    end
+
+    subgraph Domain["AtelieBebe.Domain — núcleo, zero dependências"]
+        Entities["Entities<br/>Product · Order · Customer · Admin · ContactMessage"]
+        ValueObjects["Value Objects<br/>Money · Email"]
+        DomainEvents["Domain Events"]
+    end
+
+    subgraph Infrastructure["AtelieBebe.Infrastructure"]
+        Persistence["AppDbContext + Repositories<br/>EF Core + SQLite"]
+        Outbox["Outbox<br/>Interceptor + OutboxProcessor"]
+        Security["JWT + BCrypt"]
+    end
+
+    Api --> Application
+    Api --> Infrastructure
+    Application --> Domain
+    Infrastructure --> Domain
+    Infrastructure -. implementa .-> Abstractions
 ```
 
 - **Domain** modela entidades ricas (`Product`, `Order`, `Customer`, `Admin`, `ContactMessage`) que protegem suas próprias invariantes através de métodos de fábrica e comportamento (`Product.Reserve`, `Order.ChangeStatus`), e levantam eventos de domínio quando algo relevante acontece.
@@ -90,6 +112,40 @@ Entidade levanta evento  →  SaveChanges interceptor grava na tabela Outbox (me
 Quando uma entidade de domínio muda de forma relevante (pedido criado, status alterado, cliente cadastrado, estoque baixo, mensagem de contato recebida), ela registra um evento de domínio. O `DomainEventsToOutboxInterceptor` — um interceptor de `SaveChanges` do EF Core — serializa esse evento como uma linha na tabela `OutboxMessages`, **na mesma transação** da mudança de estado que o originou, garantindo que o evento nunca seja perdido mesmo que o processo caia logo em seguida.
 
 Um `BackgroundService` (`OutboxProcessor`) faz *polling* a cada 5 segundos, lê lotes de até 20 mensagens pendentes, desserializa cada evento pelo seu tipo CLR e despacha para `INotificationSender`. A entrega é *at-least-once*: falhas incrementam um contador de tentativas (até 5) e o erro é registrado na própria linha, sem derrubar o processador. Hoje a única implementação de `INotificationSender` é `LoggingNotificationSender`, que apenas registra em log — não há envio real de e-mail/SMS.
+
+Exemplo de ponta a ponta — criação de um pedido de loja:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Cliente as Cliente (Angular)
+    participant Ep as OrderEndpoints
+    participant Svc as OrderService
+    participant Prod as Product (Domain)
+    participant Ord as Order (Domain)
+    participant Db as AppDbContext (SQLite)
+    participant Proc as OutboxProcessor
+    participant Notif as INotificationSender
+
+    Cliente->>Ep: POST /api/orders/store
+    Ep->>Svc: CreateStoreOrderAsync(request)
+    Svc->>Prod: Reserve(quantidade)
+    Prod-->>Svc: estoque atualizado (ou DomainException)
+    Svc->>Ord: AddItem(...) / Submit()
+    Ord-->>Svc: OrderCreatedDomainEvent
+    Svc->>Db: SaveChangesAsync()
+    Note over Db: interceptor grava Order + OutboxMessage<br/>na mesma transação
+    Db-->>Svc: OK
+    Svc-->>Ep: OrderDto
+    Ep-->>Cliente: 200 OK
+
+    loop a cada 5s
+        Proc->>Db: SELECT mensagens pendentes
+        Db-->>Proc: OutboxMessage
+        Proc->>Notif: SendOrderCreatedAsync(...)
+        Proc->>Db: marca ProcessedOn
+    end
+```
 
 ### Autenticação e autorização
 
@@ -154,10 +210,18 @@ npm test        # testes unitários (Vitest)
 - O total do pedido nunca é armazenado: é sempre recalculado como a soma dos subtotais dos itens (`preço unitário × quantidade`) no momento da leitura.
 - O status segue uma máquina de estados estrita, sem pular etapas nem retroceder:
 
-  ```
-  Recebido ──► EmProducao ──► Pronto ──► Enviado ──► Entregue
-     │              │            │
-     └──────────────┴────────────┴──► Cancelado
+  ```mermaid
+  stateDiagram-v2
+      [*] --> Recebido
+      Recebido --> EmProducao
+      Recebido --> Cancelado
+      EmProducao --> Pronto
+      EmProducao --> Cancelado
+      Pronto --> Enviado
+      Pronto --> Cancelado
+      Enviado --> Entregue
+      Entregue --> [*]
+      Cancelado --> [*]
   ```
 
   `Entregue` e `Cancelado` são estados terminais: nenhuma transição é permitida a partir deles. Qualquer transição fora do mapa acima é rejeitada com erro de domínio.
