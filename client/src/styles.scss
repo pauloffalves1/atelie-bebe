@@ -30,7 +30,42 @@ $box-shadow-sm: 0 .25rem .75rem rgba(74, 63, 58, .06);
 $box-shadow:    0 .5rem 1.5rem rgba(74, 63, 58, .09);
 $box-shadow-lg: 0 1rem 3rem rgba(74, 63, 58, .12);
 
-@import "bootstrap/scss/bootstrap";
+// Import only the Bootstrap 5 partials this app actually uses (instead of the full
+// ~230KB bundle) — grid/utilities/forms/buttons/navbar/card/badge/alert/progress/
+// list-group/spinners/placeholders/tables/dropdown, all confirmed against every
+// template. If a new page needs another component (e.g. modal, tooltip, accordion),
+// add its partial here rather than reverting to the full "bootstrap/scss/bootstrap".
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/tables";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/dropdown";
+@import "bootstrap/scss/nav";
+@import "bootstrap/scss/navbar";
+@import "bootstrap/scss/card";
+@import "bootstrap/scss/badge";
+@import "bootstrap/scss/alert";
+@import "bootstrap/scss/progress";
+@import "bootstrap/scss/list-group";
+@import "bootstrap/scss/spinners";
+@import "bootstrap/scss/placeholders";
+@import "bootstrap/scss/helpers";
+
+@import "bootstrap/scss/utilities/api";
+
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
 // ---- Global look & feel ----
