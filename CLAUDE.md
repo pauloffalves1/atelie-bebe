@@ -11,6 +11,10 @@ This is a monorepo with two independent projects, no shared tooling or root pack
 
 There is no root-level build; each project is built/run/tested from its own directory.
 
+Git repo hosted at `github.com/pauloffalves1/atelie-bebe` (remote `origin`, branch `master`). Ignore rules are split per project: root `.gitignore` (OS cruft only), `client/.gitignore` (Angular defaults: `node_modules`, `dist`, `.angular/cache`), `server/.gitignore` (.NET: `bin/`, `obj/`, `.vs/`, `*.user`, the local SQLite `*.db*` files).
+
+`README.md` at the repo root is the canonical, detailed reference for architecture diagrams (Mermaid), the full business-rule catalog, and numbered functional/non-functional requirements (RF01–RF27, RNF01–RNF08) — read it for anything beyond the condensed architecture notes below rather than re-deriving it from source.
+
 ## Commands
 
 ### Backend (`server/`)
