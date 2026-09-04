@@ -9,7 +9,7 @@
       @for (image of images; track image) {
         <div class="col-6 col-md-4 col-lg-3">
           <div class="rounded-4 overflow-hidden shadow-sm" style="aspect-ratio: 4/5;">
-            <img [src]="image" alt="Trabalho do ateliê" class="w-100 h-100 object-fit-cover">
+            <img [src]="image" alt="Trabalho do ateliê" class="w-100 h-100 object-fit-cover" loading="lazy">
           </div>
         </div>
       }
