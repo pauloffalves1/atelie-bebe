@@ -40,7 +40,7 @@ npm run build         # ng build -> dist/
 npm test              # ng test (Vitest)
 ```
 
-To run a single test file/suite, use Vitest's own filtering, e.g. `npx vitest run path/to/file.spec.ts` or `npx vitest -t "test name"`.
+To run a single test file/suite, use `ng test`'s own flags — `npx ng test --include='**/cart.service.spec.ts'` for a file, or `npx ng test --filter="test name"` for a name pattern. (Running `npx vitest` directly does *not* work here: Angular's vitest builder supplies the TestBed setup and global `describe`/`it`/`vi` — a bare `vitest run` fails with `describe is not defined`.)
 
 `client/src/environments/environment.ts` points `apiUrl` at `http://localhost:5120/api` — keep the backend's `Cors:AllowedOrigins` (appsettings) and the frontend's dev port in sync when changing either.
 
@@ -61,6 +61,10 @@ There are two independent auth flows sharing the same JWT bearer scheme but diff
 ## Frontend architecture
 
 Angular 22, standalone components (no `NgModule`s), lazy-loaded routes (`loadComponent`), Bootstrap 5 for styling. Bootstrapped via `app.config.ts` (`ApplicationConfig`) rather than a root module.
+
+`src/styles.scss` imports Bootstrap as an explicit list of partials (grid, forms, buttons, navbar, card, badge, alert, progress, list-group, tables, spinners, placeholders, helpers, utilities/api, etc.) rather than the full `bootstrap/scss/bootstrap` bundle, to keep the compiled CSS smaller. If new UI needs a component that isn't imported (modal, tooltip/popover, carousel, toast, offcanvas, accordion, breadcrumb, pagination, button-group), add that partial to the list — don't revert to the full-bundle import.
+
+Routes carry a static `title` (Angular Router's built-in title strategy); `product-detail` and `order-confirmation` additionally call `Title.setTitle(...)` once their data loads to override it with the specific product/order. Follow this pattern for any new route that shows single-entity data.
 
 `src/app/` is split into:
 - **`core/`** — singletons: `services/` (one `HttpClient` wrapper per backend feature, mirroring the Application-layer split — e.g. `product.service.ts` calls both the public `/api/products` and admin `/api/admin/products` endpoints), `models/` (DTO interfaces matching the backend's), `guards/` (`adminGuard`, `customerGuard`, checked in `app.routes.ts`), `interceptors/` (`auth.interceptor.ts` attaches a Bearer token — picks the admin or customer token based on whether the request URL contains `/admin/`).
