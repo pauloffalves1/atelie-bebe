@@ -5,4 +5,7 @@
     <Project Path="src/AtelieBebe.Domain/AtelieBebe.Domain.csproj" />
     <Project Path="src/AtelieBebe.Infrastructure/AtelieBebe.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/AtelieBebe.Domain.Tests/AtelieBebe.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

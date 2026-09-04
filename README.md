@@ -5,6 +5,7 @@
 [![EF Core](https://img.shields.io/badge/EF_Core-10-512BD4?style=flat&logo=nuget&logoColor=white)](https://learn.microsoft.com/ef/core/)
 [![SQLite](https://img.shields.io/badge/SQLite-3-07405E?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![xUnit](https://img.shields.io/badge/Tests-xUnit-512BD4?style=flat&logo=dotnet&logoColor=white)](https://xunit.net/)
 [![Angular](https://img.shields.io/badge/Angular-22-DD0031?style=flat&logo=angular&logoColor=white)](https://angular.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![RxJS](https://img.shields.io/badge/RxJS-7.8-B7178C?style=flat&logo=reactivex&logoColor=white)](https://rxjs.dev/)
@@ -51,6 +52,7 @@ Monorepo com dois projetos independentes:
 - BCrypt para hash de senha
 - Padrão *Outbox* implementado sobre um `SaveChanges` interceptor + `BackgroundService`
 - OpenAPI habilitado em ambiente de desenvolvimento
+- xUnit para testes de domínio, com segredos locais (JWT) via `dotnet user-secrets`
 
 **Frontend**
 
@@ -179,8 +181,14 @@ O token JWT carrega `NameIdentifier`, `Name`, `Email` e `Role`, assinado com HMA
 ```bash
 cd server
 dotnet build AtelieBebe.slnx
+
+# primeira vez apenas: gera um segredo JWT local (nunca commitado)
+dotnet user-secrets set "Jwt:Secret" "<uma-chave-aleatoria-de-pelo-menos-32-caracteres>" --project src/AtelieBebe.Api
+
 dotnet run --project src/AtelieBebe.Api        # http://localhost:5120
 ```
+
+`appsettings.json` mantém `Jwt:Secret` vazio de propósito — o valor real fica apenas no cofre local do [`dotnet user-secrets`](https://learn.microsoft.com/aspnet/core/security/app-secrets), fora do controle de versão. Sem esse passo, a API sobe normalmente mas a geração de token falha em tempo de execução (chave curta demais para HMAC-SHA256).
 
 Ao subir, a API aplica automaticamente as migrations pendentes e semeia um administrador padrão (`admin@ateliebebe.com.br` / `admin123`, salvo configuração em contrário) e um catálogo de produtos de exemplo. O banco SQLite fica em `src/AtelieBebe.Api/atelie-bebe.db`.
 
@@ -189,6 +197,12 @@ Para gerar/aplicar migrations:
 ```bash
 dotnet ef migrations add <Nome> --project src/AtelieBebe.Infrastructure --startup-project src/AtelieBebe.Api
 dotnet ef database update --project src/AtelieBebe.Infrastructure --startup-project src/AtelieBebe.Api
+```
+
+Para rodar os testes de domínio:
+
+```bash
+dotnet test test/AtelieBebe.Domain.Tests/AtelieBebe.Domain.Tests.csproj
 ```
 
 ### Frontend

@@ -21,12 +21,14 @@ Git repo hosted at `github.com/pauloffalves1/atelie-bebe` (remote `origin`, bran
 
 ```bash
 dotnet build AtelieBebe.slnx                       # build the whole solution
+dotnet user-secrets set "Jwt:Secret" "<random-secret>" --project src/AtelieBebe.Api  # one-time, see below
 dotnet run --project src/AtelieBebe.Api             # run the API (http://localhost:5120)
 dotnet ef migrations add <Name> --project src/AtelieBebe.Infrastructure --startup-project src/AtelieBebe.Api
 dotnet ef database update --project src/AtelieBebe.Infrastructure --startup-project src/AtelieBebe.Api
+dotnet test test/AtelieBebe.Domain.Tests/AtelieBebe.Domain.Tests.csproj   # domain unit tests (xUnit)
 ```
 
-There is no test project in the solution today.
+`Jwt:Secret` is intentionally blank in `appsettings.json` — it is never committed. Set it locally via `dotnet user-secrets` (stored outside the repo, under the project's `UserSecretsId`) before running the API; without it, token generation throws at runtime (the key is too short). `dotnet test AtelieBebe.slnx` runs every test project; to run a single test, use xUnit's filter: `dotnet test --filter "FullyQualifiedName~OrderTests.ChangeStatus_AllowedTransition_Succeeds"`.
 
 The API applies EF Core migrations and seeds the admin user + demo products automatically on startup (`DbInitializer.InitializeAsync`, called from `Program.cs`). The SQLite file lives at `src/AtelieBebe.Api/atelie-bebe.db`. Default seeded admin login is `admin@ateliebebe.com.br` / `admin123` (overridable via `AdminSeed:Email` / `AdminSeed:Password` config).
 
@@ -50,6 +52,7 @@ Clean Architecture with four projects, dependencies flowing inward (`Api` → `A
 - **`AtelieBebe.Application`** — one folder per feature (`Products`, `Orders`, `Auth`, `Contact`, `Dashboard`), each with an `I<Name>Service` interface, DTOs, and the implementation. Services depend on `Domain` repository interfaces and `Application/Abstractions` (`IUnitOfWork`, `IPasswordHasher`, `IJwtTokenGenerator`, `INotificationSender`) — never on `Infrastructure` directly. Custom exceptions (`NotFoundException`, `ConflictException`, `UnauthorizedAppException`) are thrown from services and translated to HTTP responses centrally.
 - **`AtelieBebe.Infrastructure`** — EF Core (`AppDbContext`, per-entity `IEntityTypeConfiguration` classes, SQLite), repository implementations, `UnitOfWork`, JWT generation/password hashing, and the outbox (below). Registers everything via `AddInfrastructure(configuration)`; `Application` registers its services via `AddApplication()`.
 - **`AtelieBebe.Api`** — Minimal API endpoints only, no controllers. Each feature has a static `Map<Feature>Endpoints(this WebApplication app)` extension in `Endpoints/`, called from `Program.cs`. Public routes live under `/api/{feature}`; admin-only routes live under `/api/admin/{feature}` behind `RequireAuthorization("AdminOnly")`. `Program.cs` is the composition root: registers auth (JWT bearer, `AdminOnly`/`CustomerOnly` policies), CORS, exception handling (`AppExceptionHandler` + `ProblemDetails`), then maps endpoints and runs `DbInitializer` before `app.Run()`.
+- **`test/AtelieBebe.Domain.Tests`** — xUnit tests covering `Domain` invariants: the `Order` status state machine, `Product` stock/reservation rules, `Money`/`Email` value objects, and `Customer` registration. Only references `AtelieBebe.Domain` — no `Application`/`Infrastructure` tests exist yet, so mocking a repository or `IUnitOfWork` isn't a pattern established in this repo.
 
 **Domain events → outbox → notifications**: entities raise domain events; `DomainEventsToOutboxInterceptor` (an EF Core `SaveChanges` interceptor) intercepts them at persistence time and writes each one as a serialized `OutboxMessage` row in the same transaction as the entity change — this is what makes the write atomic with the event capture. `OutboxProcessor` (a `BackgroundService`) polls unprocessed rows every 5s, deserializes each by its stored CLR type name, and dispatches to `INotificationSender` (currently `LoggingNotificationSender`, which just logs — no real email/SMS integration yet) based on a `switch` over the event type in `OutboxProcessor.DispatchAsync`. Delivery is at-least-once with a retry cap (`MaxAttempts = 5`); failures are recorded on the message row (`Attempts`, `Error`) rather than crashing the poller. When adding a new domain event that should trigger a notification, add a case to that switch and a corresponding method on `INotificationSender`.
 
