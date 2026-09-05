@@ -15,8 +15,8 @@ export class Contact implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
 
-  readonly pieceTypes = ['Body', 'Manta', 'Saída de maternidade', 'Kit enxoval', 'Naninha', 'Almofada de amamentação', 'Outro'];
-  readonly sizes = ['RN', 'P', 'M', 'G', 'Sob medida'];
+  readonly pieceTypes = ['Fralda de Ombro', 'Fralda de Boca', 'Kit Ombro e Boca', 'Outro'];
+  readonly sizes = ['Padrão', 'Grande', 'Sob medida'];
 
   readonly form = this.fb.nonNullable.group({
     isCustomOrder: [false],

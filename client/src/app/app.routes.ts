@@ -60,7 +60,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: `${SITE_NAME} — Enxovais e roupinhas feitas à mão`,
+        title: `${SITE_NAME} — Fraldas de ombro e boca bordadas à mão`,
         loadComponent: () => import('./features/public/home/home').then((m) => m.Home),
       },
       {

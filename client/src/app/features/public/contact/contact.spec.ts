@@ -52,8 +52,8 @@ describe('Contact', () => {
     component.form.patchValue({
       customerName: 'Maria Silva',
       isCustomOrder: true,
-      tipoPeca: 'Manta',
-      tamanho: 'RN',
+      tipoPeca: 'Fralda de Ombro',
+      tamanho: 'Padrão',
       tecido: 'algodão pima',
       cor: 'rosa claro',
       message: 'Quero para o mês que vem.',
@@ -63,7 +63,7 @@ describe('Contact', () => {
 
     const text = decodeURIComponent(submittedUrl().split('text=')[1]);
     expect(text).toContain('encomenda personalizada');
-    expect(text).toContain('Tipo de peça: Manta');
+    expect(text).toContain('Tipo de peça: Fralda de Ombro');
     expect(text).toContain('Tecido desejado: algodão pima');
     expect(text).toContain('Cor: rosa claro');
   });
