@@ -1,1 +1,1 @@
-export const SITE_NAME = 'Layette Baby';
+export const SITE_NAME = 'Ateliê Layette Baby';

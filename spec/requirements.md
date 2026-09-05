@@ -1,8 +1,8 @@
-# Requirements Document — Layette Baby
+# Requirements Document — Ateliê Layette Baby
 
 ## Introdução
 
-O Layette Baby é uma plataforma de e-commerce e gestão de encomendas para um ateliê especializado em fraldas de ombro e boca bordadas à mão (individuais ou em kit). Este documento formaliza, no padrão *Spec-Driven Development* (user story + critérios de aceite em EARS — Easy Approach to Requirements Syntax), os requisitos do sistema **tal como construído**. Ele complementa (não substitui) `README.md`, que mantém a tabela de requisitos numerados (RF01–RF26, RNF01–RNF08) usada como referência rápida — cada requisito abaixo cita o(s) RF/RNF correspondente(s) para rastreabilidade.
+O Ateliê Layette Baby é uma plataforma de e-commerce e gestão de encomendas para um ateliê especializado em fraldas de ombro e boca bordadas à mão (individuais ou em kit). Este documento formaliza, no padrão *Spec-Driven Development* (user story + critérios de aceite em EARS — Easy Approach to Requirements Syntax), os requisitos do sistema **tal como construído**. Ele complementa (não substitui) `README.md`, que mantém a tabela de requisitos numerados (RF01–RF26, RNF01–RNF08) usada como referência rápida — cada requisito abaixo cita o(s) RF/RNF correspondente(s) para rastreabilidade.
 
 Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente** (autenticado com papel `customer`), **Administrador** (autenticado com papel `admin`) e **Sistema** (comportamentos automáticos, sem ator humano direto).
 
