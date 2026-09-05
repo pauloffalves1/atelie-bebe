@@ -15,6 +15,8 @@ Git repo hosted at `github.com/pauloffalves1/atelie-bebe` (remote `origin`, bran
 
 `README.md` at the repo root is the canonical, detailed reference for architecture diagrams (Mermaid), the full business-rule catalog, and numbered functional/non-functional requirements (RF01–RF25, RNF01–RNF08) — read it for anything beyond the condensed architecture notes below rather than re-deriving it from source.
 
+`spec/` holds the same requirements reframed as formal Spec-Driven Development docs: `requirements.md` (user story + EARS acceptance criteria per requirement, cross-referenced to the README's RF/RNF numbers), `design.md` (the same architecture with a components/interfaces/data-model breakdown per requirement), and `tasks.md` (a requirement-traceable implementation checklist — everything existing is checked off; append new `[ ]` tasks there, under a new `requirements.md` entry first, before starting a new feature).
+
 ## Commands
 
 ### Backend (`server/`)

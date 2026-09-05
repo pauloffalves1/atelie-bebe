@@ -1,0 +1,75 @@
+# Implementation Plan — Ateliê Bebê
+
+Este plano reflete o que já está **implementado e verificado** no sistema (marcado `[x]`), organizado pelos requisitos de `requirements.md`. Serve como registro de rastreabilidade requisito → código, e como template para novas tarefas: ao planejar uma funcionalidade nova, adicione-a como `[ ]` na seção correspondente (ou crie uma nova seção) e referencie o(s) requisito(s) que ela atende.
+
+- [x] 1. Domínio: entidades, value objects e eventos
+  - [x] 1.1 Implementar `Entity`/`IAggregateRoot` e o mecanismo de eventos de domínio (`Domain/Common`)
+  - [x] 1.2 Implementar `Money` e `Email` como value objects imutáveis com invariantes (Requisito 2, 5, 12)
+  - [x] 1.3 Implementar `Product` com invariantes de estoque e evento de estoque baixo (Requisito 7)
+  - [x] 1.4 Implementar `Order`/`OrderItem` com máquina de estados e imutabilidade pós-`Recebido` (Requisito 2, 8)
+  - [x] 1.5 Implementar `Customer`, `Admin`, `ContactMessage` (Requisito 5, 6, 9)
+  - [x] 1.6 Cobrir as regras acima com testes de unidade (`AtelieBebe.Domain.Tests`, 58 testes)
+
+- [x] 2. Infraestrutura: persistência, outbox e segurança
+  - [x] 2.1 Configurar `AppDbContext` + `IEntityTypeConfiguration` por entidade, migrations EF Core
+  - [x] 2.2 Implementar repositórios e `UnitOfWork`
+  - [x] 2.3 Implementar `DomainEventsToOutboxInterceptor` (grava evento na mesma transação) (Requisito 11)
+  - [x] 2.4 Implementar `OutboxProcessor` (polling 5s, lote 20, retry até 5 tentativas) (Requisito 11)
+  - [x] 2.5 Implementar `BCryptPasswordHasher` e `JwtTokenGenerator` (Requisito 5, 6, 12)
+  - [x] 2.6 Mover o segredo JWT para `dotnet user-secrets`, fora do controle de versão (Requisito 12)
+  - [x] 2.7 Implementar `DbInitializer` idempotente (seed de admin + catálogo, sem duplicar ao reexecutar)
+
+- [x] 3. Aplicação: casos de uso
+  - [x] 3.1 `ProductService` — listar/filtrar/CRUD/estoque/ativação (Requisito 1, 7)
+  - [x] 3.2 `OrderService` — criar pedido de loja/personalizado, listar, mudar status (Requisito 2, 4, 8)
+  - [x] 3.3 `CustomerAuthService` / `AdminAuthService` — registro e login (Requisito 5, 6)
+  - [x] 3.4 `ContactService` — submissão e listagem de mensagens (Requisito 9)
+  - [x] 3.5 `DashboardService` — agregação de métricas (Requisito 10)
+
+- [x] 4. API: endpoints e composição
+  - [x] 4.1 Mapear grupos de endpoints por feature (`Endpoints/*.cs`), públicos em `/api/*`, admin em `/api/admin/*`
+  - [x] 4.2 Configurar autenticação JWT Bearer e policies `AdminOnly`/`CustomerOnly`
+  - [x] 4.3 Configurar CORS a partir de `Cors:AllowedOrigins`
+  - [x] 4.4 Implementar `AppExceptionHandler` central (mapa exceção → `ProblemDetails`) (Requisito 12)
+  - [x] 4.5 Rodar migrations + seed automaticamente no startup
+
+- [x] 5. Frontend: loja pública
+  - [x] 5.1 `Home`, `Shop`, `ProductDetail` consumindo `ProductService` (Requisito 1)
+  - [x] 5.2 `CartService` (signals + `localStorage`) com limite por estoque (Requisito 2)
+  - [x] 5.3 `CartPage`, `Checkout` com validação por campo e criação de pedido (Requisito 2)
+  - [x] 5.4 `OrderConfirmation`, `MyAccount` (Requisito 4)
+  - [x] 5.5 `LoginPage`, `RegisterPage`, `AuthService` (Requisito 5)
+  - [x] 5.6 Unificar contato + encomenda personalizada em `Contact`, com montagem de mensagem e link `wa.me` (Requisito 3)
+  - [x] 5.7 Redesenhar layout visual de `Contact` (card "Outros canais", selos de confiança, alternador destacado)
+  - [x] 5.8 Redirecionar `/encomenda-personalizada` → `/contato`; atualizar nav/footer/CTAs (Requisito 3)
+
+- [x] 6. Frontend: painel administrativo
+  - [x] 6.1 `AdminLogin`, `AdminAuthService`, `adminGuard` (Requisito 6)
+  - [x] 6.2 `AdminProductList`, `AdminProductForm` com validação por campo (Requisito 7)
+  - [x] 6.3 `AdminOrderList`, `AdminOrderDetail` com transição de status (Requisito 8)
+  - [x] 6.4 `AdminContactMessages` (Requisito 9)
+  - [x] 6.5 `AdminDashboard` consumindo `IDashboardService` (Requisito 10)
+
+- [x] 7. Qualidade e acessibilidade transversal
+  - [x] 7.1 Associar `label for`/`input id` em todos os formulários (Requisito 12 — usabilidade)
+  - [x] 7.2 Substituir banner de erro genérico por validação por campo (`is-invalid`/`invalid-feedback`) em todos os formulários
+  - [x] 7.3 Adicionar título de página (`Router.title`) e meta description dinâmica por rota
+  - [x] 7.4 Adicionar `loading="lazy"` às imagens fora da dobra (grades de produto, carrinho, galeria)
+  - [x] 7.5 Reduzir o CSS do Bootstrap aos partials realmente usados (~314 KB → ~270 KB)
+  - [x] 7.6 Testes de frontend: `CartService`, `Contact` (mensagem WhatsApp), guards, `ProductService` (25 testes)
+
+- [x] 8. Dados de catálogo
+  - [x] 8.1 Semear categorias e produtos iniciais (Bodies, Mantas, Saída de Maternidade, Kits Enxoval, Acessórios)
+  - [x] 8.2 Adicionar produtos bordados nas categorias Roupinhas, Acessórios e Toalhas (Requisito 1)
+
+- [x] 9. Documentação e operação
+  - [x] 9.1 `README.md` — arquitetura, tecnologias, regras de negócio, requisitos numerados (RF/RNF)
+  - [x] 9.2 `CLAUDE.md` — guia de arquitetura e comandos para sessões futuras de agente
+  - [x] 9.3 `spec/requirements.md`, `spec/design.md`, `spec/tasks.md` — este conjunto de documentos SDD
+  - [x] 9.4 Repositório Git inicializado e publicado em `github.com/pauloffalves1/atelie-bebe`
+
+## Próximas tarefas (não iniciadas)
+
+Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo foi iniciada ainda.
+
+- [ ] 10. (placeholder) Descreva aqui a próxima funcionalidade antes de implementá-la, quebrada em subtarefas incrementais e referenciando os requisitos que ela precisa satisfazer (adicione-os primeiro em `requirements.md` se ainda não existirem).

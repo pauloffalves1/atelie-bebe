@@ -21,6 +21,8 @@ Monorepo com dois projetos independentes:
 | [`server/`](./server) | .NET 10 · ASP.NET Core Minimal APIs · EF Core · SQLite | API REST, Clean Architecture |
 | [`client/`](./client) | Angular 22 · standalone components · Bootstrap 5 | SPA (loja pública + painel admin) |
 
+Os requisitos deste README (RF/RNF) têm uma versão formal, no padrão *Spec-Driven Development* (user stories + critérios de aceite EARS, design técnico e plano de tarefas rastreável), em [`spec/`](./spec): [`requirements.md`](./spec/requirements.md), [`design.md`](./spec/design.md) e [`tasks.md`](./spec/tasks.md).
+
 ## Sumário
 
 - [Tecnologias](#tecnologias)
