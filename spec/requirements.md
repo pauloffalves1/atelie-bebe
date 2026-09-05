@@ -287,3 +287,16 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. O SISTEMA DEVE aceitar o CPF formatado (`000.000.000-00`) ou apenas os dígitos, normalizando para armazenamento.
 3. O SISTEMA NÃO DEVE permitir duas contas de cliente com o mesmo CPF — um cadastro com um CPF já usado por outra conta É REJEITADO.
 4. Contas de cliente já existentes antes deste requisito, que não têm CPF registrado, PERMANECEM válidas (o campo fica em branco para elas) — este requisito não é retroativo.
+
+---
+
+## Requisito 18: Listagem de clientes no admin
+
+**User Story:** Como administrador, quero ver a lista de todos os clientes cadastrados, para consultar quem já tem conta no ateliê e seus dados de contato.
+
+**Rastreamento:** RF31.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE oferecer uma tela administrativa (`/admin/clientes`) listando nome, e-mail, telefone, CPF e data de cadastro de todos os clientes.
+2. QUANDO um cliente não tem telefone ou CPF registrado (conta anterior ao Requisito 17), O SISTEMA DEVE exibir um traço (`—`) no lugar do dado ausente, sem quebrar a listagem.
+3. Esta tela reaproveita o endpoint `GET /api/admin/customers` já existente (usado pelo seletor de clientes exclusivos do Requisito 14) — não pagina, pelo mesmo motivo que o seletor precisa da lista completa de uma vez.

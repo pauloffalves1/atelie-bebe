@@ -180,4 +180,12 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 17.7 `dotnet test`/`ng test` completos (71+20 backend, 26 frontend); verificado via API: CPF válido aceito (200), CPF com dígito verificador errado rejeitado (400, mensagem clara), CPF duplicado rejeitado (409); migration aplicada localmente sem quebrar clientes existentes (coluna nullable)
     - [x] 17.8 `README.md` (RF30), `spec/requirements.md` (Requisito 17) e `spec/design.md` (Requisito 17) atualizados
+  - Máscara de telefone/WhatsApp (transversal, não numerado como requisito próprio)
+    - [x] 17.9 Novo `PhoneMaskDirective` (`shared/directives/phone-mask.directive.ts`); aplicado em `register-page`, `checkout` e `contact`
+
+- [x] 18. Listagem de clientes no admin (Requisito 18 / RF31, design em `spec/design.md`)
+  - [x] 18.1 `CustomerSummaryDto`/`CustomerSummary` ganham `Phone`/`Cpf`/`CreatedAt` (campos aditivos — `ICustomerAdminService`/endpoint continuam sem paginação, reaproveitados do seletor de clientes exclusivos do Requisito 14)
+  - [x] 18.2 Nova tela `admin-customer-list` (`/admin/clientes`) + link no menu lateral do admin
+  - [x] 18.3 `dotnet test`/`ng test` completos (71+20 backend, 26 frontend); verificado visualmente: tela lista clientes com `—` para telefone/CPF ausente; seletor de clientes exclusivos (Requisito 14) continua funcionando sem regressão
+  - [x] 18.4 `README.md` (RF31) e `spec/requirements.md`/`spec/design.md` (Requisito 18) atualizados
   - [x] 16.3 `spec/requirements.md` (Requisito 15: user story e critérios reescritos, nota de histórico da mudança de escopo) e `spec/design.md` (seção "Frontend — bordado em todos os produtos") atualizados

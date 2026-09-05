@@ -262,6 +262,7 @@ npm test        # testes unitários (Vitest)
 | RF27 | O sistema deve permitir associar um produto a um ou mais clientes específicos, tornando-o exclusivo — visível e encomendável apenas por eles, ausente das listagens (loja, categorias, destaque) e respondendo 404 no detalhe para quem não tem acesso | Administrador / Cliente |
 | RF28 | O sistema deve permitir que o cliente informe, ao adicionar qualquer produto ao carrinho, o texto a ser bordado e a quantidade de peças com esse mesmo bordado, persistindo essa personalização no pedido e exibindo-a no detalhe administrativo da encomenda | Cliente / Administrador |
 | RF30 | O sistema deve exigir um CPF válido e único no cadastro de cliente (`POST /api/auth/register`), rejeitando CPF ausente, com dígitos verificadores inválidos ou já usado por outra conta; contas criadas antes deste requisito permanecem válidas sem CPF | Visitante |
+| RF31 | O sistema deve permitir que o administrador liste todas as contas de cliente cadastradas (nome, e-mail, telefone, CPF e data de cadastro) | Administrador |
 
 ### Requisitos não funcionais
 

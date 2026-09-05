@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
 /** Atelier's WhatsApp number in E.164 (no symbols), used to build the wa.me deep link. */
 const WHATSAPP_NUMBER = '5511942361443';
@@ -8,7 +9,7 @@ const WHATSAPP_NUMBER = '5511942361443';
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PhoneMaskDirective],
   templateUrl: './contact.html',
 })
 export class Contact implements OnInit {

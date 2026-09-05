@@ -7,11 +7,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { CepService } from '../../../core/services/cep.service';
 import { OrderService } from '../../../core/services/order.service';
+import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CurrencyPipe, ReactiveFormsModule, RouterLink],
+  imports: [CurrencyPipe, ReactiveFormsModule, RouterLink, PhoneMaskDirective],
   templateUrl: './checkout.html',
 })
 export class Checkout implements OnInit {
