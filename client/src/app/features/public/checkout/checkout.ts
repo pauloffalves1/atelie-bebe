@@ -114,7 +114,7 @@ export class Checkout implements OnInit {
           productName: item.product.name,
           unitPrice: item.product.price,
           quantity: item.quantity,
-          optionsJson: null,
+          optionsJson: item.embroideryText ? JSON.stringify({ embroideryText: item.embroideryText }) : null,
         })),
       })
       .subscribe({

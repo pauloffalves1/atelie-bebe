@@ -259,6 +259,8 @@ npm test        # testes unitários (Vitest)
 | RF24 | O sistema deve notificar o cliente na confirmação de criação de um pedido | Sistema |
 | RF25 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
 | RF26 | O sistema deve paginar as listagens de produtos (loja e admin), encomendas (admin) e mensagens de contato (admin), aceitando `page`/`pageSize` e devolvendo o total de itens e páginas | Visitante / Administrador |
+| RF27 | O sistema deve permitir associar um produto a um ou mais clientes específicos, tornando-o exclusivo — visível e encomendável apenas por eles, ausente das listagens (loja, categorias, destaque) e respondendo 404 no detalhe para quem não tem acesso | Administrador / Cliente |
+| RF28 | O sistema deve permitir que o cliente informe, ao adicionar um produto exclusivo ao carrinho, o texto a ser bordado e a quantidade de peças com esse mesmo bordado, persistindo essa personalização no pedido e exibindo-a no detalhe administrativo da encomenda | Cliente / Administrador |
 
 ### Requisitos não funcionais
 
@@ -282,6 +284,7 @@ npm test        # testes unitários (Vitest)
 - Produtos podem ser marcados como **destaque** (`Featured`) para aparecer na home, e **ativos/inativos** (`Active`); apenas produtos ativos aparecem na listagem e busca pública — produtos inativos continuam visíveis e editáveis no painel admin.
 - Reservar estoque para um pedido de loja (`Reserve`) falha explicitamente se a quantidade pedida exceder o disponível — não há venda com estoque negativo.
 - Sempre que o estoque de um produto cai para **3 unidades ou menos** (`LowStockThreshold`), um evento de estoque baixo é emitido, tanto ao ajustar estoque manualmente quanto ao reservar por um pedido.
+- Um produto sem nenhum cliente associado é **público** (visível a todos, como hoje). Associar um ou mais clientes o torna **exclusivo**: some das listagens públicas (loja, categorias, destaque) e do detalhe (404) para quem não está na lista de acesso — inclusive administradores continuam vendo tudo nas telas administrativas, independentemente da regra de visibilidade pública. Um produto exclusivo aceita personalização de bordado (texto + quantidade de peças) no carrinho; produtos públicos não oferecem esse campo.
 
 ### Pedidos e ciclo de vida
 

@@ -25,5 +25,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnName("PriceAmount")
             .HasColumnType("decimal(18,2)")
             .IsRequired();
+
+        builder.HasMany<ProductCustomerAccessEntry>("_allowedCustomerAccess")
+            .WithOne()
+            .HasForeignKey("ProductId")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

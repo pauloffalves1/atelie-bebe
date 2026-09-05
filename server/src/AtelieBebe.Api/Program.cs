@@ -70,6 +70,7 @@ app.MapProductEndpoints();
 app.MapOrderEndpoints();
 app.MapDashboardEndpoints();
 app.MapContactEndpoints();
+app.MapCustomerEndpoints();
 
 await DbInitializer.InitializeAsync(app.Services);
 

@@ -13,13 +13,13 @@ public static class OrderEndpoints
         // is an authenticated customer, the order is linked to their account automatically.
         group.MapPost("/store", async (CreateStoreOrderRequest request, HttpContext http, IOrderService service, CancellationToken ct) =>
         {
-            var customerId = TryGetCustomerId(http);
+            var customerId = http.User.GetUserIdOrNull();
             return Results.Ok(await service.CreateStoreOrderAsync(request, customerId, ct));
         });
 
         group.MapPost("/custom", async (CreateCustomOrderRequest request, HttpContext http, IOrderService service, CancellationToken ct) =>
         {
-            var customerId = TryGetCustomerId(http);
+            var customerId = http.User.GetUserIdOrNull();
             return Results.Ok(await service.CreateCustomOrderAsync(request, customerId, ct));
         });
 
@@ -38,7 +38,4 @@ public static class OrderEndpoints
         adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, IOrderService service, CancellationToken ct) =>
             Results.Ok(await service.ChangeStatusAsync(id, request, ct)));
     }
-
-    private static Guid? TryGetCustomerId(HttpContext http) =>
-        http.User.Identity?.IsAuthenticated == true ? http.User.GetUserId() : null;
 }

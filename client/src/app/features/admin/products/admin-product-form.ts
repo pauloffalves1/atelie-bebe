@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CustomerSummary } from '../../../core/models/customer.model';
+import { CustomerAdminService } from '../../../core/services/customer-admin.service';
 import { ProductService } from '../../../core/services/product.service';
 
 @Component({
@@ -17,6 +19,11 @@ export class AdminProductForm implements OnInit {
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
+  readonly customers = signal<CustomerSummary[]>([]);
+  readonly selectedCustomerIds = signal<string[]>([]);
+  readonly savingCustomers = signal(false);
+  readonly customersSaved = signal(false);
+
   private productId: string | null = null;
 
   readonly form = this.fb.nonNullable.group({
@@ -31,11 +38,14 @@ export class AdminProductForm implements OnInit {
 
   constructor(
     private readonly productService: ProductService,
+    private readonly customerAdminService: CustomerAdminService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
+    this.customerAdminService.list().subscribe((customers) => this.customers.set(customers));
+
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;
 
@@ -54,9 +64,32 @@ export class AdminProductForm implements OnInit {
           description: product.description ?? '',
           featured: product.featured,
         });
+        this.selectedCustomerIds.set(product.allowedCustomerIds);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  toggleCustomer(customerId: string, checked: boolean): void {
+    const current = this.selectedCustomerIds();
+    this.selectedCustomerIds.set(
+      checked ? [...current, customerId] : current.filter((id) => id !== customerId),
+    );
+  }
+
+  saveCustomerAccess(): void {
+    if (!this.productId) return;
+
+    this.savingCustomers.set(true);
+    this.customersSaved.set(false);
+    this.productService.setAllowedCustomers(this.productId, this.selectedCustomerIds()).subscribe({
+      next: () => {
+        this.savingCustomers.set(false);
+        this.customersSaved.set(true);
+        setTimeout(() => this.customersSaved.set(false), 2500);
+      },
+      error: () => this.savingCustomers.set(false),
     });
   }
 

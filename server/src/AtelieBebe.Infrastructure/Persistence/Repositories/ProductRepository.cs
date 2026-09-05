@@ -10,21 +10,32 @@ public sealed class ProductRepository : IProductRepository
 
     public ProductRepository(AppDbContext dbContext) => _dbContext = dbContext;
 
+    /// <summary>Products with the customer-access grants eagerly loaded, so IsExclusive/AllowedCustomerIds/HasAccess read correctly in memory.</summary>
+    private IQueryable<Product> ProductsWithAccess => _dbContext.Products.Include("_allowedCustomerAccess");
+
     public Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
-        _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
+        ProductsWithAccess.FirstOrDefaultAsync(p => p.Id == id, ct);
 
-    public Task<Product?> GetBySlugAsync(string slug, CancellationToken ct = default) =>
-        _dbContext.Products.FirstOrDefaultAsync(p => p.Slug == slug, ct);
+    public Task<Product?> GetBySlugAsync(string slug, Guid? customerId = null, CancellationToken ct = default) =>
+        ApplyVisibility(ProductsWithAccess.Where(p => p.Slug == slug), customerId).FirstOrDefaultAsync(ct);
 
-    public async Task<(IReadOnlyList<Product> Items, int TotalItems)> ListAsync(string? category, bool onlyActive, int page, int pageSize, CancellationToken ct = default)
+    public Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default) =>
+        _dbContext.Products.AnyAsync(p => p.Slug == slug, ct);
+
+    public async Task<(IReadOnlyList<Product> Items, int TotalItems)> ListAsync(string? category, bool onlyActive, int page, int pageSize, Guid? customerId = null, CancellationToken ct = default)
     {
-        var query = _dbContext.Products.AsQueryable();
+        var query = ProductsWithAccess;
 
         if (onlyActive)
             query = query.Where(p => p.Active);
 
         if (!string.IsNullOrWhiteSpace(category))
             query = query.Where(p => p.Category == category);
+
+        // Admin listings (onlyActive: false) show every product regardless of exclusivity;
+        // only the customer-facing catalog (onlyActive: true) is restricted by access grants.
+        if (onlyActive)
+            query = ApplyVisibility(query, customerId);
 
         query = query.OrderBy(p => p.Name);
 
@@ -34,15 +45,13 @@ public sealed class ProductRepository : IProductRepository
         return (items, totalItems);
     }
 
-    public async Task<IReadOnlyList<Product>> ListFeaturedAsync(CancellationToken ct = default) =>
-        await _dbContext.Products
-            .Where(p => p.Active && p.Featured)
+    public async Task<IReadOnlyList<Product>> ListFeaturedAsync(Guid? customerId = null, CancellationToken ct = default) =>
+        await ApplyVisibility(ProductsWithAccess.Where(p => p.Active && p.Featured), customerId)
             .OrderBy(p => p.Name)
             .ToListAsync(ct);
 
-    public async Task<IReadOnlyList<string>> ListCategoriesAsync(CancellationToken ct = default) =>
-        await _dbContext.Products
-            .Where(p => p.Active)
+    public async Task<IReadOnlyList<string>> ListCategoriesAsync(Guid? customerId = null, CancellationToken ct = default) =>
+        await ApplyVisibility(_dbContext.Products.Where(p => p.Active), customerId)
             .Select(p => p.Category)
             .Distinct()
             .OrderBy(c => c)
@@ -51,4 +60,17 @@ public sealed class ProductRepository : IProductRepository
     public void Add(Product product) => _dbContext.Products.Add(product);
 
     public void Remove(Product product) => _dbContext.Products.Remove(product);
+
+    /// <summary>
+    /// Restricts a product query to products that are public, or exclusive products the given customer
+    /// was granted access to. Translated to SQL as an EXISTS subquery against ProductCustomerAccess.
+    /// </summary>
+    private IQueryable<Product> ApplyVisibility(IQueryable<Product> query, Guid? customerId)
+    {
+        var access = _dbContext.Set<ProductCustomerAccessEntry>();
+
+        return query.Where(p =>
+            !access.Any(a => EF.Property<Guid>(a, "ProductId") == p.Id) ||
+            (customerId != null && access.Any(a => EF.Property<Guid>(a, "ProductId") == p.Id && a.CustomerId == customerId)));
+    }
 }

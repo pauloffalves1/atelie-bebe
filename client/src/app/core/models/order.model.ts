@@ -54,6 +54,10 @@ export interface CustomOrderDetails {
   observacoes: string;
 }
 
+export interface OrderItemOptions {
+  embroideryText?: string;
+}
+
 export interface ShippingAddress {
   street: string;
   number: string;

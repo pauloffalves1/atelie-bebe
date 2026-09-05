@@ -9,6 +9,11 @@ export interface Product {
   stock: number;
   active: boolean;
   featured: boolean;
+  isExclusive: boolean;
+}
+
+export interface AdminProduct extends Product {
+  allowedCustomerIds: string[];
 }
 
 export interface CreateProductRequest {

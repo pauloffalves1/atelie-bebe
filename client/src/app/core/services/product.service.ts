@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PagedResult } from '../models/pagination.model';
-import { CreateProductRequest, Product, UpdateProductRequest } from '../models/product.model';
+import { AdminProduct, CreateProductRequest, Product, UpdateProductRequest } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -36,8 +36,12 @@ export class ProductService {
     return this.http.get<PagedResult<Product>>(this.adminUrl, { params: { page, pageSize } });
   }
 
-  getById(id: string): Observable<Product> {
-    return this.http.get<Product>(`${this.adminUrl}/${id}`);
+  getById(id: string): Observable<AdminProduct> {
+    return this.http.get<AdminProduct>(`${this.adminUrl}/${id}`);
+  }
+
+  setAllowedCustomers(id: string, customerIds: string[]): Observable<AdminProduct> {
+    return this.http.put<AdminProduct>(`${this.adminUrl}/${id}/customers`, { customerIds });
   }
 
   create(request: CreateProductRequest): Observable<Product> {

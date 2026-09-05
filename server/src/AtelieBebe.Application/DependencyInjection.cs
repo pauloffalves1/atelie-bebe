@@ -1,5 +1,6 @@
 using AtelieBebe.Application.Auth;
 using AtelieBebe.Application.Contact;
+using AtelieBebe.Application.Customers;
 using AtelieBebe.Application.Orders;
 using AtelieBebe.Application.Products;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerAuthService, CustomerAuthService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<IContactService, ContactService>();
+        services.AddScoped<ICustomerAdminService, CustomerAdminService>();
         return services;
     }
 }

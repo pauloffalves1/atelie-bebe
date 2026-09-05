@@ -22,7 +22,14 @@
           <ul class="list-unstyled mb-0">
             @for (item of o.items; track item.id) {
               <li class="d-flex justify-content-between border-bottom py-2">
-                <span>{{ item.quantity }}x {{ item.productName }}</span>
+                <span>
+                  {{ item.quantity }}x {{ item.productName }}
+                  @if (parsedItemOptions(item.optionsJson); as options) {
+                    @if (options.embroideryText) {
+                      <span class="d-block small text-secondary"><i class="bi bi-scissors me-1"></i>Bordado: {{ options.embroideryText }}</span>
+                    }
+                  }
+                </span>
                 <span>{{ item.subtotal | currency:'BRL' }}</span>
               </li>
             }

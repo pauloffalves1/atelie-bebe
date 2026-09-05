@@ -36,7 +36,7 @@ public sealed class OrderService : IOrderService
                     ?? throw new NotFoundException("Produto", productId);
 
                 product.Reserve(itemRequest.Quantity);
-                order.AddItem(product.Id, product.Name, product.Price, itemRequest.Quantity);
+                order.AddItem(product.Id, product.Name, product.Price, itemRequest.Quantity, itemRequest.OptionsJson);
             }
             else
             {

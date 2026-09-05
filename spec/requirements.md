@@ -225,11 +225,9 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ## Requisito 14: Produtos exclusivos por cliente
 
-> **Status:** proposto — ainda não implementado.
-
 **User Story:** Como administrador, quero cadastrar produtos que só determinados clientes podem ver e encomendar (ex.: kit berço, carrinho, lençol), para oferecer itens sob consulta ou de catálogo estendido sem torná-los públicos.
 
-**Rastreamento:** provisório — será adicionado ao README como RF27 quando implementado.
+**Rastreamento:** RF27.
 
 **Acceptance Criteria**
 1. Um produto PODE ser associado a zero, um ou vários clientes (relação N:N). Um produto sem nenhum cliente associado é considerado **público** — o comportamento atual (visível a todos) não muda.
@@ -244,11 +242,9 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ## Requisito 15: Personalização de bordado em produtos exclusivos
 
-> **Status:** proposto — ainda não implementado.
-
 **User Story:** Como cliente com acesso a um produto exclusivo, quero informar quais letras devem ser bordadas e em quantas peças, para receber o item personalizado conforme pedido.
 
-**Rastreamento:** provisório — será adicionado ao README como RF28 quando implementado.
+**Rastreamento:** RF28.
 
 **Acceptance Criteria**
 1. QUANDO um cliente adiciona ao carrinho um produto exclusivo ao qual tem acesso, O SISTEMA DEVE oferecer um campo de texto para as letras/inscrição a bordar, além da quantidade.

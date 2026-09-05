@@ -21,7 +21,12 @@
         </div>
 
         <div class="col-lg-6">
-          <span class="badge-soft mb-3 d-inline-block">{{ p.category }}</span>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge-soft d-inline-block">{{ p.category }}</span>
+            @if (p.isExclusive) {
+              <span class="badge-soft d-inline-block"><i class="bi bi-stars me-1"></i>Exclusivo pra você</span>
+            }
+          </div>
           <h1 class="mb-3">{{ p.name }}</h1>
           <p class="fs-3 fw-bold text-blush mb-4">{{ p.price | currency:'BRL' }}</p>
           <p class="text-secondary">{{ p.description }}</p>
@@ -29,8 +34,20 @@
           @if (p.stock === 0) {
             <div class="alert alert-warning rounded-4 mt-4"><i class="bi bi-exclamation-triangle me-2"></i>Produto esgotado no momento.</div>
           } @else {
+            @if (p.isExclusive) {
+              <div class="my-4">
+                <label for="embroidery-text" class="fw-semibold small">Texto para bordar</label>
+                <input type="text" id="embroidery-text" class="form-control" placeholder="Ex: ANA" maxlength="30"
+                  [class.is-invalid]="embroideryTouched() && !embroideryText().trim()"
+                  [ngModel]="embroideryText()" (ngModelChange)="embroideryText.set($event)">
+                @if (embroideryTouched() && !embroideryText().trim()) {
+                  <div class="invalid-feedback">Informe as letras que devem ser bordadas.</div>
+                }
+              </div>
+            }
+
             <div class="d-flex align-items-center gap-3 my-4">
-              <label class="fw-semibold small">Quantidade</label>
+              <label class="fw-semibold small">Quantidade {{ p.isExclusive ? 'com esse bordado' : '' }}</label>
               <input type="number" class="form-control" style="width: 90px" [min]="1" [max]="p.stock" [ngModel]="quantity()" (ngModelChange)="quantity.set($event)">
               <span class="small text-secondary">{{ p.stock }} em estoque</span>
             </div>

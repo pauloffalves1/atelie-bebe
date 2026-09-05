@@ -21,6 +21,14 @@ public sealed class Product : Entity, IAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
+    private readonly List<ProductCustomerAccessEntry> _allowedCustomerAccess = new();
+
+    /// <summary>Customers this product is restricted to. Empty means the product is public.</summary>
+    public IReadOnlyCollection<Guid> AllowedCustomerIds => _allowedCustomerAccess.Select(e => e.CustomerId).ToList().AsReadOnly();
+
+    /// <summary>A product with at least one allowed customer is exclusive — invisible to everyone else.</summary>
+    public bool IsExclusive => _allowedCustomerAccess.Count > 0;
+
     private Product() { } // EF Core
 
     private Product(Guid id, string name, string slug, string? description, Money price,
@@ -104,4 +112,16 @@ public sealed class Product : Entity, IAggregateRoot
         if (Stock <= LowStockThreshold)
             AddDomainEvent(new ProductLowStockDomainEvent(Id, Name, Stock));
     }
+
+    /// <summary>Replaces the full set of customers allowed to see/order this product. An empty set makes it public again.</summary>
+    public void SetAllowedCustomers(IEnumerable<Guid> customerIds)
+    {
+        _allowedCustomerAccess.Clear();
+        _allowedCustomerAccess.AddRange(customerIds.Distinct().Select(id => new ProductCustomerAccessEntry(id)));
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Public products are visible to everyone; exclusive products only to their allowed customers.</summary>
+    public bool HasAccess(Guid? customerId) =>
+        !IsExclusive || (customerId is { } id && _allowedCustomerAccess.Any(e => e.CustomerId == id));
 }

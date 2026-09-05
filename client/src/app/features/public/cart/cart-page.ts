@@ -12,11 +12,11 @@ import { CartService } from '../../../core/services/cart.service';
 export class CartPage {
   constructor(readonly cart: CartService) {}
 
-  increment(productId: string, current: number, max: number): void {
-    if (current < max) this.cart.updateQuantity(productId, current + 1);
+  increment(productId: string, current: number, max: number, embroideryText?: string | null): void {
+    if (current < max) this.cart.updateQuantity(productId, current + 1, embroideryText);
   }
 
-  decrement(productId: string, current: number): void {
-    this.cart.updateQuantity(productId, current - 1);
+  decrement(productId: string, current: number, embroideryText?: string | null): void {
+    this.cart.updateQuantity(productId, current - 1, embroideryText);
   }
 }

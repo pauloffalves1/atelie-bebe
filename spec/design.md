@@ -253,24 +253,24 @@ Eventos de domínio (todos `sealed record : DomainEventBase`, carregando `EventI
 - Enumeração de contas: mensagem de erro de login idêntica para e-mail inexistente e senha incorreta (Requisito 5, 6).
 - `authInterceptor` só anexa o token Bearer a requisições para `environment.apiUrl` — nunca para domínios de terceiros como a ViaCEP (Requisito 2, item 13). Qualquer novo serviço que chame uma API externa herda essa proteção automaticamente, por ser aplicada no interceptor global.
 
-## Requisito 14 e 15 — Produtos exclusivos por cliente e bordado (proposto)
-
-> Design ainda não implementado.
+## Requisito 14 e 15 — Produtos exclusivos por cliente e bordado
 
 ### Modelo de dados
 
-`Product` (Domain) ganha uma coleção de IDs de cliente com acesso, controlada por comportamento (não uma lista pública mutável):
+`Product` (Domain) ganha uma coleção de acessos de cliente, controlada por comportamento (não uma lista pública mutável):
 
 ```csharp
-private readonly List<Guid> _allowedCustomerIds = new();
-public IReadOnlyCollection<Guid> AllowedCustomerIds => _allowedCustomerIds.AsReadOnly();
-public bool IsExclusive => _allowedCustomerIds.Count > 0;
+private readonly List<ProductCustomerAccessEntry> _allowedCustomerAccess = new();
+public IReadOnlyCollection<Guid> AllowedCustomerIds => _allowedCustomerAccess.Select(e => e.CustomerId).ToList().AsReadOnly();
+public bool IsExclusive => _allowedCustomerAccess.Count > 0;
 
 public void SetAllowedCustomers(IEnumerable<Guid> customerIds); // substitui o conjunto inteiro — usado pelo admin
-public bool HasAccess(Guid? customerId) => !IsExclusive || (customerId is Guid id && _allowedCustomerIds.Contains(id));
+public bool HasAccess(Guid? customerId) => !IsExclusive || (customerId is { } id && _allowedCustomerAccess.Any(e => e.CustomerId == id));
 ```
 
-Persistência: tabela própria `ProductCustomerAccess (ProductId, CustomerId)`, mapeada em `ProductConfiguration` como coleção owned da lista privada (join table, sem virar uma entidade de domínio rica — é só uma associação). Sem relação com `OrderItem`/`Order`; a associação vale só para visibilidade no catálogo, não fica "congelada" no pedido depois de criado.
+`ProductCustomerAccessEntry` é uma pequena entidade interna (`CustomerId` + FK sombra `ProductId`) que existe só para o EF Core mapear a coleção como uma tabela própria `ProductCustomerAccess (ProductId, CustomerId)` — mapeada em `ProductConfiguration`/`ProductCustomerAccessEntryConfiguration` como uma relação `HasMany().WithOne()` normal, e não como tipo owned: um tipo owned não pode ser consultado diretamente via `_dbContext.Set<T>()`, o que inviabilizaria o filtro `EXISTS` do repositório (abaixo). O Domain nunca referencia `ProductCustomerAccessEntry` diretamente — só `Guid`s via `AllowedCustomerIds`/`SetAllowedCustomers`/`HasAccess`. Sem relação com `OrderItem`/`Order`; a associação vale só para visibilidade no catálogo, não fica "congelada" no pedido depois de criado.
+
+Toda leitura de `Product` que precise refletir `IsExclusive`/`AllowedCustomerIds` corretamente (`GetByIdAsync`, `GetBySlugAsync`, `ListAsync`, `ListFeaturedAsync`) faz `Include("_allowedCustomerAccess")` — sem isso a coleção fica vazia em memória e `IsExclusive` sempre lê `false`, mesmo com grants no banco.
 
 `Order` não muda de modelo — o texto do bordado viaja em `OrderItem.OptionsJson` (campo já existente), como um JSON simples `{ "embroideryText": "ANA" }`.
 
@@ -278,14 +278,15 @@ Persistência: tabela própria `ProductCustomerAccess (ProductId, CustomerId)`, 
 
 | Camada | Mudança |
 |---|---|
-| `IProductRepository.ListAsync` | Ganha parâmetro `Guid? customerId`. Filtro SQL: `!p.IsExclusive OR EXISTS(access WHERE ProductId = p.Id AND CustomerId = @customerId)`. |
+| `IProductRepository.ListAsync`, `ListFeaturedAsync` | Ganham parâmetro `Guid? customerId`. Filtro SQL (`ApplyVisibility`): `!EXISTS(access WHERE ProductId = p.Id) OR (customerId != null AND EXISTS(access WHERE ProductId = p.Id AND CustomerId = @customerId))`. Em `ListAsync`, só aplicado quando `onlyActive: true` — a listagem admin (`onlyActive: false`) nunca filtra por visibilidade. `ListFeaturedAsync` também precisa do filtro: um produto exclusivo em destaque não pode vazar pelo card de "Destaques do ateliê" na home. |
 | `IProductRepository.GetBySlugAsync` | Mesma regra — se o produto for exclusivo e o `customerId` não tiver acesso, o repositório retorna `null` (o serviço já trata `null` como 404 via `NotFoundException`, sem mudança na `Api`). |
 | `IProductRepository.ListCategoriesAsync` | Ganha `Guid? customerId`, mesmo filtro, para a categoria de um produto exclusivo só aparecer no filtro de quem tem acesso. |
-| `ProductEndpoints.MapProductEndpoints` (`GET /api/products`, `/{slug}`, `/categories`) | Deixam de ser 100% anônimos: continuam **sem** `RequireAuthorization` (visitante sem token continua funcionando), mas passam a ler `http.User` — se autenticado como `customer`, extraem o `CustomerId` das claims (via `ClaimsPrincipalExtensions.GetUserId()`, já usado em `OrderEndpoints`) e repassam ao serviço. Token inválido/expirado não deve gerar 401 aqui — sem `RequireAuthorization`, o middleware de autenticação simplesmente não popula `http.User` como autenticado, e o endpoint trata como anônimo. |
+| `IProductRepository.SlugExistsAsync` (novo) | Checagem de unicidade de slug em `ProductService.CreateAsync`, sem o filtro de visibilidade — precisa detectar colisão mesmo com um produto exclusivo já usando o slug. |
+| `ProductEndpoints.MapProductEndpoints` (`GET /api/products`, `/featured`, `/{slug}`, `/categories`) | Deixam de ser 100% anônimos: continuam **sem** `RequireAuthorization` (visitante sem token continua funcionando), mas passam a ler `http.User` via `ClaimsPrincipalExtensions.GetUserIdOrNull()` (extensão nova, usada também para simplificar `OrderEndpoints`) e repassam o `customerId` ao serviço. Token inválido/expirado não gera 401 aqui — sem `RequireAuthorization`, o middleware de autenticação simplesmente não popula `http.User` como autenticado, e o endpoint trata como anônimo. |
 | `GET /api/admin/products` | Sem mudança de filtro — continua mostrando tudo, para todo administrador. |
 | `ProductDto` (público) | Ganha `IsExclusive: bool` (sem listar os clientes — não é informação pública). |
-| `AdminProductDto` (ou `ProductDto` usado no admin) | Ganha `AllowedCustomerIds: Guid[]` (ou uma lista `AllowedCustomers: { Id, Name, Email }[]` já resolvida, mais prática pro formulário admin). |
-| **Novo**: `GET /api/admin/customers` | `AdminOnly`. Lista clientes cadastrados (`Id, Name, Email`) para popular o seletor no formulário de produto. Exige `ICustomerRepository.ListAsync` (novo método — hoje o repositório só tem `GetByEmailAsync`/`EmailExistsAsync`/`Add`). |
+| `AdminProductDto` (novo, usado só em `GET/PUT /api/admin/products/{id}...`) | `ProductDto` + `AllowedCustomerIds: Guid[]`. Produzido por `ProductService.GetForAdminAsync`/`SetAllowedCustomersAsync`; a listagem admin (`GET /api/admin/products`) continua usando `ProductDto` — não precisa da lista de clientes por item. |
+| **Novo**: `GET /api/admin/customers` | `AdminOnly`. Lista clientes cadastrados (`Id, Name, Email`) via `ICustomerAdminService`, para popular o seletor no formulário de produto. Usa `ICustomerRepository.ListAsync` (novo método — o repositório só tinha `GetByEmailAsync`/`EmailExistsAsync`/`Add`). |
 | **Novo**: `PUT /api/admin/products/{id}/customers` | `AdminOnly`. Corpo: `{ customerIds: Guid[] }`. Chama `Product.SetAllowedCustomers(...)` — substitui o conjunto inteiro (o formulário admin envia a seleção completa, não incrementalmente). |
 
 ### Backend — bordado (Requisito 15)
@@ -303,8 +304,8 @@ Sem validação extra no backend de que `OptionsJson` só venha preenchido para 
 
 ### Frontend — visibilidade e formulário admin (Requisito 14)
 
-- `Product` (model) ganha `isExclusive: boolean`.
-- `AdminProductForm` ganha uma seção "Acesso exclusivo": lista de clientes (via novo `CustomerService.listForAdmin()` → `GET /api/admin/customers`) com checkbox por cliente; ao salvar, chama `PUT /api/admin/products/{id}/customers` com os IDs marcados. Produto novo (ainda sem ID) só ganha essa seção depois do primeiro salvamento (mesma limitação que já existe hoje para ajustar estoque em produto novo).
+- `Product` (model) ganha `isExclusive: boolean`; novo `AdminProduct extends Product` ganha `allowedCustomerIds: string[]` (retornado por `GET /api/admin/products/{id}`).
+- Novo `CustomerAdminService.list()` → `GET /api/admin/customers`, com o model `CustomerSummary`. `AdminProductForm` ganha uma seção "Acesso exclusivo": lista de clientes com checkbox por cliente; ao salvar, chama `ProductService.setAllowedCustomers(id, customerIds)` → `PUT /api/admin/products/{id}/customers`. Produto novo (ainda sem ID) só ganha essa seção depois do primeiro salvamento (mesma limitação que já existe hoje para ajustar estoque em produto novo).
 - `Shop`/`Home`/`ProductDetail` não precisam de mudança de autenticação — o token já viaja via `authInterceptor` quando o cliente está logado; a API decide o que incluir.
 - Produtos exclusivos exibidos para quem tem acesso ganham um badge visual "Exclusivo pra você" (`badge-soft`, mesmo padrão usado em outras páginas) — diferenciação de UX, não é um requisito de dado novo.
 
@@ -327,12 +328,9 @@ sequenceDiagram
     participant Repo as IProductRepository
 
     Cliente->>Ep: GET /api/products (Authorization opcional)
-    alt token de cliente válido presente
-        Ep->>Ep: customerId = http.User.GetUserId()
-    else sem token ou token inválido
-        Ep->>Ep: customerId = null
-    end
-    Ep->>Svc: ListAsync(category, onlyActive: true, customerId, page, pageSize)
+    Ep->>Ep: customerId = http.User.GetUserIdOrNull()
+    Note over Ep: null quando não há token ou o token não veio autenticado
+    Ep->>Svc: ListAsync(category, onlyActive: true, page, pageSize, customerId)
     Svc->>Repo: ListAsync(..., customerId, ...)
     Repo-->>Svc: produtos públicos + exclusivos liberados para customerId
     Svc-->>Ep: PagedResult<ProductDto> (com IsExclusive)

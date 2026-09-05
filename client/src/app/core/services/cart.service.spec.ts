@@ -14,6 +14,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     stock: 10,
     active: true,
     featured: false,
+    isExclusive: false,
     ...overrides,
   };
 }
@@ -87,6 +88,38 @@ describe('CartService', () => {
     service.remove('a');
 
     expect(service.items().map((i) => i.product.id)).toEqual(['b']);
+  });
+
+  it('add keeps separate lines for the same product with different embroidery text', () => {
+    const product = makeProduct({ isExclusive: true });
+    service.add(product, 1, 'ANA');
+    service.add(product, 1, 'BIA');
+
+    expect(service.items()).toHaveLength(2);
+    expect(service.items().map((i) => i.embroideryText)).toEqual(['ANA', 'BIA']);
+  });
+
+  it('add merges quantity for the same product with the same embroidery text', () => {
+    const product = makeProduct({ isExclusive: true });
+    service.add(product, 1, 'ANA');
+    service.add(product, 2, 'ANA');
+
+    expect(service.items()).toHaveLength(1);
+    expect(service.items()[0].quantity).toBe(3);
+  });
+
+  it('updateQuantity and remove target only the matching embroidery-text line', () => {
+    const product = makeProduct({ isExclusive: true });
+    service.add(product, 1, 'ANA');
+    service.add(product, 1, 'BIA');
+
+    service.updateQuantity(product.id, 5, 'ANA');
+    expect(service.items().find((i) => i.embroideryText === 'ANA')?.quantity).toBe(5);
+    expect(service.items().find((i) => i.embroideryText === 'BIA')?.quantity).toBe(1);
+
+    service.remove(product.id, 'ANA');
+    expect(service.items()).toHaveLength(1);
+    expect(service.items()[0].embroideryText).toBe('BIA');
   });
 
   it('clear empties the cart', () => {

@@ -18,6 +18,8 @@ export class ProductDetail implements OnInit {
   readonly loading = signal(true);
   readonly notFound = signal(false);
   readonly quantity = signal(1);
+  readonly embroideryText = signal('');
+  readonly embroideryTouched = signal(false);
   readonly addedFeedback = signal(false);
 
   private readonly title = inject(Title);
@@ -51,8 +53,15 @@ export class ProductDetail implements OnInit {
     const product = this.product();
     if (!product) return;
 
-    this.cart.add(product, this.quantity());
+    if (product.isExclusive && !this.embroideryText().trim()) {
+      this.embroideryTouched.set(true);
+      return;
+    }
+
+    this.cart.add(product, this.quantity(), product.isExclusive ? this.embroideryText().trim() : null);
     this.addedFeedback.set(true);
+    this.embroideryText.set('');
+    this.embroideryTouched.set(false);
     setTimeout(() => this.addedFeedback.set(false), 2500);
   }
 }

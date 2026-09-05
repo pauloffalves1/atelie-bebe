@@ -111,4 +111,66 @@ public class ProductTests
 
         Assert.False(product.Active);
     }
+
+    [Fact]
+    public void NewProduct_IsPublicByDefault()
+    {
+        var product = CreateProduct();
+
+        Assert.False(product.IsExclusive);
+        Assert.Empty(product.AllowedCustomerIds);
+        Assert.True(product.HasAccess(null));
+        Assert.True(product.HasAccess(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void SetAllowedCustomers_WithAtLeastOneId_MakesProductExclusive()
+    {
+        var product = CreateProduct();
+        var allowedCustomer = Guid.NewGuid();
+
+        product.SetAllowedCustomers([allowedCustomer]);
+
+        Assert.True(product.IsExclusive);
+        Assert.True(product.HasAccess(allowedCustomer));
+        Assert.False(product.HasAccess(Guid.NewGuid()));
+        Assert.False(product.HasAccess(null));
+    }
+
+    [Fact]
+    public void SetAllowedCustomers_DeduplicatesIds()
+    {
+        var product = CreateProduct();
+        var customer = Guid.NewGuid();
+
+        product.SetAllowedCustomers([customer, customer, customer]);
+
+        Assert.Single(product.AllowedCustomerIds);
+    }
+
+    [Fact]
+    public void SetAllowedCustomers_WithEmptyCollection_MakesProductPublicAgain()
+    {
+        var product = CreateProduct();
+        product.SetAllowedCustomers([Guid.NewGuid()]);
+
+        product.SetAllowedCustomers([]);
+
+        Assert.False(product.IsExclusive);
+        Assert.True(product.HasAccess(null));
+    }
+
+    [Fact]
+    public void SetAllowedCustomers_ReplacesThePreviousSetEntirely()
+    {
+        var product = CreateProduct();
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        product.SetAllowedCustomers([first]);
+
+        product.SetAllowedCustomers([second]);
+
+        Assert.False(product.HasAccess(first));
+        Assert.True(product.HasAccess(second));
+    }
 }

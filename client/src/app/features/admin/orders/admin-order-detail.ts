@@ -1,7 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CustomOrderDetails, Order, ORDER_STATUS_LABELS, OrderStatus, ShippingAddress } from '../../../core/models/order.model';
+import { CustomOrderDetails, Order, ORDER_STATUS_LABELS, OrderItemOptions, OrderStatus, ShippingAddress } from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
 
 const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -64,6 +64,15 @@ export class AdminOrderDetail implements OnInit {
     if (!json) return null;
     try {
       return JSON.parse(json) as CustomOrderDetails;
+    } catch {
+      return null;
+    }
+  }
+
+  parsedItemOptions(optionsJson: string | null): OrderItemOptions | null {
+    if (!optionsJson) return null;
+    try {
+      return JSON.parse(optionsJson) as OrderItemOptions;
     } catch {
       return null;
     }

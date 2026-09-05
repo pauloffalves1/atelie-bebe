@@ -12,7 +12,7 @@
       <div class="row g-5">
         <div class="col-lg-8">
           <div class="list-group list-group-flush">
-            @for (item of cart.items(); track item.product.id) {
+            @for (item of cart.items(); track item.product.id + '|' + (item.embroideryText ?? '')) {
               <div class="list-group-item py-3 px-0 border-bottom">
                 <div class="row align-items-center g-3">
                   <div class="col-3 col-md-2">
@@ -21,14 +21,17 @@
                   <div class="col-9 col-md-4">
                     <h6 class="mb-1">{{ item.product.name }}</h6>
                     <span class="small text-secondary">{{ item.product.price | currency:'BRL' }}</span>
+                    @if (item.embroideryText) {
+                      <div class="small text-secondary"><i class="bi bi-scissors me-1"></i>Bordado: {{ item.embroideryText }}</div>
+                    }
                   </div>
                   <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                      <button class="btn btn-outline-secondary" (click)="decrement(item.product.id, item.quantity)">
+                      <button class="btn btn-outline-secondary" (click)="decrement(item.product.id, item.quantity, item.embroideryText)">
                         <i class="bi bi-dash"></i>
                       </button>
                       <span class="input-group-text bg-white">{{ item.quantity }}</span>
-                      <button class="btn btn-outline-secondary" [disabled]="item.quantity >= item.product.stock" (click)="increment(item.product.id, item.quantity, item.product.stock)">
+                      <button class="btn btn-outline-secondary" [disabled]="item.quantity >= item.product.stock" (click)="increment(item.product.id, item.quantity, item.product.stock, item.embroideryText)">
                         <i class="bi bi-plus"></i>
                       </button>
                     </div>
@@ -37,7 +40,7 @@
                     {{ item.product.price * item.quantity | currency:'BRL' }}
                   </div>
                   <div class="col-2 col-md-1 text-end">
-                    <button class="btn btn-sm btn-link text-danger" (click)="cart.remove(item.product.id)">
+                    <button class="btn btn-sm btn-link text-danger" (click)="cart.remove(item.product.id, item.embroideryText)">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>

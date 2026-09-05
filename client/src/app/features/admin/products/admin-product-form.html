@@ -62,7 +62,7 @@
       </div>
 
       <div class="col-lg-4">
-        <div class="stat-card">
+        <div class="stat-card mb-4">
           <h6 class="mb-3">Pré-visualização</h6>
           <div class="ratio ratio-1x1 rounded-4 overflow-hidden bg-light mb-3">
             @if (form.value.imageUrl) {
@@ -81,6 +81,46 @@
             Salvar produto
           </button>
         </div>
+
+        @if (isEditMode()) {
+          <div class="stat-card">
+            <h6 class="mb-1">Acesso exclusivo</h6>
+            <p class="small text-secondary mb-3">
+              Marque os clientes que podem ver e encomendar este produto. Sem nenhum marcado, o produto é público.
+            </p>
+
+            @if (customers().length === 0) {
+              <p class="small text-secondary mb-0">Nenhum cliente cadastrado ainda.</p>
+            } @else {
+              <div class="d-flex flex-column gap-2 mb-3" style="max-height: 260px; overflow-y: auto">
+                @for (customer of customers(); track customer.id) {
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      class="form-check-input"
+                      [id]="'customer-' + customer.id"
+                      [checked]="selectedCustomerIds().includes(customer.id)"
+                      (change)="toggleCustomer(customer.id, $any($event.target).checked)">
+                    <label class="form-check-label small" [for]="'customer-' + customer.id">
+                      {{ customer.name }} <span class="text-secondary">({{ customer.email }})</span>
+                    </label>
+                  </div>
+                }
+              </div>
+            }
+
+            <button type="button" class="btn btn-outline-primary btn-sm w-100 rounded-pill" [disabled]="savingCustomers()" (click)="saveCustomerAccess()">
+              @if (savingCustomers()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Salvar acesso exclusivo
+            </button>
+
+            @if (customersSaved()) {
+              <div class="small text-success mt-2"><i class="bi bi-check-circle me-1"></i>Acesso atualizado!</div>
+            }
+          </div>
+        }
       </div>
     </form>
   }

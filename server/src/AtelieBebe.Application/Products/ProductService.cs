@@ -12,25 +12,25 @@ public sealed class ProductService : IProductService
 
     public ProductService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task<PagedResult<ProductDto>> ListAsync(string? category, bool onlyActive, int page, int pageSize, CancellationToken ct = default)
+    public async Task<PagedResult<ProductDto>> ListAsync(string? category, bool onlyActive, int page, int pageSize, Guid? customerId = null, CancellationToken ct = default)
     {
         var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
-        var (products, totalItems) = await _unitOfWork.Products.ListAsync(category, onlyActive, normalizedPage, normalizedPageSize, ct);
+        var (products, totalItems) = await _unitOfWork.Products.ListAsync(category, onlyActive, normalizedPage, normalizedPageSize, customerId, ct);
         return new PagedResult<ProductDto>(products.Select(ToDto).ToList(), normalizedPage, normalizedPageSize, totalItems);
     }
 
-    public async Task<IReadOnlyList<ProductDto>> ListFeaturedAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<ProductDto>> ListFeaturedAsync(Guid? customerId = null, CancellationToken ct = default)
     {
-        var products = await _unitOfWork.Products.ListFeaturedAsync(ct);
+        var products = await _unitOfWork.Products.ListFeaturedAsync(customerId, ct);
         return products.Select(ToDto).ToList();
     }
 
-    public Task<IReadOnlyList<string>> ListCategoriesAsync(CancellationToken ct = default) =>
-        _unitOfWork.Products.ListCategoriesAsync(ct);
+    public Task<IReadOnlyList<string>> ListCategoriesAsync(Guid? customerId = null, CancellationToken ct = default) =>
+        _unitOfWork.Products.ListCategoriesAsync(customerId, ct);
 
-    public async Task<ProductDto> GetBySlugAsync(string slug, CancellationToken ct = default)
+    public async Task<ProductDto> GetBySlugAsync(string slug, Guid? customerId = null, CancellationToken ct = default)
     {
-        var product = await _unitOfWork.Products.GetBySlugAsync(slug, ct)
+        var product = await _unitOfWork.Products.GetBySlugAsync(slug, customerId, ct)
             ?? throw new NotFoundException("Produto", slug);
         return ToDto(product);
     }
@@ -42,11 +42,17 @@ public sealed class ProductService : IProductService
         return ToDto(product);
     }
 
+    public async Task<AdminProductDto> GetForAdminAsync(Guid id, CancellationToken ct = default)
+    {
+        var product = await _unitOfWork.Products.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException("Produto", id);
+        return ToAdminDto(product);
+    }
+
     public async Task<ProductDto> CreateAsync(CreateProductRequest request, CancellationToken ct = default)
     {
         var slug = SlugHelper.Slugify(request.Name);
-        var existing = await _unitOfWork.Products.GetBySlugAsync(slug, ct);
-        if (existing is not null)
+        if (await _unitOfWork.Products.SlugExistsAsync(slug, ct))
             slug = $"{slug}-{Guid.NewGuid().ToString()[..6]}";
 
         var product = Product.Create(
@@ -101,6 +107,19 @@ public sealed class ProductService : IProductService
         return ToDto(product);
     }
 
+    public async Task<AdminProductDto> SetAllowedCustomersAsync(Guid id, SetAllowedCustomersRequest request, CancellationToken ct = default)
+    {
+        var product = await _unitOfWork.Products.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException("Produto", id);
+
+        product.SetAllowedCustomers(request.CustomerIds);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return ToAdminDto(product);
+    }
+
     private static ProductDto ToDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Stock, p.Active, p.Featured);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Stock, p.Active, p.Featured, p.IsExclusive);
+
+    private static AdminProductDto ToAdminDto(Product p) => new(
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Stock, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds);
 }
