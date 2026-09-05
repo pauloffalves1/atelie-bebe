@@ -240,6 +240,24 @@ a {
   font-size: 1.2rem;
 }
 
+.contact-link {
+  padding: .5rem;
+  margin: -.5rem;
+  border-radius: $border-radius;
+  transition: background-color .2s ease;
+}
+
+.contact-link:hover {
+  background-color: var(--atelie-cream);
+}
+
+.toggle-order {
+  background: var(--atelie-sage-light);
+  border-radius: $border-radius;
+  padding: .85rem 1.1rem;
+  cursor: pointer;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
