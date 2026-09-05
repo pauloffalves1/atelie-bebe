@@ -76,15 +76,9 @@
                   <a [routerLink]="['/produto', product.slug]" class="text-dark stretched-link-none">{{ product.name }}</a>
                 </h6>
                 <p class="fw-bold text-blush mb-3 mt-auto">{{ product.price | currency:'BRL' }}</p>
-                @if (product.isExclusive) {
-                  <a [routerLink]="['/produto', product.slug]" class="btn btn-sm btn-primary rounded-pill">
-                    <i class="bi bi-scissors me-1"></i>Personalizar
-                  </a>
-                } @else {
-                  <button class="btn btn-sm btn-primary rounded-pill" (click)="addToCart(product)">
-                    <i class="bi bi-bag-plus me-1"></i>Adicionar
-                  </button>
-                }
+                <a [routerLink]="['/produto', product.slug]" class="btn btn-sm btn-primary rounded-pill">
+                  <i class="bi bi-scissors me-1"></i>Personalizar
+                </a>
               </div>
             </div>
           </div>

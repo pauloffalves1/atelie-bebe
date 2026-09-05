@@ -260,7 +260,7 @@ npm test        # testes unitários (Vitest)
 | RF25 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
 | RF26 | O sistema deve paginar as listagens de produtos (loja e admin), encomendas (admin) e mensagens de contato (admin), aceitando `page`/`pageSize` e devolvendo o total de itens e páginas | Visitante / Administrador |
 | RF27 | O sistema deve permitir associar um produto a um ou mais clientes específicos, tornando-o exclusivo — visível e encomendável apenas por eles, ausente das listagens (loja, categorias, destaque) e respondendo 404 no detalhe para quem não tem acesso | Administrador / Cliente |
-| RF28 | O sistema deve permitir que o cliente informe, ao adicionar um produto exclusivo ao carrinho, o texto a ser bordado e a quantidade de peças com esse mesmo bordado, persistindo essa personalização no pedido e exibindo-a no detalhe administrativo da encomenda | Cliente / Administrador |
+| RF28 | O sistema deve permitir que o cliente informe, ao adicionar qualquer produto ao carrinho, o texto a ser bordado e a quantidade de peças com esse mesmo bordado, persistindo essa personalização no pedido e exibindo-a no detalhe administrativo da encomenda | Cliente / Administrador |
 
 ### Requisitos não funcionais
 
@@ -282,7 +282,8 @@ npm test        # testes unitários (Vitest)
 - Nome, slug e categoria são obrigatórios; o slug é gerado automaticamente a partir do nome e, em caso de colisão, recebe um sufixo aleatório de 6 caracteres.
 - Produtos podem ser marcados como **destaque** (`Featured`) para aparecer na home, e **ativos/inativos** (`Active`); apenas produtos ativos aparecem na listagem e busca pública — produtos inativos continuam visíveis e editáveis no painel admin.
 - Não há controle de estoque: o ateliê fabrica cada peça sob encomenda, então todo produto está sempre disponível para compra, em qualquer quantidade — não existe reserva de estoque, alerta de estoque baixo, nem status "esgotado" na loja.
-- Um produto sem nenhum cliente associado é **público** (visível a todos, como hoje). Associar um ou mais clientes o torna **exclusivo**: some das listagens públicas (loja, categorias, destaque) e do detalhe (404) para quem não está na lista de acesso — inclusive administradores continuam vendo tudo nas telas administrativas, independentemente da regra de visibilidade pública. Um produto exclusivo aceita personalização de bordado (texto + quantidade de peças) no carrinho; produtos públicos não oferecem esse campo.
+- Um produto sem nenhum cliente associado é **público** (visível a todos, como hoje). Associar um ou mais clientes o torna **exclusivo**: some das listagens públicas (loja, categorias, destaque) e do detalhe (404) para quem não está na lista de acesso — inclusive administradores continuam vendo tudo nas telas administrativas, independentemente da regra de visibilidade pública.
+- Todo produto, exclusivo ou público, aceita personalização de bordado (texto + quantidade de peças) — é obrigatório informar o texto antes de adicionar ao carrinho, então a compra sempre passa pela página de detalhe do produto (não há mais botão de "adicionar rápido" na grade da loja).
 
 ### Pedidos e ciclo de vida
 

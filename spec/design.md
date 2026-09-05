@@ -308,14 +308,16 @@ Sem validação extra no backend de que `OptionsJson` só venha preenchido para 
 - `Shop`/`Home`/`ProductDetail` não precisam de mudança de autenticação — o token já viaja via `authInterceptor` quando o cliente está logado; a API decide o que incluir.
 - Produtos exclusivos exibidos para quem tem acesso ganham um badge visual "Exclusivo pra você" (`badge-soft`, mesmo padrão usado em outras páginas) — diferenciação de UX, não é um requisito de dado novo.
 
-### Frontend — bordado no carrinho (Requisito 15)
+### Frontend — bordado em todos os produtos (Requisito 15)
+
+> Escopo estendido a pedido do cliente: o bordado nasceu restrito a produtos exclusivos e agora vale para toda a loja (ver nota no Requisito 15 em `requirements.md`).
 
 - `CartItem` (model) ganha `embroideryText?: string`.
-- `CartService.add(product, quantity, embroideryText?)`: a chave de mesclagem passa de `product.id` para `(product.id, embroideryText ?? null)` — dois itens do mesmo produto com bordado diferente NÃO se somam; com o mesmo texto (ou ambos sem bordado), somam a quantidade normalmente.
-- O botão rápido "Adicionar" nas grades de produto (`Shop`, `Home`) continua chamando `cart.add(product, 1)` sem bordado — só funciona assim para produtos **não exclusivos**. Para um produto exclusivo, o card não mostra o botão rápido; o clique leva para `ProductDetail`, que ganha um campo "Texto para bordar" (obrigatório quando `product.isExclusive`) antes do botão "Adicionar ao carrinho".
-- Ao lado do campo de texto, `ProductDetail` mostra um teclado de alfabeto (A-Z, mais "espaço"/"limpar"/apagar-última-letra) que escreve no mesmo `embroideryText` signal — o cliente pode digitar direto no campo ou tocar nas letras, os dois métodos convergem para o mesmo texto (`appendLetter`/`appendSpace`/`removeLastLetter`/`clearEmbroideryText`, respeitando o `maxlength` de 30).
+- `CartService.add(product, quantity, embroideryText?)`: a chave de mesclagem passa de `product.id` para `(product.id, embroideryText ?? null)` — dois itens do mesmo produto com bordado diferente NÃO se somam; com o mesmo texto, somam a quantidade normalmente.
+- Não existe mais botão de "adicionar rápido" em nenhuma grade de produto (`Shop`, `Home`) — todo card mostra um link "Personalizar" que leva para `ProductDetail`, único lugar onde o pedido pode ser montado, já que o bordado (obrigatório) precisa ser informado antes de ir ao carrinho.
+- `ProductDetail` sempre mostra o campo "Texto para bordar" (obrigatório) e, ao lado, um teclado de alfabeto (A-Z, mais "espaço"/"limpar"/apagar-última-letra) que escreve no mesmo `embroideryText` signal — o cliente pode digitar direto no campo ou tocar nas letras, os dois métodos convergem para o mesmo texto (`appendLetter`/`appendSpace`/`removeLastLetter`/`clearEmbroideryText`, respeitando o `maxlength` de 30).
 - `Checkout.submit()`: para cada item do carrinho, `optionsJson` passa de sempre `null` para `item.embroideryText ? JSON.stringify({ embroideryText: item.embroideryText }) : null`.
-- `CartPage` exibe o texto do bordado (se houver) abaixo do nome do produto em cada linha.
+- `CartPage` exibe o texto do bordado abaixo do nome do produto em cada linha.
 
 ### Diagrama — resolução de visibilidade em `GET /api/products`
 

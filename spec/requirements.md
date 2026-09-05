@@ -237,18 +237,20 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ---
 
-## Requisito 15: Personalização de bordado em produtos exclusivos
+## Requisito 15: Personalização de bordado em todos os produtos
 
-**User Story:** Como cliente com acesso a um produto exclusivo, quero informar quais letras devem ser bordadas e em quantas peças, para receber o item personalizado conforme pedido.
+> **Histórico:** este requisito nasceu restrito a produtos exclusivos (critério 2 original: "NÃO DEVE ser oferecida para produtos públicos"). O cliente pediu explicitamente para estender a todos os produtos da loja; o critério 2 abaixo substitui essa restrição.
+
+**User Story:** Como cliente, quero informar quais letras devem ser bordadas e em quantas peças ao comprar qualquer produto, para receber o item personalizado conforme pedido — toda peça do ateliê é bordada sob encomenda.
 
 **Rastreamento:** RF28.
 
 **Acceptance Criteria**
-1. QUANDO um cliente adiciona ao carrinho um produto exclusivo ao qual tem acesso, O SISTEMA DEVE oferecer um campo de texto para as letras/inscrição a bordar, além da quantidade.
-2. A personalização de bordado NÃO DEVE ser oferecida para produtos públicos (Kit Ombro e Boca, Fralda de Ombro, Fralda de Boca) — apenas para produtos exclusivos.
-3. QUANDO o mesmo produto exclusivo é adicionado ao carrinho com um texto de bordado DIFERENTE do já presente, O SISTEMA DEVE tratá-lo como um item de carrinho separado (não somar à quantidade do item com bordado diferente); QUANDO adicionado com o MESMO texto de bordado, O SISTEMA DEVE somar à quantidade desse item.
+1. QUANDO um cliente adiciona um produto ao carrinho, O SISTEMA DEVE oferecer um campo de texto para as letras/inscrição a bordar, além da quantidade — inclusive um alfabeto clicável (A-Z, espaço, apagar, limpar) que escreve no mesmo campo.
+2. O texto de bordado É OBRIGATÓRIO para todo produto, exclusivo ou público — não há mais grade de produto com botão de "adicionar rápido" sem personalização; a única forma de comprar é pela página de detalhe do produto, informando o bordado.
+3. QUANDO o mesmo produto é adicionado ao carrinho com um texto de bordado DIFERENTE do já presente, O SISTEMA DEVE tratá-lo como um item de carrinho separado (não somar à quantidade do item com bordado diferente); QUANDO adicionado com o MESMO texto de bordado, O SISTEMA DEVE somar à quantidade desse item.
 4. A quantidade de um item do carrinho representa o número de peças que recebem aquele mesmo texto de bordado.
-5. QUANDO o pedido é criado, O SISTEMA DEVE persistir o texto de bordado de cada item no campo `OptionsJson` do `OrderItem` correspondente (mecanismo já existente no domínio, hoje não preenchido para itens de catálogo).
+5. QUANDO o pedido é criado, O SISTEMA DEVE persistir o texto de bordado de cada item no campo `OptionsJson` do `OrderItem` correspondente.
 6. QUANDO um administrador visualiza o detalhe de uma encomenda, O SISTEMA DEVE exibir o texto de bordado de cada item que o possuir.
 
 ---

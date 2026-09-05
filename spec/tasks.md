@@ -163,3 +163,8 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 15.13 `AdminProductForm`/`AdminProductList`/`AdminDashboard`: remover campo/coluna/card de estoque
   - Documentação
     - [x] 15.14 `dotnet test`/`ng test`/build de produção do Angular confirmados; `README.md` (RF15/RF21/RF22 marcados removidos, seção "Catálogo e estoque" → "Catálogo"), `spec/requirements.md` (Requisitos 2, 7, 10, 11, 16 atualizados) e `spec/design.md` (modelo de dados, diagramas, tabela de templates WhatsApp) atualizados
+
+- [x] 16. Estender bordado personalizado para todos os produtos, não só exclusivos (Requisito 15)
+  - [x] 16.1 `ProductDetail`: campo "Texto para bordar" + teclado de alfabeto sempre visíveis (removido o `@if (p.isExclusive)`); `addToCart()` exige bordado para qualquer produto, não só exclusivo
+  - [x] 16.2 `Shop`/`Home`: removido o botão de "adicionar rápido" para produtos não exclusivos — todo card agora usa o link "Personalizar" para `ProductDetail`; `addToCart()`/injeção de `CartService` removidos de `Shop`/`Home` (ficaram sem uso)
+  - [x] 16.3 `spec/requirements.md` (Requisito 15: user story e critérios reescritos, nota de histórico da mudança de escopo) e `spec/design.md` (seção "Frontend — bordado em todos os produtos") atualizados

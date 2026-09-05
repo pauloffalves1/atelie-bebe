@@ -2,7 +2,6 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
-import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 
@@ -24,7 +23,6 @@ export class Shop implements OnInit {
     private readonly productService: ProductService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    readonly cart: CartService,
   ) {}
 
   ngOnInit(): void {
@@ -47,10 +45,6 @@ export class Shop implements OnInit {
     const queryParams: Record<string, string | number> = { pagina: page };
     if (this.activeCategory()) queryParams['categoria'] = this.activeCategory()!;
     this.router.navigate([], { queryParams });
-  }
-
-  addToCart(product: Product): void {
-    this.cart.add(product, 1);
   }
 
   private load(category: string | null, page: number): void {

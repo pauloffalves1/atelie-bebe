@@ -76,12 +76,12 @@ export class ProductDetail implements OnInit {
     const product = this.product();
     if (!product) return;
 
-    if (product.isExclusive && !this.embroideryText().trim()) {
+    if (!this.embroideryText().trim()) {
       this.embroideryTouched.set(true);
       return;
     }
 
-    this.cart.add(product, this.quantity(), product.isExclusive ? this.embroideryText().trim() : null);
+    this.cart.add(product, this.quantity(), this.embroideryText().trim());
     this.addedFeedback.set(true);
     this.embroideryText.set('');
     this.embroideryTouched.set(false);

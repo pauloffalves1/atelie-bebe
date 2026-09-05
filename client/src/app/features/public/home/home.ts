@@ -3,7 +3,6 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
-import { CartService } from '../../../core/services/cart.service';
 
 @Component({
   selector: 'app-home',
@@ -15,10 +14,7 @@ export class Home implements OnInit {
   readonly featured = signal<Product[]>([]);
   readonly loading = signal(true);
 
-  constructor(
-    private readonly productService: ProductService,
-    readonly cart: CartService,
-  ) {}
+  constructor(private readonly productService: ProductService) {}
 
   ngOnInit(): void {
     this.productService.listFeatured().subscribe({
@@ -28,9 +24,5 @@ export class Home implements OnInit {
       },
       error: () => this.loading.set(false),
     });
-  }
-
-  addToCart(product: Product): void {
-    this.cart.add(product, 1);
   }
 }
