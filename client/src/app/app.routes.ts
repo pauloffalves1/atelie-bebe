@@ -59,7 +59,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: `${SITE_NAME} — Fraldas de ombro e boca com bordado computadorizado`,
+        title: `${SITE_NAME} — Fraldas de ombro e boca bordadas`,
         loadComponent: () => import('./features/public/home/home').then((m) => m.Home),
       },
       {

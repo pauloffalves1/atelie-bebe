@@ -42,7 +42,7 @@ public static class DbInitializer
         var seedData = new (string Name, string Category, decimal Price, bool Featured, string Description)[]
         {
             // Kit Ombro e Boca
-            ("Kit Fralda de Ombro e Boca Ursinho Bordado", "Kit Ombro e Boca", 79.90m, true, "Kit com 1 fralda de ombro e 1 fralda de boca em algodão, bordado computadorizado de ursinho."),
+            ("Kit Fralda de Ombro e Boca Ursinho Bordado", "Kit Ombro e Boca", 79.90m, true, "Kit com 1 fralda de ombro e 1 fralda de boca em algodão, bordado de ursinho."),
             ("Kit Fralda de Ombro e Boca Nuvem Bordada", "Kit Ombro e Boca", 79.90m, true, "Kit com 1 fralda de ombro e 1 fralda de boca, bordado de nuvens, tecido macio e absorvente."),
             ("Kit 3 Fraldas de Ombro e Boca Coordenadas", "Kit Ombro e Boca", 119.90m, true, "Kit com 3 conjuntos de fralda de ombro e boca coordenados, estampas exclusivas do ateliê."),
             // Fralda de Ombro (só ombro)
@@ -52,7 +52,7 @@ public static class DbInitializer
             // Fralda de Boca (só boca)
             ("Fralda de Boca Tricô Bordada", "Fralda de Boca", 29.90m, false, "Fralda de boca avulsa em tricô, bordado delicado, ideal para arrotinhos e babados."),
             ("Kit 3 Fraldas de Boca Estampadas", "Fralda de Boca", 39.90m, true, "Kit com 3 fraldas de boca em algodão estampado, super macias e absorventes."),
-            ("Fralda de Boca Bordada Florzinha", "Fralda de Boca", 34.90m, false, "Fralda de boca avulsa com bordado floral computadorizado."),
+            ("Fralda de Boca Bordada Florzinha", "Fralda de Boca", 34.90m, false, "Fralda de boca avulsa com bordado floral."),
         };
 
         // The ateliê now specializes exclusively in shoulder/mouth burp cloths — remove any product
