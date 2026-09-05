@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
+import { SITE_NAME } from './core/constants/site';
 import { adminGuard } from './core/guards/admin.guard';
 import { customerGuard } from './core/guards/customer.guard';
-
-const SITE_NAME = 'Ateliê Bebê';
 
 export const routes: Routes = [
   {

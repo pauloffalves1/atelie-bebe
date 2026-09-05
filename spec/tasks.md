@@ -1,4 +1,4 @@
-# Implementation Plan — Ateliê Bebê
+# Implementation Plan — Ateliê Petit Mimo
 
 Este plano reflete o que já está **implementado e verificado** no sistema (marcado `[x]`), organizado pelos requisitos de `requirements.md`. Serve como registro de rastreabilidade requisito → código, e como template para novas tarefas: ao planejar uma funcionalidade nova, adicione-a como `[ ]` na seção correspondente (ou crie uma nova seção) e referencie o(s) requisito(s) que ela atende.
 

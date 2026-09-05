@@ -2,6 +2,7 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SITE_NAME } from '../../../core/constants/site';
 import { Order, ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
 
@@ -31,7 +32,7 @@ export class OrderConfirmation implements OnInit {
       next: (order) => {
         this.order.set(order);
         this.loading.set(false);
-        this.title.setTitle(`Pedido #${order.id.slice(0, 8)} — Ateliê Bebê`);
+        this.title.setTitle(`Pedido #${order.id.slice(0, 8)} — ${SITE_NAME}`);
       },
       error: () => {
         this.notFound.set(true);

@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SITE_NAME } from '../../../core/constants/site';
 import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
@@ -41,7 +42,7 @@ export class ProductDetail implements OnInit {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
-        this.title.setTitle(`${product.name} — Ateliê Bebê`);
+        this.title.setTitle(`${product.name} — ${SITE_NAME}`);
         if (product.description) {
           this.meta.updateTag({ name: 'description', content: product.description });
         }
