@@ -2,7 +2,7 @@
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&amp;display=swap');
-      text {
+      .lb {
         font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
         font-style: italic;
         font-weight: 700;
@@ -10,5 +10,7 @@
     </style>
   </defs>
   <circle cx="32" cy="32" r="32" fill="#e8a2ad"/>
-  <text x="33" y="43" font-size="28" fill="#ffffff" text-anchor="middle">LB</text>
+  <text x="12" y="39" font-size="13" fill="#9cb89a" text-anchor="middle">❀</text>
+  <text x="32" y="41" font-size="24" fill="#ffffff" text-anchor="middle" class="lb">LB</text>
+  <text x="52" y="39" font-size="13" fill="#9cb89a" text-anchor="middle">❀</text>
 </svg>
