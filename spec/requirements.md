@@ -2,7 +2,7 @@
 
 ## Introdução
 
-O Ateliê Bebê é uma plataforma de e-commerce e gestão de encomendas para um ateliê de enxovais e itens artesanais de bebê. Este documento formaliza, no padrão *Spec-Driven Development* (user story + critérios de aceite em EARS — Easy Approach to Requirements Syntax), os requisitos do sistema **tal como construído**. Ele complementa (não substitui) `README.md`, que mantém a tabela de requisitos numerados (RF01–RF25, RNF01–RNF08) usada como referência rápida — cada requisito abaixo cita o(s) RF/RNF correspondente(s) para rastreabilidade.
+O Ateliê Bebê é uma plataforma de e-commerce e gestão de encomendas para um ateliê de enxovais e itens artesanais de bebê. Este documento formaliza, no padrão *Spec-Driven Development* (user story + critérios de aceite em EARS — Easy Approach to Requirements Syntax), os requisitos do sistema **tal como construído**. Ele complementa (não substitui) `README.md`, que mantém a tabela de requisitos numerados (RF01–RF26, RNF01–RNF08) usada como referência rápida — cada requisito abaixo cita o(s) RF/RNF correspondente(s) para rastreabilidade.
 
 Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente** (autenticado com papel `customer`), **Administrador** (autenticado com papel `admin`) e **Sistema** (comportamentos automáticos, sem ator humano direto).
 
@@ -200,7 +200,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ## Requisito 13: Paginação de listagens
 
-> **Status:** proposto — ainda não implementado. Rastreamento provisório; ao ser aprovado, será adicionado ao README como RF26.
+**Rastreamento:** RF26
 
 **User Story:** Como visitante ou administrador, quero navegar por listas longas em páginas menores, para que a tela carregue rápido e a navegação não fique poluída conforme o catálogo, as encomendas e as mensagens crescem.
 

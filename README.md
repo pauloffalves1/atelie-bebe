@@ -258,6 +258,7 @@ npm test        # testes unitários (Vitest)
 | RF23 | O sistema deve notificar o cliente sempre que o status de um pedido for alterado | Sistema |
 | RF24 | O sistema deve notificar o cliente na confirmação de criação de um pedido | Sistema |
 | RF25 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
+| RF26 | O sistema deve paginar as listagens de produtos (loja e admin), encomendas (admin) e mensagens de contato (admin), aceitando `page`/`pageSize` e devolvendo o total de itens e páginas | Visitante / Administrador |
 
 ### Requisitos não funcionais
 

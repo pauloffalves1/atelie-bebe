@@ -68,20 +68,22 @@ Este plano reflete o que já está **implementado e verificado** no sistema (mar
   - [x] 9.3 `spec/requirements.md`, `spec/design.md`, `spec/tasks.md` — este conjunto de documentos SDD
   - [x] 9.4 Repositório Git inicializado e publicado em `github.com/pauloffalves1/atelie-bebe`
 
+- [x] 10. Paginação de listagens (Requisito 13 / RF26, design em `spec/design.md`)
+  - [x] 10.1 Backend: criar `PagedResult<T>` e o helper de normalização de `page`/`pageSize` em `AtelieBebe.Application/Common`
+  - [x] 10.2 Backend: paginar `IProductRepository.ListAsync` (`.Skip().Take()` + `.CountAsync()`) e propagar em `ProductService.ListAsync`
+  - [x] 10.3 Backend: paginar `IOrderRepository.ListAsync` (admin) e propagar em `OrderService.ListAsync`
+  - [x] 10.4 Backend: paginar `IContactMessageRepository.ListAsync` e propagar em `ContactService.ListAsync`
+  - [x] 10.5 Backend: adicionar `page`/`pageSize` aos endpoints `GET /api/products`, `GET /api/admin/products`, `GET /api/admin/orders`, `GET /api/admin/contact-messages`, cada um com seu próprio default (12 público, 20 admin)
+  - [x] 10.6 Backend: criar o projeto `AtelieBebe.Application.Tests` (xUnit) e cobrir `TotalPages`, normalização de `page`/`pageSize` fora do intervalo, e página além do fim (20 testes)
+  - [x] 10.7 Frontend: criar `core/models/pagination.model.ts` (`PagedResult<T>`) e o componente `shared/components/pagination`
+  - [x] 10.8 Frontend: atualizar `ProductService`, `OrderService` (admin) e `ContactService` para aceitar `page`/`pageSize` e retornar `PagedResult<T>`
+  - [x] 10.9 Frontend: integrar paginação em `Shop` (com `?pagina=` na URL, reset ao trocar categoria)
+  - [x] 10.10 Frontend: integrar paginação em `AdminProductList`, `AdminOrderList` (reset ao trocar status) e `AdminContactMessages`
+  - [x] 10.11 Rodar `dotnet test` e `ng test` (suítes completas) e verificar manualmente no navegador/API as 4 listagens paginadas (páginas intermediárias, primeira, última, filtro trocando, página fora do intervalo)
+  - [x] 10.12 Atualizar `README.md` (RF26) e `spec/requirements.md`/`spec/design.md` (remover as notas de "proposto") após a verificação
+
 ## Próximas tarefas (não iniciadas)
 
 Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo foi iniciada ainda.
 
-- [ ] 10. Paginação de listagens (Requisito 13, design em `spec/design.md`)
-  - [ ] 10.1 Backend: criar `PagedResult<T>` e o helper de normalização de `page`/`pageSize` em `AtelieBebe.Application/Common`
-  - [ ] 10.2 Backend: paginar `IProductRepository.ListAsync` (`.Skip().Take()` + `.CountAsync()`) e propagar em `ProductService.ListAsync`
-  - [ ] 10.3 Backend: paginar `IOrderRepository.ListAsync` (admin) e propagar em `OrderService.ListAsync`
-  - [ ] 10.4 Backend: paginar `IContactMessageRepository.ListAsync` e propagar em `ContactService.ListAsync`
-  - [ ] 10.5 Backend: adicionar `page`/`pageSize` aos endpoints `GET /api/products`, `GET /api/admin/products`, `GET /api/admin/orders`, `GET /api/admin/contact`, cada um com seu próprio default (12 público, 20 admin)
-  - [ ] 10.6 Backend: criar o projeto `AtelieBebe.Application.Tests` (xUnit) e cobrir `TotalPages`, normalização de `page`/`pageSize` fora do intervalo, e página além do fim
-  - [ ] 10.7 Frontend: criar `core/models/pagination.model.ts` (`PagedResult<T>`) e o componente `shared/components/pagination`
-  - [ ] 10.8 Frontend: atualizar `ProductService`, `OrderService` (admin) e `ContactService` para aceitar `page`/`pageSize` e retornar `PagedResult<T>`
-  - [ ] 10.9 Frontend: integrar paginação em `Shop` (com `?pagina=` na URL, reset ao trocar categoria)
-  - [ ] 10.10 Frontend: integrar paginação em `AdminProductList`, `AdminOrderList` (reset ao trocar status) e `AdminContactMessages`
-  - [ ] 10.11 Rodar `dotnet test` e `ng test` (suítes completas) e verificar manualmente no navegador as 4 listagens paginadas (páginas intermediárias, primeira, última, filtro trocando)
-  - [ ] 10.12 Atualizar `README.md` (adicionar RF26) e `spec/requirements.md` (remover a nota "proposto — ainda não implementado" do Requisito 13) após a verificação
+- [ ] 11. (placeholder) Descreva aqui a próxima funcionalidade antes de implementá-la, quebrada em subtarefas incrementais e referenciando os requisitos que ela precisa satisfazer (adicione-os primeiro em `requirements.md` se ainda não existirem).

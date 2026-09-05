@@ -145,7 +145,7 @@ src/app/
 | `GET/POST/PUT/PATCH /api/admin/products/*` | `AdminOnly` | 7 |
 | `GET/PATCH /api/admin/orders/*` | `AdminOnly` | 8 |
 | `POST /api/contact` | Pública | 9 (canal reservado) |
-| `GET /api/admin/contact` | `AdminOnly` | 9 |
+| `GET /api/admin/contact-messages` | `AdminOnly` | 9 |
 | `GET /api/admin/dashboard` | `AdminOnly` | 10 |
 
 ### Frontend — componentes por requisito
@@ -163,9 +163,7 @@ src/app/
 | `AdminContactMessages` | `/admin/mensagens` | 9 |
 | `AdminDashboard` | `/admin/dashboard` | 10 |
 
-## Requisito 13 — Paginação de listagens (proposto)
-
-> Design ainda não implementado — cobre o Requisito 13 de `requirements.md`.
+## Requisito 13 — Paginação de listagens
 
 ### Backend
 
@@ -187,7 +185,7 @@ Pontos alterados (assinatura ganha `page`/`pageSize`; retorno passa de `IReadOnl
 |---|---|---|
 | `IProductRepository` | `ListAsync(category, onlyActive, page, pageSize, ct)` — usa `.Skip().Take()` + `.CountAsync()` no `IQueryable` do EF Core | `GET /api/products`, `GET /api/admin/products` |
 | `IOrderRepository` | `ListAsync(status, page, pageSize, ct)` | `GET /api/admin/orders` |
-| `IContactMessageRepository` | `ListAsync(page, pageSize, ct)` | `GET /api/admin/contact` |
+| `IContactMessageRepository` | `ListAsync(page, pageSize, ct)` | `GET /api/admin/contact-messages` |
 | `ProductService`, `OrderService`, `ContactService` | métodos `ListAsync` correspondentes passam a devolver `PagedResult<Dto>` | — |
 
 `ListFeaturedAsync`, `ListCategoriesAsync`, `ListByCustomerAsync` (encomendas do cliente) **não** mudam — fora do escopo do Requisito 13.
@@ -203,7 +201,7 @@ Cada endpoint aplica seu próprio `pageSize` padrão antes de repassar ao servi�
 
 ### Testing Strategy (adendo)
 
-`PagedResult<T>.TotalPages` e a normalização de `page`/`pageSize` são a primeira lógica não trivial da camada `Application`/`Infrastructure` — hoje só `AtelieBebe.Domain.Tests` existe. Este trabalho inclui criar `AtelieBebe.Application.Tests` (xUnit, referenciando `AtelieBebe.Application`) para cobrir: cálculo de `TotalPages` (incluindo total zero), `page` menor que 1, `pageSize` fora do intervalo `[1,100]`, e página solicitada além do fim retornando lista vazia com `totalItems`/`totalPages` corretos.
+`PagedResult<T>.TotalPages` e a normalização de `page`/`pageSize` foram a primeira lógica não trivial da camada `Application` a ganhar testes — até então só `AtelieBebe.Domain.Tests` existia. `AtelieBebe.Application.Tests` (xUnit, referenciando `AtelieBebe.Application`) cobre: cálculo de `TotalPages` (incluindo total zero), `page` menor que 1, `pageSize` fora do intervalo `[1,100]`, e página solicitada além do fim retornando lista vazia com `totalItems`/`totalPages` corretos.
 
 ## Data Models
 
@@ -239,7 +237,8 @@ Eventos de domínio (todos `sealed record : DomainEventBase`, carregando `EventI
 
 ## Testing Strategy
 
-- **Backend** (`server/test/AtelieBebe.Domain.Tests`, xUnit): cobre as invariantes de domínio mais críticas — máquina de estados de `Order` (toda transição permitida e proibida), `Product.Reserve`/`SetStock` e emissão de evento de estoque baixo, validação e igualdade de `Money`/`Email`, registro de `Customer`. 58 testes.
+- **Backend — domínio** (`server/test/AtelieBebe.Domain.Tests`, xUnit): cobre as invariantes de domínio mais críticas — máquina de estados de `Order` (toda transição permitida e proibida), `Product.Reserve`/`SetStock` e emissão de evento de estoque baixo, validação e igualdade de `Money`/`Email`, registro de `Customer`. 58 testes.
+- **Backend — aplicação** (`server/test/AtelieBebe.Application.Tests`, xUnit): `PagedResult<T>.TotalPages` (incluindo total zero e página além do fim) e a normalização de `page`/`pageSize` em `Pagination.Normalize`. 20 testes.
 - **Frontend** (`client/src/app/**/*.spec.ts`, Vitest): `CartService` (add/remover/limpar/totais/persistência), lógica de montagem da mensagem de WhatsApp em `Contact`, guards de rota (`adminGuard`, `customerGuard`), chamadas HTTP de `ProductService` via `HttpClientTestingController`. 25 testes.
 - Não há testes de integração ponta a ponta automatizados; verificação de UI é feita manualmente via navegador (Playwright/CDP) a cada mudança de front-end relevante.
 
