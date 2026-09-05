@@ -83,8 +83,20 @@ Este plano reflete o que já está **implementado e verificado** no sistema (mar
   - [x] 10.11 Rodar `dotnet test` e `ng test` (suítes completas) e verificar manualmente no navegador/API as 4 listagens paginadas (páginas intermediárias, primeira, última, filtro trocando, página fora do intervalo)
   - [x] 10.12 Atualizar `README.md` (RF26) e `spec/requirements.md`/`spec/design.md` (remover as notas de "proposto") após a verificação
 
+- [x] 11. Especialização do catálogo em fraldas de ombro e boca (Requisito 1, item 8)
+  - [x] 11.1 Reescrever o seed do backend com as 3 categorias (Kit Ombro e Boca, Fralda de Ombro, Fralda de Boca) e remover as categorias antigas do banco a cada start
+  - [x] 11.2 Reescrever textos do frontend (home, sobre, rodapé, `index.html`, tipos de peça da encomenda personalizada)
+  - [x] 11.3 Atualizar documentação (README, CLAUDE.md, spec/*)
+
+- [x] 12. Preenchimento automático de endereço via ViaCEP no checkout (Requisito 2, itens 11-13)
+  - [x] 12.1 Criar `CepService`/`ViaCepAddress` (frontend) para consultar `viacep.com.br`
+  - [x] 12.2 Escopar `authInterceptor` para só anexar o token Bearer a requisições da própria API — correção de segurança necessária antes de chamar qualquer domínio externo
+  - [x] 12.3 `Checkout`: observar o campo CEP (debounced, 8 dígitos), preencher rua/bairro/cidade/estado, tratar CEP não encontrado
+  - [x] 12.4 Reordenar o formulário de endereço para o CEP vir primeiro
+  - [x] 12.5 Verificar no navegador com CEP real (preenchimento correto) e inválido (mensagem de erro, sem apagar os demais campos)
+
 ## Próximas tarefas (não iniciadas)
 
 Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo foi iniciada ainda.
 
-- [ ] 11. (placeholder) Descreva aqui a próxima funcionalidade antes de implementá-la, quebrada em subtarefas incrementais e referenciando os requisitos que ela precisa satisfazer (adicione-os primeiro em `requirements.md` se ainda não existirem).
+- [ ] 13. (placeholder) Descreva aqui a próxima funcionalidade antes de implementá-la, quebrada em subtarefas incrementais e referenciando os requisitos que ela precisa satisfazer (adicione-os primeiro em `requirements.md` se ainda não existirem).

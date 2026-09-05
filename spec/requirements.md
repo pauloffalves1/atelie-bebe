@@ -43,6 +43,9 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 8. QUANDO a requisição de checkout parte de um visitante não autenticado, O SISTEMA DEVE aceitar o pedido mesmo assim, com `CustomerId = null`.
 9. A gravação do pedido e o registro do evento `OrderCreatedDomainEvent` na tabela de outbox DEVEM ocorrer na mesma transação de banco de dados.
 10. QUANDO o pedido está no status `Recebido`, O SISTEMA PODE aceitar adição de itens; APÓS o pedido sair do status `Recebido`, O SISTEMA DEVE rejeitar qualquer tentativa de adicionar ou alterar itens.
+11. QUANDO o usuário digita um CEP com 8 dígitos no campo de endereço do checkout, O CLIENTE (frontend) DEVE consultar a API pública ViaCEP e, em caso de sucesso, preencher automaticamente rua, bairro, cidade e estado — mantendo os campos editáveis para ajuste manual.
+12. SE o CEP informado não for encontrado pela ViaCEP, ENTÃO O CLIENTE DEVE exibir uma mensagem de erro no campo de CEP, sem apagar os demais campos do endereço.
+13. O token de autenticação do cliente/administrador NUNCA DEVE ser enviado em requisições a domínios de terceiros (ex.: ViaCEP) — apenas para a própria API do backend.
 
 ---
 
