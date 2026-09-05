@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&amp;display=swap');
+      text {
+        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-style: italic;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <circle cx="32" cy="32" r="32" fill="#e8a2ad"/>
+  <text x="33" y="43" font-size="28" fill="#ffffff" text-anchor="middle">LB</text>
+</svg>
