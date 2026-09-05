@@ -17,7 +17,6 @@ export interface Dashboard {
   revenueTotal: number;
   revenueThisMonth: number;
   totalProducts: number;
-  lowStockProducts: number;
   totalCustomers: number;
   ordersByStatus: OrdersByStatus[];
   recentOrders: RecentOrderSummary[];

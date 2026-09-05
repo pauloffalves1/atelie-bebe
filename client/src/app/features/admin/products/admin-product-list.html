@@ -20,7 +20,6 @@
               <th>Produto</th>
               <th>Categoria</th>
               <th>Preço</th>
-              <th>Estoque</th>
               <th>Status</th>
               <th class="text-end">Ações</th>
             </tr>
@@ -34,7 +33,6 @@
                 </td>
                 <td>{{ product.category }}</td>
                 <td>{{ product.price | currency:'BRL' }}</td>
-                <td [class.text-danger]="product.stock <= 3">{{ product.stock }}</td>
                 <td>
                   <span class="badge rounded-pill" [class.bg-success]="product.active" [class.bg-secondary]="!product.active">
                     {{ product.active ? 'Ativo' : 'Inativo' }}
@@ -51,7 +49,7 @@
               </tr>
             }
             @if (products().length === 0) {
-              <tr><td colspan="6" class="text-center text-secondary py-4">Nenhum produto cadastrado.</td></tr>
+              <tr><td colspan="5" class="text-center text-secondary py-4">Nenhum produto cadastrado.</td></tr>
             }
           </tbody>
         </table>

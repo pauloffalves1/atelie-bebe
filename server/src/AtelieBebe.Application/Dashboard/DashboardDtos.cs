@@ -10,7 +10,6 @@ public sealed record DashboardDto(
     decimal RevenueTotal,
     decimal RevenueThisMonth,
     int TotalProducts,
-    int LowStockProducts,
     int TotalCustomers,
     IReadOnlyList<OrdersByStatusDto> OrdersByStatus,
     IReadOnlyList<RecentOrderSummaryDto> RecentOrders);

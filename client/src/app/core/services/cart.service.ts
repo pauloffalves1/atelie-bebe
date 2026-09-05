@@ -27,9 +27,9 @@ export class CartService {
     const existing = items.find((i) => matches(i, product.id, embroideryText));
 
     if (existing) {
-      existing.quantity = Math.min(existing.quantity + quantity, product.stock);
+      existing.quantity += quantity;
     } else {
-      items.push({ product, quantity: Math.min(quantity, product.stock), embroideryText: normalize(embroideryText) });
+      items.push({ product, quantity, embroideryText: normalize(embroideryText) });
     }
 
     this.persist(items);

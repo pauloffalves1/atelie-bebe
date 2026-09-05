@@ -53,19 +53,13 @@
     </div>
 
     <div class="row g-4 mb-4">
-      <div class="col-md-4">
+      <div class="col-md-6">
         <div class="stat-card h-100">
           <span class="small text-secondary d-block mb-1">Produtos cadastrados</span>
           <span class="fs-3 fw-bold">{{ d.totalProducts }}</span>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="stat-card h-100">
-          <span class="small text-secondary d-block mb-1">Estoque baixo</span>
-          <span class="fs-3 fw-bold" [class.text-danger]="d.lowStockProducts > 0">{{ d.lowStockProducts }}</span>
-        </div>
-      </div>
-      <div class="col-md-4">
+      <div class="col-md-6">
         <div class="stat-card h-100">
           <span class="small text-secondary d-block mb-1">Clientes cadastrados</span>
           <span class="fs-3 fw-bold">{{ d.totalCustomers }}</span>

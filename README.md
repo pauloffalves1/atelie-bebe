@@ -36,7 +36,7 @@ Os requisitos deste README (RF/RNF) têm uma versão formal, no padrão *Spec-Dr
   - [Requisitos funcionais](#requisitos-funcionais)
   - [Requisitos não funcionais](#requisitos-não-funcionais)
 - [Regras de negócio](#regras-de-negócio)
-  - [Catálogo e estoque](#catálogo-e-estoque)
+  - [Catálogo](#catálogo)
   - [Pedidos e ciclo de vida](#pedidos-e-ciclo-de-vida)
   - [Contas de cliente e administrador](#contas-de-cliente-e-administrador)
   - [Contato](#contato)
@@ -127,7 +127,7 @@ Cada serviço em `core/services/` espelha uma feature do backend (ex.: `product.
 Entidade levanta evento  →  SaveChanges interceptor grava na tabela Outbox (mesma transação)  →  BackgroundService faz polling (5s)  →  INotificationSender
 ```
 
-Quando uma entidade de domínio muda de forma relevante (pedido criado, status alterado, cliente cadastrado, estoque baixo, mensagem de contato recebida), ela registra um evento de domínio. O `DomainEventsToOutboxInterceptor` — um interceptor de `SaveChanges` do EF Core — serializa esse evento como uma linha na tabela `OutboxMessages`, **na mesma transação** da mudança de estado que o originou, garantindo que o evento nunca seja perdido mesmo que o processo caia logo em seguida.
+Quando uma entidade de domínio muda de forma relevante (pedido criado, status alterado, cliente cadastrado, mensagem de contato recebida), ela registra um evento de domínio. O `DomainEventsToOutboxInterceptor` — um interceptor de `SaveChanges` do EF Core — serializa esse evento como uma linha na tabela `OutboxMessages`, **na mesma transação** da mudança de estado que o originou, garantindo que o evento nunca seja perdido mesmo que o processo caia logo em seguida.
 
 Um `BackgroundService` (`OutboxProcessor`) faz *polling* a cada 5 segundos, lê lotes de até 20 mensagens pendentes, desserializa cada evento pelo seu tipo CLR e despacha para `INotificationSender`. A entrega é *at-least-once*: falhas incrementam um contador de tentativas (até 5) e o erro é registrado na própria linha, sem derrubar o processador. Hoje a única implementação de `INotificationSender` é `LoggingNotificationSender`, que apenas registra em log — não há envio real de e-mail/SMS.
 
@@ -147,8 +147,8 @@ sequenceDiagram
 
     Cliente->>Ep: POST /api/orders/store
     Ep->>Svc: CreateStoreOrderAsync(request)
-    Svc->>Prod: Reserve(quantidade)
-    Prod-->>Svc: estoque atualizado (ou DomainException)
+    Svc->>Prod: GetByIdAsync(productId)
+    Prod-->>Svc: produto encontrado (ou NotFoundException)
     Svc->>Ord: AddItem(...) / Submit()
     Ord-->>Svc: OrderCreatedDomainEvent
     Svc->>Db: SaveChangesAsync()
@@ -247,14 +247,14 @@ npm test        # testes unitários (Vitest)
 | RF12 | O sistema deve permitir listar todo o catálogo de produtos, incluindo inativos | Administrador |
 | RF13 | O sistema deve permitir cadastrar novos produtos no catálogo | Administrador |
 | RF14 | O sistema deve permitir editar os dados de um produto existente (nome, descrição, preço, categoria, imagem, destaque) | Administrador |
-| RF15 | O sistema deve permitir ajustar manualmente o estoque de um produto | Administrador |
+| RF15 | ~~O sistema deve permitir ajustar manualmente o estoque de um produto~~ — **removido**: o ateliê não mantém estoque, todo produto é feito sob encomenda | — |
 | RF16 | O sistema deve permitir ativar ou inativar um produto, removendo-o (ou não) da vitrine pública | Administrador |
 | RF17 | O sistema deve permitir listar pedidos, com filtro opcional por status | Administrador |
 | RF18 | O sistema deve permitir alterar o status de um pedido, respeitando a máquina de estados definida | Administrador |
 | RF19 | O sistema deve permitir consultar as mensagens de contato recebidas pela API (canal reservado para uso administrativo/futuro — o formulário público atual não envia mais mensagens por aqui, ver RF06) | Administrador |
-| RF20 | O sistema deve exibir um painel com indicadores consolidados: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, produtos com estoque baixo, total de clientes, distribuição de pedidos por status e pedidos recentes | Administrador |
-| RF21 | O sistema deve reservar automaticamente o estoque de um produto ao confirmar um pedido de loja, recusando a reserva quando o estoque for insuficiente | Sistema |
-| RF22 | O sistema deve registrar um evento de estoque baixo sempre que o estoque de um produto atingir 3 unidades ou menos | Sistema |
+| RF20 | O sistema deve exibir um painel com indicadores consolidados: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, total de clientes, distribuição de pedidos por status e pedidos recentes | Administrador |
+| RF21 | ~~O sistema deve reservar automaticamente o estoque de um produto ao confirmar um pedido de loja~~ — **removido**: sem controle de estoque, não há o que reservar | — |
+| RF22 | ~~O sistema deve registrar um evento de estoque baixo~~ — **removido**: sem controle de estoque, não há alerta de estoque baixo | — |
 | RF23 | O sistema deve notificar o cliente sempre que o status de um pedido for alterado | Sistema |
 | RF24 | O sistema deve notificar o cliente na confirmação de criação de um pedido | Sistema |
 | RF25 | O sistema deve impedir a alteração dos itens de um pedido após ele sair do status inicial "Recebido" | Sistema |
@@ -277,19 +277,17 @@ npm test        # testes unitários (Vitest)
 
 ## Regras de negócio
 
-### Catálogo e estoque
+### Catálogo
 
 - Nome, slug e categoria são obrigatórios; o slug é gerado automaticamente a partir do nome e, em caso de colisão, recebe um sufixo aleatório de 6 caracteres.
-- Estoque nunca pode ser negativo — tentar defini-lo como negativo, seja via ajuste manual ou reserva, é rejeitado.
 - Produtos podem ser marcados como **destaque** (`Featured`) para aparecer na home, e **ativos/inativos** (`Active`); apenas produtos ativos aparecem na listagem e busca pública — produtos inativos continuam visíveis e editáveis no painel admin.
-- Reservar estoque para um pedido de loja (`Reserve`) falha explicitamente se a quantidade pedida exceder o disponível — não há venda com estoque negativo.
-- Sempre que o estoque de um produto cai para **3 unidades ou menos** (`LowStockThreshold`), um evento de estoque baixo é emitido, tanto ao ajustar estoque manualmente quanto ao reservar por um pedido.
+- Não há controle de estoque: o ateliê fabrica cada peça sob encomenda, então todo produto está sempre disponível para compra, em qualquer quantidade — não existe reserva de estoque, alerta de estoque baixo, nem status "esgotado" na loja.
 - Um produto sem nenhum cliente associado é **público** (visível a todos, como hoje). Associar um ou mais clientes o torna **exclusivo**: some das listagens públicas (loja, categorias, destaque) e do detalhe (404) para quem não está na lista de acesso — inclusive administradores continuam vendo tudo nas telas administrativas, independentemente da regra de visibilidade pública. Um produto exclusivo aceita personalização de bordado (texto + quantidade de peças) no carrinho; produtos públicos não oferecem esse campo.
 
 ### Pedidos e ciclo de vida
 
 - Um pedido é de um dos dois tipos:
-  - **Loja** (`Loja`): um ou mais itens do catálogo, com reserva automática de estoque no momento da criação.
+  - **Loja** (`Loja`): um ou mais itens do catálogo.
   - **Personalizado** (`Personalizada`): encomenda sob medida, representada como um único item com o valor estimado informado pelo cliente e detalhes livres em JSON (`CustomDetailsJson`).
 - Pedidos de loja exigem pelo menos um item; a validação ocorre tanto na camada de aplicação quanto no domínio (`Order.Submit`).
 - No checkout, o campo CEP busca o endereço automaticamente via [ViaCEP](https://viacep.com.br/) (rua, bairro, cidade, estado) assim que o cliente digita os 8 dígitos; os campos continuam editáveis e, se o CEP não for encontrado, uma mensagem de erro é exibida sem apagar o restante do formulário.
@@ -341,7 +339,6 @@ npm test        # testes unitários (Vitest)
 - O resumo do dashboard (`/api/admin/dashboard`) exclui pedidos **cancelados** de todas as métricas de receita e contagem de pedidos "em aberto".
 - "Pedidos em aberto" são os que estão em qualquer status anterior a `Entregue` (`Recebido`, `EmProducao`, `Pronto`, `Enviado`).
 - Receita do mês corrente é calculada a partir do início do mês em UTC, não do fuso horário local.
-- Produtos com estoque baixo contados no dashboard consideram apenas produtos **ativos** com estoque ≤ 3.
 
 ### Tratamento de erros
 

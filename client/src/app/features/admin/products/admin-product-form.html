@@ -27,7 +27,7 @@
                 <div class="invalid-feedback">Categoria é obrigatória.</div>
               }
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label for="product-price" class="form-label small fw-semibold">Preço (R$)</label>
               <input type="number" step="0.01" id="product-price" class="form-control" formControlName="price"
                 [class.is-invalid]="form.controls.price.invalid && form.controls.price.touched">
@@ -35,15 +35,7 @@
                 <div class="invalid-feedback">Informe um preço maior que zero.</div>
               }
             </div>
-            <div class="col-md-4">
-              <label for="product-stock" class="form-label small fw-semibold">Estoque</label>
-              <input type="number" id="product-stock" class="form-control" formControlName="stock"
-                [class.is-invalid]="form.controls.stock.invalid && form.controls.stock.touched">
-              @if (form.controls.stock.invalid && form.controls.stock.touched) {
-                <div class="invalid-feedback">Estoque não pode ser negativo.</div>
-              }
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="col-md-6 d-flex align-items-end">
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="featured" formControlName="featured">
                 <label class="form-check-label small fw-semibold" for="featured">Produto em destaque</label>

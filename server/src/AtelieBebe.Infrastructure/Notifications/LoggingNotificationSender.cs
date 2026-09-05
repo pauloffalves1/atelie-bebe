@@ -35,14 +35,6 @@ public sealed class LoggingNotificationSender : INotificationSender
         return Task.CompletedTask;
     }
 
-    public Task SendLowStockAlertAsync(Guid productId, string productName, int remainingStock, CancellationToken ct = default)
-    {
-        _logger.LogWarning(
-            "[notificação] Estoque baixo: '{ProductName}' ({ProductId}) com {RemainingStock} unidades. Alerta enviado ao admin.",
-            productName, productId, remainingStock);
-        return Task.CompletedTask;
-    }
-
     public Task SendContactAcknowledgementAsync(Guid messageId, string name, string phone, CancellationToken ct = default)
     {
         _logger.LogInformation("[notificação] Confirmação de recebimento de contato enviada para {Name} <{Phone}>.", name, phone);

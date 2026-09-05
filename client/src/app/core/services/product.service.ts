@@ -52,10 +52,6 @@ export class ProductService {
     return this.http.put<Product>(`${this.adminUrl}/${id}`, request);
   }
 
-  updateStock(id: string, stock: number): Observable<Product> {
-    return this.http.patch<Product>(`${this.adminUrl}/${id}/stock`, { stock });
-  }
-
   setActive(id: string, active: boolean): Observable<Product> {
     return this.http.patch<Product>(`${this.adminUrl}/${id}/active?active=${active}`, {});
   }

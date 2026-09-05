@@ -53,13 +53,4 @@ describe('ProductService', () => {
     expect(req.request.params.get('pageSize')).toBe('20');
     req.flush({ ...emptyPage, pageSize: 20 });
   });
-
-  it('updateStock() PATCHes the stock value', () => {
-    service.updateStock('p1', 5).subscribe();
-
-    const req = httpMock.expectOne(`${environment.apiUrl}/admin/products/p1/stock`);
-    expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ stock: 5 });
-    req.flush({});
-  });
 });

@@ -109,9 +109,6 @@ public sealed class OutboxProcessor : BackgroundService
             case CustomerRegisteredDomainEvent e:
                 await sender.SendWelcomeMessageAsync(e.CustomerId, e.Name, e.Phone, ct);
                 break;
-            case ProductLowStockDomainEvent e:
-                await sender.SendLowStockAlertAsync(e.ProductId, e.ProductName, e.RemainingStock, ct);
-                break;
             case ContactMessageReceivedDomainEvent e:
                 await sender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Phone, ct);
                 break;

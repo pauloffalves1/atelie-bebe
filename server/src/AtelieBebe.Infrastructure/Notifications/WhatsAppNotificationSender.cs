@@ -45,9 +45,6 @@ public sealed class WhatsAppNotificationSender : INotificationSender
     public Task SendWelcomeMessageAsync(Guid customerId, string name, string phone, CancellationToken ct = default) =>
         SendTemplateAsync(phone, "boas_vindas_cliente", ct, name);
 
-    public Task SendLowStockAlertAsync(Guid productId, string productName, int remainingStock, CancellationToken ct = default) =>
-        SendTemplateAsync(_options.AdminPhoneNumber, "alerta_estoque_baixo", ct, productName, remainingStock.ToString(CultureInfo.InvariantCulture));
-
     public Task SendContactAcknowledgementAsync(Guid messageId, string name, string phone, CancellationToken ct = default) =>
         SendTemplateAsync(phone, "confirmacao_contato", ct, name);
 

@@ -8,7 +8,6 @@ public sealed record ProductDto(
     decimal Price,
     string Category,
     string? ImageUrl,
-    int Stock,
     bool Active,
     bool Featured,
     bool IsExclusive);
@@ -21,7 +20,6 @@ public sealed record AdminProductDto(
     decimal Price,
     string Category,
     string? ImageUrl,
-    int Stock,
     bool Active,
     bool Featured,
     bool IsExclusive,
@@ -35,7 +33,6 @@ public sealed record CreateProductRequest(
     decimal Price,
     string Category,
     string? ImageUrl,
-    int Stock,
     bool Featured);
 
 public sealed record UpdateProductRequest(
@@ -45,5 +42,3 @@ public sealed record UpdateProductRequest(
     string Category,
     string? ImageUrl,
     bool Featured);
-
-public sealed record UpdateStockRequest(int Stock);

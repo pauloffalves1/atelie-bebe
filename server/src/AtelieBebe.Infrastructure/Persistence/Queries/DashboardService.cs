@@ -1,5 +1,4 @@
 using AtelieBebe.Application.Dashboard;
-using AtelieBebe.Domain.Entities;
 using AtelieBebe.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +22,6 @@ public sealed class DashboardService : IDashboardService
             .ToListAsync(ct);
 
         var totalProducts = await _dbContext.Products.CountAsync(ct);
-        var lowStockProducts = await _dbContext.Products.CountAsync(p => p.Active && p.Stock <= Product.LowStockThreshold, ct);
         var totalCustomers = await _dbContext.Customers.CountAsync(ct);
 
         var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -46,7 +44,6 @@ public sealed class DashboardService : IDashboardService
             RevenueTotal: orders.Sum(o => o.Total.Amount),
             RevenueThisMonth: orders.Where(o => o.CreatedAt >= startOfMonth).Sum(o => o.Total.Amount),
             TotalProducts: totalProducts,
-            LowStockProducts: lowStockProducts,
             TotalCustomers: totalCustomers,
             OrdersByStatus: ordersByStatus,
             RecentOrders: recentOrders);

@@ -130,10 +130,10 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 14.2 `ContactMessage`: nova propriedade `Phone` (obrigatória, mesma validação); `ContactMessage.Create` ganha parâmetro `phone`; migration `AddContactMessagePhone`
     - [x] 14.3 Domain events: `OrderCreatedDomainEvent`, `OrderStatusChangedDomainEvent` (+ `CustomerName`), `CustomerRegisteredDomainEvent`, `ContactMessageReceivedDomainEvent` ganham campo de telefone; `Order.Submit()`/`ChangeStatus()`, `Customer.Register`, `ContactMessage.Create` repassam
   - Backend — canal WhatsApp
-    - [x] 14.4 `INotificationSender`: adicionar parâmetro de telefone em `SendOrderCreatedAsync`/`SendOrderStatusChangedAsync`/`SendContactAcknowledgementAsync` (e-mail removido — não é mais o canal); renomeado `SendWelcomeEmailAsync` → `SendWelcomeMessageAsync` (+ telefone). `SendLowStockAlertAsync` sem mudança de assinatura
+    - [x] 14.4 `INotificationSender`: adicionar parâmetro de telefone em `SendOrderCreatedAsync`/`SendOrderStatusChangedAsync`/`SendContactAcknowledgementAsync` (e-mail removido — não é mais o canal); renomeado `SendWelcomeEmailAsync` → `SendWelcomeMessageAsync` (+ telefone). `SendLowStockAlertAsync` existia sem mudança de assinatura, depois removido por completo na tarefa 15
     - [x] 14.5 `WhatsAppOptions` (`AccessToken`, `PhoneNumberId`, `ApiVersion`, `AdminPhoneNumber`) bound via `IOptions<>`; seção `WhatsApp` em branco no `appsettings.json`, real via `dotnet user-secrets`
     - [x] 14.6 `WhatsAppPhoneFormatter`: normaliza telefone para E.164 (heurística de dígitos + prefixo `55`)
-    - [x] 14.7 `WhatsAppNotificationSender : INotificationSender` (HttpClient tipado) — `POST /{phoneNumberId}/messages` na Graph API com os 5 templates (`pedido_recebido`, `pedido_status_atualizado`, `boas_vindas_cliente`, `confirmacao_contato`, `alerta_estoque_baixo`); lança exceção clara se `AccessToken`/`PhoneNumberId` vazios
+    - [x] 14.7 `WhatsAppNotificationSender : INotificationSender` (HttpClient tipado) — `POST /{phoneNumberId}/messages` na Graph API com templates (`pedido_recebido`, `pedido_status_atualizado`, `boas_vindas_cliente`, `confirmacao_contato` — `alerta_estoque_baixo` existia aqui, removido na tarefa 15 junto com o controle de estoque); lança exceção clara se `AccessToken`/`PhoneNumberId` vazios
     - [x] 14.8 `AddInfrastructure`: registrar `WhatsAppOptions` + `AddHttpClient<INotificationSender, WhatsAppNotificationSender>()` no lugar de `LoggingNotificationSender` (pacote `Microsoft.Extensions.Http` adicionado ao `.csproj`)
     - [x] 14.9 `OutboxProcessor.DispatchAsync`: repassar telefone (e nome) de cada evento ao `INotificationSender`
     - [x] 14.10 `RegisterCustomerRequest`/`CreateStoreOrderRequest`/`CreateCustomOrderRequest`/`SubmitContactRequest`: `Phone` continua `string?` no DTO, rejeição por ausência acontece no Domain; `ContactService.SubmitAsync`/`SubmitContactRequest`/`ContactMessageDto` ganham `Phone`
@@ -142,5 +142,24 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 14.12 `checkout`: campo "Telefone / WhatsApp" ganha `Validators.required` + `invalid-feedback`
   - Verificação e documentação
     - [x] 14.13 `dotnet test`/`ng test` completos (69+20 backend, 28 frontend); verificado via API: cadastro/pedido/contato sem telefone rejeitados com 400 e mensagem clara; pedido válido com telefone é aceito (200) e a falha de envio (sem credencial configurada) fica isolada no outbox (`Attempts`/`Error`, até 5 tentativas), sem afetar a criação do pedido
-    - [ ] 14.14 **Bloqueado até o administrador criar a conta Meta WhatsApp Business Cloud API, obter `AccessToken`/`PhoneNumberId` e ter os 5 templates aprovados** — só então é possível verificar o envio real de ponta a ponta; até lá, o `WhatsAppNotificationSender` está implementado e verificado até a chamada HTTP (falha limpa e isolada quando não configurado), mas nenhuma mensagem real foi enviada ainda
+    - [ ] 14.14 **Bloqueado até o administrador criar a conta Meta WhatsApp Business Cloud API, obter `AccessToken`/`PhoneNumberId` e ter os 4 templates aprovados** (`alerta_estoque_baixo` foi removido junto com o controle de estoque, tarefa 15) — só então é possível verificar o envio real de ponta a ponta; até lá, o `WhatsAppNotificationSender` está implementado e verificado até a chamada HTTP (falha limpa e isolada quando não configurado), mas nenhuma mensagem real foi enviada ainda
     - [ ] 14.15 Atualizar `README.md` (RF29) e remover a nota "proposto" de `spec/requirements.md`/`spec/design.md` — **fazer só depois de 14.14**, quando o envio real for confirmado
+
+- [x] 15. Remover controle de estoque — negócio é feito sob encomenda (Requisitos 2, 7, 10, 11; RF15/RF21/RF22 removidos do README)
+  - Backend
+    - [x] 15.1 `Product` (Domain): remover `Stock`, `LowStockThreshold`, `SetStock`, `Reserve`, `RaiseLowStockEventIfNeeded`; `Create`/`UpdateDetails` sem parâmetro de estoque
+    - [x] 15.2 Remover `ProductLowStockDomainEvent`; `OutboxProcessor.DispatchAsync` sem o case desse evento
+    - [x] 15.3 `INotificationSender`/`LoggingNotificationSender`/`WhatsAppNotificationSender`/`WhatsAppOptions`: remover `SendLowStockAlertAsync` e `AdminPhoneNumber` (sem destinatário fixo a manter)
+    - [x] 15.4 `ProductDtos`/`IProductService`/`ProductService`/`ProductEndpoints`: remover `Stock` de `ProductDto`/`AdminProductDto`/`CreateProductRequest`, remover `UpdateStockRequest`/`UpdateStockAsync`/`PATCH .../stock`
+    - [x] 15.5 `OrderService.CreateStoreOrderAsync`: remover `product.Reserve(...)` — item de catálogo é sempre aceito, sem checagem de disponibilidade
+    - [x] 15.6 `DbInitializer`: seed sem `Stock`; `DashboardDto`/`DashboardService`: remover `LowStockProducts`
+    - [x] 15.7 Migration `RemoveProductStock` (`DropColumn Stock` em `Products`)
+    - [x] 15.8 `ProductTests.cs`: remover testes de `Reserve`/`SetStock`/evento de estoque baixo; `dotnet test` completo (61+20)
+  - Frontend
+    - [x] 15.9 `Product`/`AdminProduct`/`CreateProductRequest` (model): remover `stock`; `ProductService`: remover `updateStock()`
+    - [x] 15.10 `CartService.add()`: remover o `Math.min(quantity, product.stock)` — quantidade nunca é limitada; `cart.service.spec.ts` atualizado
+    - [x] 15.11 `Shop`/`ProductDetail`: remover badges "Últimas unidades"/"Esgotado", `[disabled]`/`[max]` baseados em estoque; `ProductDetail` sempre mostra os controles de compra
+    - [x] 15.12 `CartPage`: botão de incrementar quantidade sem limite de estoque
+    - [x] 15.13 `AdminProductForm`/`AdminProductList`/`AdminDashboard`: remover campo/coluna/card de estoque
+  - Documentação
+    - [x] 15.14 `dotnet test`/`ng test`/build de produção do Angular confirmados; `README.md` (RF15/RF21/RF22 marcados removidos, seção "Catálogo e estoque" → "Catálogo"), `spec/requirements.md` (Requisitos 2, 7, 10, 11, 16 atualizados) e `spec/design.md` (modelo de dados, diagramas, tabela de templates WhatsApp) atualizados

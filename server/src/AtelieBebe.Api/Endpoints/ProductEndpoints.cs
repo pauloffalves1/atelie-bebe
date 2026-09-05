@@ -40,9 +40,6 @@ public static class ProductEndpoints
         adminGroup.MapPut("/{id:guid}", async (Guid id, UpdateProductRequest request, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.UpdateAsync(id, request, ct)));
 
-        adminGroup.MapPatch("/{id:guid}/stock", async (Guid id, UpdateStockRequest request, IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.UpdateStockAsync(id, request, ct)));
-
         adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.SetActiveAsync(id, active, ct)));
 

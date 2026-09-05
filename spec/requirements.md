@@ -19,7 +19,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. QUANDO um visitante seleciona uma categoria, O SISTEMA DEVE retornar apenas produtos ativos dessa categoria.
 3. QUANDO um visitante acessa a home, O SISTEMA DEVE exibir os produtos com `Featured = true`.
 4. QUANDO um visitante solicita a lista de categorias, O SISTEMA DEVE retornar as categorias distintas presentes no catálogo.
-5. QUANDO um visitante acessa um produto por slug válido, O SISTEMA DEVE exibir nome, categoria, preço, descrição, imagem e estoque disponível.
+5. QUANDO um visitante acessa um produto por slug válido, O SISTEMA DEVE exibir nome, categoria, preço, descrição e imagem.
 6. SE o slug não corresponder a nenhum produto, ENTÃO O SISTEMA DEVE responder com 404 e a UI DEVE exibir uma página "produto não encontrado" com um link de volta à loja.
 7. O SISTEMA NUNCA DEVE incluir produtos com `Active = false` nas listagens públicas (loja, destaque, busca por categoria).
 8. O catálogo é especializado exclusivamente em fraldas de ombro e boca — as únicas categorias vendidas são "Kit Ombro e Boca", "Fralda de Ombro" e "Fralda de Boca". O SISTEMA DEVE remover qualquer produto fora dessas categorias (ex.: restaurado de um backup antigo com o catálogo genérico anterior) em vez de exibi-lo.
@@ -30,19 +30,17 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 **User Story:** Como visitante ou cliente, quero adicionar produtos a um carrinho e finalizar a compra, para receber os itens escolhidos.
 
-**Rastreamento:** RF05, RF21, RF25, RNF07
+**Rastreamento:** RF05, RF25, RNF07
 
 **Acceptance Criteria**
-1. QUANDO um usuário adiciona um produto ao carrinho, O CLIENTE (frontend) DEVE limitar a quantidade ao estoque disponível do produto (`min(quantidade solicitada, stock)`).
-2. QUANDO o carrinho é persistido, O CLIENTE DEVE gravá-lo em `localStorage`, sobrevivendo a recarregamentos de página.
-3. QUANDO um usuário confirma o checkout, O SISTEMA DEVE criar um pedido do tipo `Loja` com um item por produto do carrinho.
-4. PARA CADA item do pedido de loja, O SISTEMA DEVE reservar o estoque do produto correspondente (`Product.Reserve`) na mesma operação de criação do pedido.
-5. SE a quantidade solicitada de um item exceder o estoque disponível do produto, ENTÃO O SISTEMA DEVE rejeitar a criação do pedido inteiro com um erro de domínio, sem reservar estoque parcialmente.
-6. SE o pedido de loja não tiver nenhum item, ENTÃO O SISTEMA DEVE rejeitá-lo (`ConflictException`/`DomainException`).
-7. QUANDO a requisição de checkout parte de um cliente autenticado, O SISTEMA DEVE vincular o pedido criado ao `CustomerId` desse cliente.
-8. QUANDO a requisição de checkout parte de um visitante não autenticado, O SISTEMA DEVE aceitar o pedido mesmo assim, com `CustomerId = null`.
-9. A gravação do pedido e o registro do evento `OrderCreatedDomainEvent` na tabela de outbox DEVEM ocorrer na mesma transação de banco de dados.
-10. QUANDO o pedido está no status `Recebido`, O SISTEMA PODE aceitar adição de itens; APÓS o pedido sair do status `Recebido`, O SISTEMA DEVE rejeitar qualquer tentativa de adicionar ou alterar itens.
+1. QUANDO o carrinho é persistido, O CLIENTE DEVE gravá-lo em `localStorage`, sobrevivendo a recarregamentos de página.
+2. QUANDO um usuário confirma o checkout, O SISTEMA DEVE criar um pedido do tipo `Loja` com um item por produto do carrinho.
+3. SE o pedido de loja não tiver nenhum item, ENTÃO O SISTEMA DEVE rejeitá-lo (`ConflictException`/`DomainException`).
+4. QUANDO a requisição de checkout parte de um cliente autenticado, O SISTEMA DEVE vincular o pedido criado ao `CustomerId` desse cliente.
+5. QUANDO a requisição de checkout parte de um visitante não autenticado, O SISTEMA DEVE aceitar o pedido mesmo assim, com `CustomerId = null`.
+6. A gravação do pedido e o registro do evento `OrderCreatedDomainEvent` na tabela de outbox DEVEM ocorrer na mesma transação de banco de dados.
+7. QUANDO o pedido está no status `Recebido`, O SISTEMA PODE aceitar adição de itens; APÓS o pedido sair do status `Recebido`, O SISTEMA DEVE rejeitar qualquer tentativa de adicionar ou alterar itens.
+8. Não há controle de estoque: todo produto é fabricado sob encomenda, então a quantidade escolhida pelo cliente nunca é limitada por disponibilidade prévia (ver nota sobre a remoção do Requisito 7/RF15/RF21/RF22 abaixo).
 11. QUANDO o usuário digita um CEP com 8 dígitos no campo de endereço do checkout, O CLIENTE (frontend) DEVE consultar a API pública ViaCEP e, em caso de sucesso, preencher automaticamente rua, bairro, cidade e estado — mantendo os campos editáveis para ajuste manual.
 12. SE o CEP informado não for encontrado pela ViaCEP, ENTÃO O CLIENTE DEVE exibir uma mensagem de erro no campo de CEP, sem apagar os demais campos do endereço.
 13. O token de autenticação do cliente/administrador NUNCA DEVE ser enviado em requisições a domínios de terceiros (ex.: ViaCEP) — apenas para a própria API do backend.
@@ -114,18 +112,18 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ## Requisito 7: Gestão de produtos (administrador)
 
-**User Story:** Como administrador, quero cadastrar, editar e controlar a visibilidade e o estoque dos produtos, para manter o catálogo atualizado.
+**User Story:** Como administrador, quero cadastrar, editar e controlar a visibilidade dos produtos, para manter o catálogo atualizado.
 
-**Rastreamento:** RF12, RF13, RF14, RF15, RF16
+**Rastreamento:** RF12, RF13, RF14, RF16
+
+> **Nota (removido):** este ateliê não mantém estoque físico — todo produto é fabricado sob encomenda a partir da compra. Os antigos RF15 ("ajustar estoque"), RF21 ("reservar estoque no pedido") e RF22 ("evento de estoque baixo") foram removidos do sistema; os números RF15/RF21/RF22 ficam propositalmente vagos na tabela do README em vez de renumerados, para não invalidar referências antigas.
 
 **Acceptance Criteria**
 1. QUANDO um administrador lista produtos, O SISTEMA DEVE incluir tanto ativos quanto inativos (diferente da listagem pública).
 2. QUANDO um administrador cadastra um novo produto, O SISTEMA DEVE gerar um slug a partir do nome; SE o slug colidir com um existente, ENTÃO O SISTEMA DEVE adicionar um sufixo aleatório para garantir unicidade.
-3. SE nome, slug OU categoria estiverem vazios, OU o estoque informado for negativo, ENTÃO O SISTEMA DEVE rejeitar a criação/edição do produto.
-4. QUANDO um administrador edita os dados de um produto, O SISTEMA DEVE atualizar nome, descrição, preço, categoria, imagem e destaque sem alterar o estoque (o estoque tem endpoint próprio).
-5. QUANDO um administrador ajusta o estoque manualmente, O SISTEMA DEVE rejeitar valores negativos.
-6. QUANDO o estoque de um produto (por ajuste manual ou reserva) chega a 3 unidades ou menos, O SISTEMA DEVE emitir um evento de estoque baixo.
-7. QUANDO um administrador ativa ou inativa um produto, O SISTEMA DEVE refletir imediatamente essa mudança na visibilidade da loja pública.
+3. SE nome, slug OU categoria estiverem vazios, ENTÃO O SISTEMA DEVE rejeitar a criação/edição do produto.
+4. QUANDO um administrador edita os dados de um produto, O SISTEMA DEVE atualizar nome, descrição, preço, categoria, imagem e destaque.
+5. QUANDO um administrador ativa ou inativa um produto, O SISTEMA DEVE refletir imediatamente essa mudança na visibilidade da loja pública.
 
 ---
 
@@ -165,22 +163,21 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 **Rastreamento:** RF20
 
 **Acceptance Criteria**
-1. O painel DEVE exibir: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, produtos com estoque baixo, total de clientes, distribuição de pedidos por status e os pedidos mais recentes.
+1. O painel DEVE exibir: total de pedidos, pedidos em aberto, receita total, receita do mês, total de produtos, total de clientes, distribuição de pedidos por status e os pedidos mais recentes.
 2. Pedidos com status `Cancelado` NÃO DEVEM ser contabilizados em nenhuma métrica de receita nem na contagem de "pedidos em aberto".
 3. "Pedidos em aberto" DEVE contar pedidos em `Recebido`, `EmProducao`, `Pronto` ou `Enviado`.
 4. "Receita do mês" DEVE somar apenas pedidos criados a partir do primeiro dia do mês corrente, calculado em UTC.
-5. "Produtos com estoque baixo" DEVE contar apenas produtos ativos com estoque ≤ 3.
 
 ---
 
 ## Requisito 11: Comportamentos automáticos do sistema
 
-**User Story:** Como sistema, preciso reagir automaticamente a eventos de negócio (estoque, pedidos, mensagens), para manter consistência de dados e manter os envolvidos informados, sem depender de ação manual.
+**User Story:** Como sistema, preciso reagir automaticamente a eventos de negócio (pedidos, clientes, mensagens), para manter consistência de dados e manter os envolvidos informados, sem depender de ação manual.
 
-**Rastreamento:** RF21, RF22, RF23, RF24, RNF06, RNF07
+**Rastreamento:** RF23, RF24, RNF06, RNF07
 
 **Acceptance Criteria**
-1. QUANDO uma entidade de domínio levanta um evento (criação de pedido, mudança de status, cadastro de cliente, estoque baixo, mensagem de contato recebida), O SISTEMA DEVE gravar esse evento na tabela de outbox na MESMA transação que originou a mudança de estado.
+1. QUANDO uma entidade de domínio levanta um evento (criação de pedido, mudança de status, cadastro de cliente, mensagem de contato recebida), O SISTEMA DEVE gravar esse evento na tabela de outbox na MESMA transação que originou a mudança de estado.
 2. Um processo em segundo plano DEVE consultar mensagens pendentes da outbox a cada 5 segundos, em lotes de até 20.
 3. QUANDO o despacho de uma mensagem de outbox falha, O SISTEMA DEVE incrementar seu contador de tentativas e registrar o erro, sem interromper o processamento das demais mensagens.
 4. QUANDO uma mensagem de outbox atinge 5 tentativas malsucedidas, O SISTEMA NÃO DEVE mais tentar reprocessá-la automaticamente.
@@ -260,7 +257,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 > **Status:** proposto — depende de configuração externa (conta Meta WhatsApp Business Cloud API) que o administrador ainda não criou.
 
-**User Story:** Como cliente e como administrador, quero receber as notificações do site (confirmação de pedido, mudança de status, boas-vindas, confirmação de contato, alerta de estoque baixo) por WhatsApp em vez de e-mail, para acompanhar tudo no canal que já uso no dia a dia.
+**User Story:** Como cliente, quero receber as notificações do site (confirmação de pedido, mudança de status, boas-vindas, confirmação de contato) por WhatsApp em vez de e-mail, para acompanhar tudo no canal que já uso no dia a dia.
 
 **Rastreamento:** RF29.
 
@@ -269,9 +266,8 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. QUANDO o status de um pedido muda (ex.: "Recebido" → "Em produção" → "Pronto" → "Enviado" → "Entregue"), O SISTEMA DEVE enviar ao cliente uma mensagem de WhatsApp informando o novo status.
 3. QUANDO um cliente cria uma conta, O SISTEMA DEVE enviar uma mensagem de WhatsApp de boas-vindas.
 4. QUANDO alguém envia o formulário de contato (`POST /api/contact`), O SISTEMA DEVE enviar uma mensagem de WhatsApp confirmando o recebimento.
-5. QUANDO o estoque de um produto atinge o limite de estoque baixo, O SISTEMA DEVE enviar uma mensagem de WhatsApp de alerta para o número de WhatsApp do próprio ateliê (configurado, não é o número de um cliente).
-6. Como o telefone é agora o canal de entrega das notificações, o SISTEMA DEVE exigir telefone/WhatsApp: (a) no cadastro de cliente (`POST /api/auth/register`); (b) no checkout de loja (`POST /api/orders/store`); (c) na encomenda personalizada (`POST /api/orders/custom`); (d) no formulário de contato (`POST /api/contact`, que ganha um campo de telefone que hoje não existe). Um pedido/cadastro/contato sem telefone É REJEITADO com uma mensagem de erro clara.
-7. O envio por WhatsApp usa a Meta WhatsApp Business Cloud API oficial (Graph API `POST /{phone-number-id}/messages`), autenticada por um token de acesso configurado via `dotnet user-secrets` (nunca commitado), no mesmo padrão já usado para `Jwt:Secret`.
-8. Cada tipo de notificação corresponde a um *message template* pré-aprovado pela Meta (a Cloud API exige template aprovado para mensagens iniciadas pela empresa fora da janela de 24h de atendimento) — o sistema não tenta enviar texto livre para essas notificações automáticas.
-9. QUANDO o envio de uma notificação por WhatsApp falha (credenciais ausentes/inválidas, número inválido, template não aprovado, etc.), O SISTEMA NÃO DEVE afetar a operação que originou o evento (criar pedido, mudar status, cadastrar cliente) — a falha fica registrada no outbox (`Attempts`/`Error`) e é reprocessada nas tentativas seguintes, como já ocorre hoje para qualquer falha de notificação.
-10. Este requisito substitui o canal de notificação simulado (log) por um canal real — mas o mecanismo de outbox/at-least-once/retry (Requisito de eventos de domínio já implementado) não muda.
+5. Como o telefone é agora o canal de entrega das notificações, o SISTEMA DEVE exigir telefone/WhatsApp: (a) no cadastro de cliente (`POST /api/auth/register`); (b) no checkout de loja (`POST /api/orders/store`); (c) na encomenda personalizada (`POST /api/orders/custom`); (d) no formulário de contato (`POST /api/contact`, que ganha um campo de telefone que hoje não existe). Um pedido/cadastro/contato sem telefone É REJEITADO com uma mensagem de erro clara.
+6. O envio por WhatsApp usa a Meta WhatsApp Business Cloud API oficial (Graph API `POST /{phone-number-id}/messages`), autenticada por um token de acesso configurado via `dotnet user-secrets` (nunca commitado), no mesmo padrão já usado para `Jwt:Secret`.
+7. Cada tipo de notificação corresponde a um *message template* pré-aprovado pela Meta (a Cloud API exige template aprovado para mensagens iniciadas pela empresa fora da janela de 24h de atendimento) — o sistema não tenta enviar texto livre para essas notificações automáticas.
+8. QUANDO o envio de uma notificação por WhatsApp falha (credenciais ausentes/inválidas, número inválido, template não aprovado, etc.), O SISTEMA NÃO DEVE afetar a operação que originou o evento (criar pedido, mudar status, cadastrar cliente) — a falha fica registrada no outbox (`Attempts`/`Error`) e é reprocessada nas tentativas seguintes, como já ocorre hoje para qualquer falha de notificação.
+9. Este requisito substitui o canal de notificação simulado (log) por um canal real — mas o mecanismo de outbox/at-least-once/retry (Requisito de eventos de domínio já implementado) não muda.

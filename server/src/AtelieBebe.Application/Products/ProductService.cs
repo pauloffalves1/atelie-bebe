@@ -62,7 +62,6 @@ public sealed class ProductService : IProductService
             Money.FromReais(request.Price),
             request.Category,
             request.ImageUrl,
-            request.Stock,
             request.Featured);
 
         _unitOfWork.Products.Add(product);
@@ -83,16 +82,6 @@ public sealed class ProductService : IProductService
             request.ImageUrl,
             request.Featured);
 
-        await _unitOfWork.SaveChangesAsync(ct);
-        return ToDto(product);
-    }
-
-    public async Task<ProductDto> UpdateStockAsync(Guid id, UpdateStockRequest request, CancellationToken ct = default)
-    {
-        var product = await _unitOfWork.Products.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException("Produto", id);
-
-        product.SetStock(request.Stock);
         await _unitOfWork.SaveChangesAsync(ct);
         return ToDto(product);
     }
@@ -118,8 +107,8 @@ public sealed class ProductService : IProductService
     }
 
     private static ProductDto ToDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Stock, p.Active, p.Featured, p.IsExclusive);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive);
 
     private static AdminProductDto ToAdminDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Stock, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds);
 }

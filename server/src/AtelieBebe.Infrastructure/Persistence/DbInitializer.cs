@@ -39,20 +39,20 @@ public static class DbInitializer
 
     private static async Task SeedProductsAsync(AppDbContext dbContext)
     {
-        var seedData = new (string Name, string Category, decimal Price, int Stock, bool Featured, string Description)[]
+        var seedData = new (string Name, string Category, decimal Price, bool Featured, string Description)[]
         {
             // Kit Ombro e Boca
-            ("Kit Fralda de Ombro e Boca Ursinho Bordado", "Kit Ombro e Boca", 79.90m, 30, true, "Kit com 1 fralda de ombro e 1 fralda de boca em algodão, bordado artesanal de ursinho."),
-            ("Kit Fralda de Ombro e Boca Nuvem Bordada", "Kit Ombro e Boca", 79.90m, 28, true, "Kit com 1 fralda de ombro e 1 fralda de boca, bordado de nuvens, tecido macio e absorvente."),
-            ("Kit 3 Fraldas de Ombro e Boca Coordenadas", "Kit Ombro e Boca", 119.90m, 18, true, "Kit com 3 conjuntos de fralda de ombro e boca coordenados, estampas exclusivas do ateliê."),
+            ("Kit Fralda de Ombro e Boca Ursinho Bordado", "Kit Ombro e Boca", 79.90m, true, "Kit com 1 fralda de ombro e 1 fralda de boca em algodão, bordado artesanal de ursinho."),
+            ("Kit Fralda de Ombro e Boca Nuvem Bordada", "Kit Ombro e Boca", 79.90m, true, "Kit com 1 fralda de ombro e 1 fralda de boca, bordado de nuvens, tecido macio e absorvente."),
+            ("Kit 3 Fraldas de Ombro e Boca Coordenadas", "Kit Ombro e Boca", 119.90m, true, "Kit com 3 conjuntos de fralda de ombro e boca coordenados, estampas exclusivas do ateliê."),
             // Fralda de Ombro (só ombro)
-            ("Fralda de Ombro Bordada Golfinho", "Fralda de Ombro", 49.90m, 35, false, "Fralda de ombro avulsa em algodão, bordado de golfinho, tamanho reforçado para proteger a roupa."),
-            ("Fralda de Ombro Xadrez Piquet", "Fralda de Ombro", 44.90m, 40, false, "Fralda de ombro em piquet xadrez, absorvente e resistente ao uso diário."),
-            ("Fralda de Ombro Bordada com Nome", "Fralda de Ombro", 54.90m, 22, true, "Fralda de ombro avulsa com bordado personalizado do nome do bebê."),
+            ("Fralda de Ombro Bordada Golfinho", "Fralda de Ombro", 49.90m, false, "Fralda de ombro avulsa em algodão, bordado de golfinho, tamanho reforçado para proteger a roupa."),
+            ("Fralda de Ombro Xadrez Piquet", "Fralda de Ombro", 44.90m, false, "Fralda de ombro em piquet xadrez, absorvente e resistente ao uso diário."),
+            ("Fralda de Ombro Bordada com Nome", "Fralda de Ombro", 54.90m, true, "Fralda de ombro avulsa com bordado personalizado do nome do bebê."),
             // Fralda de Boca (só boca)
-            ("Fralda de Boca Tricô Bordada", "Fralda de Boca", 29.90m, 45, false, "Fralda de boca avulsa em tricô, bordado delicado, ideal para arrotinhos e babados."),
-            ("Kit 3 Fraldas de Boca Estampadas", "Fralda de Boca", 39.90m, 32, true, "Kit com 3 fraldas de boca em algodão estampado, super macias e absorventes."),
-            ("Fralda de Boca Bordada Florzinha", "Fralda de Boca", 34.90m, 27, false, "Fralda de boca avulsa com bordado floral feito à mão."),
+            ("Fralda de Boca Tricô Bordada", "Fralda de Boca", 29.90m, false, "Fralda de boca avulsa em tricô, bordado delicado, ideal para arrotinhos e babados."),
+            ("Kit 3 Fraldas de Boca Estampadas", "Fralda de Boca", 39.90m, true, "Kit com 3 fraldas de boca em algodão estampado, super macias e absorventes."),
+            ("Fralda de Boca Bordada Florzinha", "Fralda de Boca", 34.90m, false, "Fralda de boca avulsa com bordado floral feito à mão."),
         };
 
         // The ateliê now specializes exclusively in shoulder/mouth burp cloths — remove any product
@@ -81,7 +81,6 @@ public static class DbInitializer
                 Money.FromReais(x.Product.Price),
                 x.Product.Category,
                 $"https://picsum.photos/seed/atelie-bebe-{x.ImageIndex}/600/600",
-                x.Product.Stock,
                 x.Product.Featured))
             .ToList();
 

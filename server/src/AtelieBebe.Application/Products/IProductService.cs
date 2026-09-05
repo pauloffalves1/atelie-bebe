@@ -12,7 +12,6 @@ public interface IProductService
     Task<AdminProductDto> GetForAdminAsync(Guid id, CancellationToken ct = default);
     Task<ProductDto> CreateAsync(CreateProductRequest request, CancellationToken ct = default);
     Task<ProductDto> UpdateAsync(Guid id, UpdateProductRequest request, CancellationToken ct = default);
-    Task<ProductDto> UpdateStockAsync(Guid id, UpdateStockRequest request, CancellationToken ct = default);
     Task<ProductDto> SetActiveAsync(Guid id, bool active, CancellationToken ct = default);
     Task<AdminProductDto> SetAllowedCustomersAsync(Guid id, SetAllowedCustomersRequest request, CancellationToken ct = default);
 }

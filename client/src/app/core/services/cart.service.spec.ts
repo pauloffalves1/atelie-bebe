@@ -11,7 +11,6 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     price: 69.9,
     category: 'Bodies',
     imageUrl: null,
-    stock: 10,
     active: true,
     featured: false,
     isExclusive: false,
@@ -48,16 +47,6 @@ describe('CartService', () => {
     service.add(product, 2);
 
     expect(service.items()).toHaveLength(1);
-    expect(service.items()[0].quantity).toBe(3);
-  });
-
-  it('caps the quantity at the product stock, both on first add and on increment', () => {
-    const product = makeProduct({ stock: 3 });
-
-    service.add(product, 5);
-    expect(service.items()[0].quantity).toBe(3);
-
-    service.add(product, 5);
     expect(service.items()[0].quantity).toBe(3);
   });
 

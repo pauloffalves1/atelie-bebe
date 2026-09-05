@@ -6,7 +6,6 @@ export interface Product {
   price: number;
   category: string;
   imageUrl: string | null;
-  stock: number;
   active: boolean;
   featured: boolean;
   isExclusive: boolean;
@@ -22,7 +21,6 @@ export interface CreateProductRequest {
   price: number;
   category: string;
   imageUrl: string | null;
-  stock: number;
   featured: boolean;
 }
 

@@ -30,7 +30,6 @@ export class AdminProductForm implements OnInit {
     name: ['', Validators.required],
     category: ['', Validators.required],
     price: [0, [Validators.required, Validators.min(0.01)]],
-    stock: [0, [Validators.required, Validators.min(0)]],
     imageUrl: [''],
     description: [''],
     featured: [false],
@@ -59,7 +58,6 @@ export class AdminProductForm implements OnInit {
           name: product.name,
           category: product.category,
           price: product.price,
-          stock: product.stock,
           imageUrl: product.imageUrl ?? '',
           description: product.description ?? '',
           featured: product.featured,
@@ -119,12 +117,9 @@ export class AdminProductForm implements OnInit {
     };
 
     if (this.isEditMode() && this.productId) {
-      this.productService.update(this.productId, payload).subscribe({
-        next: () => this.productService.updateStock(this.productId!, value.stock).subscribe({ next: onSuccess, error: onError }),
-        error: onError,
-      });
+      this.productService.update(this.productId, payload).subscribe({ next: onSuccess, error: onError });
     } else {
-      this.productService.create({ ...payload, stock: value.stock }).subscribe({ next: onSuccess, error: onError });
+      this.productService.create(payload).subscribe({ next: onSuccess, error: onError });
     }
   }
 }

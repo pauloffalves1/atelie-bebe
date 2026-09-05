@@ -31,7 +31,7 @@
                         <i class="bi bi-dash"></i>
                       </button>
                       <span class="input-group-text bg-white">{{ item.quantity }}</span>
-                      <button class="btn btn-outline-secondary" [disabled]="item.quantity >= item.product.stock" (click)="increment(item.product.id, item.quantity, item.product.stock, item.embroideryText)">
+                      <button class="btn btn-outline-secondary" (click)="increment(item.product.id, item.quantity, item.embroideryText)">
                         <i class="bi bi-plus"></i>
                       </button>
                     </div>

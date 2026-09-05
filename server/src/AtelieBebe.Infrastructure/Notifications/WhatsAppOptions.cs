@@ -12,7 +12,4 @@ public sealed class WhatsAppOptions
 
     /// <summary>Graph API version, e.g. "v21.0".</summary>
     public string ApiVersion { get; set; } = "v21.0";
-
-    /// <summary>The ateliê's own WhatsApp number (E.164, no "+"), used as the recipient for low-stock alerts.</summary>
-    public string AdminPhoneNumber { get; set; } = default!;
 }
