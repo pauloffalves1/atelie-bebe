@@ -88,11 +88,6 @@ body {
   background-image:
     radial-gradient(circle at 8% 8%, rgba(232, 162, 173, .12), transparent 40%),
     radial-gradient(circle at 95% 15%, rgba(156, 184, 154, .12), transparent 35%);
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 1 L3 19 L8 14.5 L11 21 L14 19.5 L11 13 L17 13 Z' fill='%23e8a2ad' stroke='%239cb89a' stroke-width='1' stroke-linejoin='round'/%3E%3C/svg%3E") 3 1, auto;
-}
-
-a, button, .btn, input, select, textarea, [role="button"], .form-check-input {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 1 L3 19 L8 14.5 L11 21 L14 19.5 L11 13 L17 13 Z' fill='%239cb89a' stroke='%23e8a2ad' stroke-width='1' stroke-linejoin='round'/%3E%3C/svg%3E") 3 1, pointer;
 }
 
 .app-shell {
