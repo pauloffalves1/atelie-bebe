@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PagedResult } from '../models/pagination.model';
 
 export interface ContactMessage {
   id: string;
@@ -25,7 +26,9 @@ export class ContactService {
     return this.http.post<void>(`${environment.apiUrl}/contact`, request);
   }
 
-  listForAdmin(): Observable<ContactMessage[]> {
-    return this.http.get<ContactMessage[]>(`${environment.apiUrl}/admin/contact-messages`);
+  listForAdmin(page = 1, pageSize = 20): Observable<PagedResult<ContactMessage>> {
+    return this.http.get<PagedResult<ContactMessage>>(`${environment.apiUrl}/admin/contact-messages`, {
+      params: { page, pageSize },
+    });
   }
 }

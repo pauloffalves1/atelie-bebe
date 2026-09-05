@@ -18,21 +18,26 @@ describe('ProductService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('list() requests the public products endpoint without a category filter', () => {
+  const emptyPage = { items: [], page: 1, pageSize: 12, totalItems: 0, totalPages: 0 };
+
+  it('list() requests the public products endpoint without a category filter, defaulting to page 1 / pageSize 12', () => {
     service.list().subscribe();
 
     const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/products`);
     expect(req.request.method).toBe('GET');
     expect(req.request.params.has('category')).toBe(false);
-    req.flush([]);
+    expect(req.request.params.get('page')).toBe('1');
+    expect(req.request.params.get('pageSize')).toBe('12');
+    req.flush(emptyPage);
   });
 
-  it('list(category) sends the category as a query param', () => {
-    service.list('Toalhas').subscribe();
+  it('list(category, page) sends category and page as query params', () => {
+    service.list('Toalhas', 2).subscribe();
 
     const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/products`);
     expect(req.request.params.get('category')).toBe('Toalhas');
-    req.flush([]);
+    expect(req.request.params.get('page')).toBe('2');
+    req.flush(emptyPage);
   });
 
   it('getBySlug() requests the product by slug', () => {
@@ -41,10 +46,12 @@ describe('ProductService', () => {
     httpMock.expectOne(`${environment.apiUrl}/products/body-manga-longa-nuvem`).flush({});
   });
 
-  it('listAllForAdmin() hits the admin endpoint', () => {
+  it('listAllForAdmin() hits the admin endpoint with page/pageSize params', () => {
     service.listAllForAdmin().subscribe();
 
-    httpMock.expectOne(`${environment.apiUrl}/admin/products`).flush([]);
+    const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/admin/products`);
+    expect(req.request.params.get('pageSize')).toBe('20');
+    req.flush({ ...emptyPage, pageSize: 20 });
   });
 
   it('updateStock() PATCHes the stock value', () => {

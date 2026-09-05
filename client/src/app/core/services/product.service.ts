@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PagedResult } from '../models/pagination.model';
 import { CreateProductRequest, Product, UpdateProductRequest } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
@@ -11,10 +12,10 @@ export class ProductService {
 
   constructor(private readonly http: HttpClient) {}
 
-  list(category?: string): Observable<Product[]> {
-    const params: Record<string, string> = {};
+  list(category?: string, page = 1, pageSize = 12): Observable<PagedResult<Product>> {
+    const params: Record<string, string | number> = { page, pageSize };
     if (category) params['category'] = category;
-    return this.http.get<Product[]>(this.baseUrl, { params });
+    return this.http.get<PagedResult<Product>>(this.baseUrl, { params });
   }
 
   listFeatured(): Observable<Product[]> {
@@ -31,8 +32,8 @@ export class ProductService {
 
   // ---- admin ----
 
-  listAllForAdmin(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.adminUrl);
+  listAllForAdmin(page = 1, pageSize = 20): Observable<PagedResult<Product>> {
+    return this.http.get<PagedResult<Product>>(this.adminUrl, { params: { page, pageSize } });
   }
 
   getById(id: string): Observable<Product> {

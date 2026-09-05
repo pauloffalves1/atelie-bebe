@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CreateCustomOrderRequest, CreateStoreOrderRequest, Order } from '../models/order.model';
+import { PagedResult } from '../models/pagination.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
@@ -29,10 +30,10 @@ export class OrderService {
 
   // ---- admin ----
 
-  listAllForAdmin(status?: string): Observable<Order[]> {
-    const params: Record<string, string> = {};
+  listAllForAdmin(status?: string, page = 1, pageSize = 20): Observable<PagedResult<Order>> {
+    const params: Record<string, string | number> = { page, pageSize };
     if (status) params['status'] = status;
-    return this.http.get<Order[]>(this.adminUrl, { params });
+    return this.http.get<PagedResult<Order>>(this.adminUrl, { params });
   }
 
   changeStatus(id: string, status: string): Observable<Order> {

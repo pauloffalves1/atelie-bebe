@@ -1,21 +1,23 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
+import { Pagination } from '../../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-shop',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, CurrencyPipe, Pagination],
   templateUrl: './shop.html',
 })
 export class Shop implements OnInit {
   readonly products = signal<Product[]>([]);
   readonly categories = signal<string[]>([]);
   readonly activeCategory = signal<string | null>(null);
+  readonly page = signal(1);
+  readonly totalPages = signal(0);
   readonly loading = signal(true);
 
   constructor(
@@ -30,8 +32,10 @@ export class Shop implements OnInit {
 
     this.route.queryParamMap.subscribe((params) => {
       const category = params.get('categoria');
+      const page = Number(params.get('pagina')) || 1;
       this.activeCategory.set(category);
-      this.load(category);
+      this.page.set(page);
+      this.load(category, page);
     });
   }
 
@@ -39,15 +43,22 @@ export class Shop implements OnInit {
     this.router.navigate([], { queryParams: category ? { categoria: category } : {} });
   }
 
+  goToPage(page: number): void {
+    const queryParams: Record<string, string | number> = { pagina: page };
+    if (this.activeCategory()) queryParams['categoria'] = this.activeCategory()!;
+    this.router.navigate([], { queryParams });
+  }
+
   addToCart(product: Product): void {
     this.cart.add(product, 1);
   }
 
-  private load(category: string | null): void {
+  private load(category: string | null, page: number): void {
     this.loading.set(true);
-    this.productService.list(category ?? undefined).subscribe({
-      next: (products) => {
-        this.products.set(products);
+    this.productService.list(category ?? undefined, page).subscribe({
+      next: (result) => {
+        this.products.set(result.items);
+        this.totalPages.set(result.totalPages);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

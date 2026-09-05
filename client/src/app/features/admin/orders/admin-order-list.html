@@ -51,6 +51,7 @@
           </tbody>
         </table>
       </div>
+      <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="goToPage($event)" />
     }
   </div>
 </div>
