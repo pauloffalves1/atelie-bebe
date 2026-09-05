@@ -26,6 +26,12 @@ public sealed class CustomerRepository : ICustomerRepository
         return _dbContext.Customers.AnyAsync(c => c.Email == normalized, ct);
     }
 
+    public Task<bool> CpfExistsAsync(string cpf, CancellationToken ct = default)
+    {
+        var normalized = Cpf.Create(cpf);
+        return _dbContext.Customers.AnyAsync(c => c.Cpf == normalized, ct);
+    }
+
     public async Task<IReadOnlyList<Customer>> ListAsync(CancellationToken ct = default) =>
         await _dbContext.Customers.OrderBy(c => c.Name).ToListAsync(ct);
 

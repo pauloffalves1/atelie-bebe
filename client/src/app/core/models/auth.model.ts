@@ -8,6 +8,7 @@ export interface AuthResponse {
 export interface RegisterCustomerRequest {
   name: string;
   email: string;
+  cpf: string;
   password: string;
   phone: string | null;
 }

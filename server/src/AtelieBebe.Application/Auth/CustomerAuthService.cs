@@ -23,12 +23,17 @@ public sealed class CustomerAuthService : ICustomerAuthService
         if (await _unitOfWork.Customers.EmailExistsAsync(request.Email, ct))
             throw new ConflictException("Já existe uma conta com este e-mail.");
 
+        var cpf = Cpf.Create(request.Cpf);
+        if (await _unitOfWork.Customers.CpfExistsAsync(cpf.Value, ct))
+            throw new ConflictException("Já existe uma conta com este CPF.");
+
         if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
             throw new ConflictException("A senha deve ter pelo menos 6 caracteres.");
 
         var customer = Customer.Register(
             request.Name,
             Email.Create(request.Email),
+            cpf,
             _passwordHasher.Hash(request.Password),
             request.Phone);
 

@@ -22,6 +22,12 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasMaxLength(320)
             .IsRequired();
 
+        builder.Property(c => c.Cpf)
+            .HasConversion(cpf => cpf == null ? null : cpf.Value, value => value == null ? null : Cpf.Create(value))
+            .HasColumnName("Cpf")
+            .HasMaxLength(11);
+
         builder.HasIndex(c => c.Email).IsUnique();
+        builder.HasIndex(c => c.Cpf).IsUnique();
     }
 }

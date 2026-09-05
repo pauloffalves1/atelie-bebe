@@ -1,6 +1,6 @@
 namespace AtelieBebe.Application.Auth;
 
-public sealed record RegisterCustomerRequest(string Name, string Email, string Password, string? Phone);
+public sealed record RegisterCustomerRequest(string Name, string Email, string Cpf, string Password, string? Phone);
 public sealed record LoginRequest(string Email, string Password);
 public sealed record AdminLoginRequest(string Email, string Password);
 

@@ -167,4 +167,17 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
 - [x] 16. Estender bordado personalizado para todos os produtos, não só exclusivos (Requisito 15)
   - [x] 16.1 `ProductDetail`: campo "Texto para bordar" + teclado de alfabeto sempre visíveis (removido o `@if (p.isExclusive)`); `addToCart()` exige bordado para qualquer produto, não só exclusivo
   - [x] 16.2 `Shop`/`Home`: removido o botão de "adicionar rápido" para produtos não exclusivos — todo card agora usa o link "Personalizar" para `ProductDetail`; `addToCart()`/injeção de `CartService` removidos de `Shop`/`Home` (ficaram sem uso)
+
+- [x] 17. CPF no cadastro de cliente (Requisito 17 / RF30, design em `spec/design.md`)
+  - Backend
+    - [x] 17.1 Novo value object `Cpf` (Domain/ValueObjects): normaliza dígitos, valida comprimento/sequência repetida/dígitos verificadores (módulo 11); `CpfTests.cs`
+    - [x] 17.2 `Customer`: nova propriedade `Cpf?` (nullable — não retroativo); `Register(name, email, cpf, passwordHash, phone)` exige `Cpf` não nulo; `CustomerTests.cs` atualizado
+    - [x] 17.3 `CustomerConfiguration`: coluna `Cpf` (nullable, conversor null-safe) + índice único `IX_Customers_Cpf`; migration `AddCustomerCpf`
+    - [x] 17.4 `ICustomerRepository`/`CustomerRepository`: novo `CpfExistsAsync`
+    - [x] 17.5 `RegisterCustomerRequest` ganha `Cpf` (obrigatório); `CustomerAuthService.RegisterAsync` valida formato (`Cpf.Create`, 400) e unicidade (`CpfExistsAsync`, 409) antes de criar a conta
+  - Frontend
+    - [x] 17.6 `register-page`: novo campo "CPF" (`Validators.required` + `Validators.pattern`) entre e-mail e telefone; `RegisterCustomerRequest`/`auth.service` repassam o campo
+  - Verificação e documentação
+    - [x] 17.7 `dotnet test`/`ng test` completos (71+20 backend, 26 frontend); verificado via API: CPF válido aceito (200), CPF com dígito verificador errado rejeitado (400, mensagem clara), CPF duplicado rejeitado (409); migration aplicada localmente sem quebrar clientes existentes (coluna nullable)
+    - [x] 17.8 `README.md` (RF30), `spec/requirements.md` (Requisito 17) e `spec/design.md` (Requisito 17) atualizados
   - [x] 16.3 `spec/requirements.md` (Requisito 15: user story e critérios reescritos, nota de histórico da mudança de escopo) e `spec/design.md` (seção "Frontend — bordado em todos os produtos") atualizados

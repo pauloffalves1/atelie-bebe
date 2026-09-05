@@ -26,6 +26,15 @@
               }
             </div>
             <div class="mb-3">
+              <label for="register-cpf" class="form-label small fw-semibold">CPF</label>
+              <input type="text" id="register-cpf" class="form-control" formControlName="cpf"
+                placeholder="000.000.000-00"
+                [class.is-invalid]="form.controls.cpf.invalid && form.controls.cpf.touched">
+              @if (form.controls.cpf.invalid && form.controls.cpf.touched) {
+                <div class="invalid-feedback">Informe um CPF válido.</div>
+              }
+            </div>
+            <div class="mb-3">
               <label for="register-phone" class="form-label small fw-semibold">Telefone / WhatsApp</label>
               <input type="text" id="register-phone" class="form-control" formControlName="phone"
                 [class.is-invalid]="form.controls.phone.invalid && form.controls.phone.touched">

@@ -273,3 +273,17 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 7. Cada tipo de notificação corresponde a um *message template* pré-aprovado pela Meta (a Cloud API exige template aprovado para mensagens iniciadas pela empresa fora da janela de 24h de atendimento) — o sistema não tenta enviar texto livre para essas notificações automáticas.
 8. QUANDO o envio de uma notificação por WhatsApp falha (credenciais ausentes/inválidas, número inválido, template não aprovado, etc.), O SISTEMA NÃO DEVE afetar a operação que originou o evento (criar pedido, mudar status, cadastrar cliente) — a falha fica registrada no outbox (`Attempts`/`Error`) e é reprocessada nas tentativas seguintes, como já ocorre hoje para qualquer falha de notificação.
 9. Este requisito substitui o canal de notificação simulado (log) por um canal real — mas o mecanismo de outbox/at-least-once/retry (Requisito de eventos de domínio já implementado) não muda.
+
+---
+
+## Requisito 17: CPF no cadastro de cliente
+
+**User Story:** Como ateliê, quero registrar o CPF de cada cliente no cadastro, para ter um identificador fiscal único de cada pessoa que compra ou encomenda peças.
+
+**Rastreamento:** RF30.
+
+**Acceptance Criteria**
+1. QUANDO um visitante se cadastra (`POST /api/auth/register`), O SISTEMA DEVE exigir um CPF válido (11 dígitos, dígitos verificadores corretos pelo algoritmo padrão da Receita Federal) — um cadastro sem CPF ou com CPF inválido É REJEITADO com uma mensagem de erro clara.
+2. O SISTEMA DEVE aceitar o CPF formatado (`000.000.000-00`) ou apenas os dígitos, normalizando para armazenamento.
+3. O SISTEMA NÃO DEVE permitir duas contas de cliente com o mesmo CPF — um cadastro com um CPF já usado por outra conta É REJEITADO.
+4. Contas de cliente já existentes antes deste requisito, que não têm CPF registrado, PERMANECEM válidas (o campo fica em branco para elas) — este requisito não é retroativo.

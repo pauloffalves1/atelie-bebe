@@ -18,6 +18,7 @@ export class RegisterPage {
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
+    cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/)]],
     phone: ['', Validators.required],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
@@ -38,7 +39,13 @@ export class RegisterPage {
     this.errorMessage.set(null);
 
     this.auth
-      .register({ name: value.name, email: value.email, password: value.password, phone: value.phone || null })
+      .register({
+        name: value.name,
+        email: value.email,
+        cpf: value.cpf,
+        password: value.password,
+        phone: value.phone || null,
+      })
       .subscribe({
         next: () => this.router.navigate(['/minha-conta']),
         error: (err) => {
