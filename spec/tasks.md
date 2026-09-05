@@ -99,4 +99,27 @@ Este plano reflete o que já está **implementado e verificado** no sistema (mar
 
 Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo foi iniciada ainda.
 
-- [ ] 13. (placeholder) Descreva aqui a próxima funcionalidade antes de implementá-la, quebrada em subtarefas incrementais e referenciando os requisitos que ela precisa satisfazer (adicione-os primeiro em `requirements.md` se ainda não existirem).
+- [ ] 13. Produtos exclusivos por cliente + bordado personalizado (Requisitos 14 e 15, design em `spec/design.md`)
+  - Backend — visibilidade (Requisito 14)
+    - [ ] 13.1 `Product` (Domain): `_allowedCustomerIds`, `AllowedCustomerIds`, `IsExclusive`, `SetAllowedCustomers`, `HasAccess`; testes de domínio
+    - [ ] 13.2 EF Core: mapear `ProductCustomerAccess (ProductId, CustomerId)` em `ProductConfiguration`; nova migration
+    - [ ] 13.3 `ICustomerRepository.ListAsync` (novo) + implementação
+    - [ ] 13.4 `IProductRepository`: `customerId` opcional em `ListAsync`, `GetBySlugAsync`, `ListCategoriesAsync`; filtro EXISTS na implementação
+    - [ ] 13.5 `ProductService`/`IProductService`: propagar `customerId`; `ProductDto.IsExclusive`; DTO admin com clientes liberados
+    - [ ] 13.6 Novo endpoint `GET /api/admin/customers` (`AdminOnly`)
+    - [ ] 13.7 Novo endpoint `PUT /api/admin/products/{id}/customers` (`AdminOnly`) → `Product.SetAllowedCustomers`
+    - [ ] 13.8 `ProductEndpoints`: ler `customerId` opcional de `http.User` (sem `RequireAuthorization`) em `/`, `/{slug}`, `/categories`
+  - Backend — bordado (Requisito 15)
+    - [ ] 13.9 `OrderService.CreateStoreOrderAsync`: repassar `itemRequest.OptionsJson` também para itens com `ProductId` (hoje só linhas avulsas recebem)
+  - Frontend — visibilidade e admin (Requisito 14)
+    - [ ] 13.10 `Product` (model): `isExclusive`
+    - [ ] 13.11 Novo `AdminCustomerService`/model; `AdminProductForm`: seção "Acesso exclusivo" (checklist de clientes) salvando via `PUT .../customers`
+    - [ ] 13.12 Badge "Exclusivo pra você" em `Shop`/`Home` para produtos exclusivos visíveis
+  - Frontend — bordado (Requisito 15)
+    - [ ] 13.13 `CartItem`/`CartService`: `embroideryText?`; chave de mesclagem `(productId, embroideryText)`; atualizar `cart.service.spec.ts`
+    - [ ] 13.14 `ProductDetail`: campo "Texto para bordar" (obrigatório se `isExclusive`); esconder botão de adicionar rápido para exclusivos nas grades (`Shop`/`Home`)
+    - [ ] 13.15 `Checkout`: montar `optionsJson` a partir de `item.embroideryText`; `CartPage`: exibir o texto do bordado por item
+    - [ ] 13.16 `AdminOrderDetail`: desserializar `OptionsJson` e exibir "Bordado: {texto}" quando presente
+  - Verificação e documentação
+    - [ ] 13.17 `dotnet test`/`ng test` completos; verificar no navegador: produto exclusivo só aparece pro cliente certo (404 pra quem não tem acesso), bordado no carrinho/checkout, exibição no admin
+    - [ ] 13.18 Atualizar `README.md` (RF27, RF28) e remover as notas "proposto" de `spec/requirements.md`/`spec/design.md`

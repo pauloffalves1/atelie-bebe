@@ -220,3 +220,40 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 7. A ordenação dentro de cada listagem (mais recente primeiro para encomendas/mensagens; ordem atual para produtos) DEVE ser preservada — a paginação apenas recorta a lista já ordenada, nunca reordena.
 8. Os controles de paginação no frontend DEVEM refletir a página atual e o total de páginas, e desabilitar "Anterior"/"Próxima" nos limites (primeira/última página).
 9. Trocar de página NÃO DEVE exigir recarregar a aplicação inteira — apenas uma nova chamada à API e atualização da lista renderizada.
+
+---
+
+## Requisito 14: Produtos exclusivos por cliente
+
+> **Status:** proposto — ainda não implementado.
+
+**User Story:** Como administrador, quero cadastrar produtos que só determinados clientes podem ver e encomendar (ex.: kit berço, carrinho, lençol), para oferecer itens sob consulta ou de catálogo estendido sem torná-los públicos.
+
+**Rastreamento:** provisório — será adicionado ao README como RF27 quando implementado.
+
+**Acceptance Criteria**
+1. Um produto PODE ser associado a zero, um ou vários clientes (relação N:N). Um produto sem nenhum cliente associado é considerado **público** — o comportamento atual (visível a todos) não muda.
+2. Um produto com um ou mais clientes associados é considerado **exclusivo** e NÃO DEVE aparecer nas listagens (`/loja`, categorias, destaque, busca) para visitantes não autenticados nem para clientes a quem ele não foi associado.
+3. QUANDO um cliente autenticado ao qual o produto foi associado acessa `/loja`, O SISTEMA DEVE incluir esse produto (e sua categoria, no filtro) misturado aos produtos públicos, na mesma listagem.
+4. QUANDO um administrador cadastra ou edita um produto, O SISTEMA DEVE permitir selecionar quais clientes (dentre os já cadastrados) têm acesso a ele, a partir de uma lista de clientes existente.
+5. `GET /api/products` (loja pública) DEVE aceitar autenticação opcional: SE a requisição não trouxer um token válido, ENTÃO O SISTEMA DEVE retornar apenas produtos públicos; SE trouxer um token de cliente válido, ENTÃO O SISTEMA DEVE incluir também os produtos exclusivos associados àquele cliente.
+6. `GET /api/products/{slug}` (detalhe de produto) DEVE aplicar a mesma regra de visibilidade — SE o produto for exclusivo e o visitante/cliente não tiver acesso, ENTÃO O SISTEMA DEVE responder 404, como se o produto não existisse.
+7. As listagens administrativas (`GET /api/admin/products`) DEVEM continuar mostrando todos os produtos (públicos e exclusivos, de todos os clientes), independentemente da regra de visibilidade pública.
+
+---
+
+## Requisito 15: Personalização de bordado em produtos exclusivos
+
+> **Status:** proposto — ainda não implementado.
+
+**User Story:** Como cliente com acesso a um produto exclusivo, quero informar quais letras devem ser bordadas e em quantas peças, para receber o item personalizado conforme pedido.
+
+**Rastreamento:** provisório — será adicionado ao README como RF28 quando implementado.
+
+**Acceptance Criteria**
+1. QUANDO um cliente adiciona ao carrinho um produto exclusivo ao qual tem acesso, O SISTEMA DEVE oferecer um campo de texto para as letras/inscrição a bordar, além da quantidade.
+2. A personalização de bordado NÃO DEVE ser oferecida para produtos públicos (Kit Ombro e Boca, Fralda de Ombro, Fralda de Boca) — apenas para produtos exclusivos.
+3. QUANDO o mesmo produto exclusivo é adicionado ao carrinho com um texto de bordado DIFERENTE do já presente, O SISTEMA DEVE tratá-lo como um item de carrinho separado (não somar à quantidade do item com bordado diferente); QUANDO adicionado com o MESMO texto de bordado, O SISTEMA DEVE somar à quantidade desse item.
+4. A quantidade de um item do carrinho representa o número de peças que recebem aquele mesmo texto de bordado.
+5. QUANDO o pedido é criado, O SISTEMA DEVE persistir o texto de bordado de cada item no campo `OptionsJson` do `OrderItem` correspondente (mecanismo já existente no domínio, hoje não preenchido para itens de catálogo).
+6. QUANDO um administrador visualiza o detalhe de uma encomenda, O SISTEMA DEVE exibir o texto de bordado de cada item que o possuir.

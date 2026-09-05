@@ -252,3 +252,89 @@ Eventos de domínio (todos `sealed record : DomainEventBase`, carregando `EventI
 - CORS: lista de origens permitidas configurável (`Cors:AllowedOrigins`), padrão `http://localhost:4200`.
 - Enumeração de contas: mensagem de erro de login idêntica para e-mail inexistente e senha incorreta (Requisito 5, 6).
 - `authInterceptor` só anexa o token Bearer a requisições para `environment.apiUrl` — nunca para domínios de terceiros como a ViaCEP (Requisito 2, item 13). Qualquer novo serviço que chame uma API externa herda essa proteção automaticamente, por ser aplicada no interceptor global.
+
+## Requisito 14 e 15 — Produtos exclusivos por cliente e bordado (proposto)
+
+> Design ainda não implementado.
+
+### Modelo de dados
+
+`Product` (Domain) ganha uma coleção de IDs de cliente com acesso, controlada por comportamento (não uma lista pública mutável):
+
+```csharp
+private readonly List<Guid> _allowedCustomerIds = new();
+public IReadOnlyCollection<Guid> AllowedCustomerIds => _allowedCustomerIds.AsReadOnly();
+public bool IsExclusive => _allowedCustomerIds.Count > 0;
+
+public void SetAllowedCustomers(IEnumerable<Guid> customerIds); // substitui o conjunto inteiro — usado pelo admin
+public bool HasAccess(Guid? customerId) => !IsExclusive || (customerId is Guid id && _allowedCustomerIds.Contains(id));
+```
+
+Persistência: tabela própria `ProductCustomerAccess (ProductId, CustomerId)`, mapeada em `ProductConfiguration` como coleção owned da lista privada (join table, sem virar uma entidade de domínio rica — é só uma associação). Sem relação com `OrderItem`/`Order`; a associação vale só para visibilidade no catálogo, não fica "congelada" no pedido depois de criado.
+
+`Order` não muda de modelo — o texto do bordado viaja em `OrderItem.OptionsJson` (campo já existente), como um JSON simples `{ "embroideryText": "ANA" }`.
+
+### Backend — visibilidade (Requisito 14)
+
+| Camada | Mudança |
+|---|---|
+| `IProductRepository.ListAsync` | Ganha parâmetro `Guid? customerId`. Filtro SQL: `!p.IsExclusive OR EXISTS(access WHERE ProductId = p.Id AND CustomerId = @customerId)`. |
+| `IProductRepository.GetBySlugAsync` | Mesma regra — se o produto for exclusivo e o `customerId` não tiver acesso, o repositório retorna `null` (o serviço já trata `null` como 404 via `NotFoundException`, sem mudança na `Api`). |
+| `IProductRepository.ListCategoriesAsync` | Ganha `Guid? customerId`, mesmo filtro, para a categoria de um produto exclusivo só aparecer no filtro de quem tem acesso. |
+| `ProductEndpoints.MapProductEndpoints` (`GET /api/products`, `/{slug}`, `/categories`) | Deixam de ser 100% anônimos: continuam **sem** `RequireAuthorization` (visitante sem token continua funcionando), mas passam a ler `http.User` — se autenticado como `customer`, extraem o `CustomerId` das claims (via `ClaimsPrincipalExtensions.GetUserId()`, já usado em `OrderEndpoints`) e repassam ao serviço. Token inválido/expirado não deve gerar 401 aqui — sem `RequireAuthorization`, o middleware de autenticação simplesmente não popula `http.User` como autenticado, e o endpoint trata como anônimo. |
+| `GET /api/admin/products` | Sem mudança de filtro — continua mostrando tudo, para todo administrador. |
+| `ProductDto` (público) | Ganha `IsExclusive: bool` (sem listar os clientes — não é informação pública). |
+| `AdminProductDto` (ou `ProductDto` usado no admin) | Ganha `AllowedCustomerIds: Guid[]` (ou uma lista `AllowedCustomers: { Id, Name, Email }[]` já resolvida, mais prática pro formulário admin). |
+| **Novo**: `GET /api/admin/customers` | `AdminOnly`. Lista clientes cadastrados (`Id, Name, Email`) para popular o seletor no formulário de produto. Exige `ICustomerRepository.ListAsync` (novo método — hoje o repositório só tem `GetByEmailAsync`/`EmailExistsAsync`/`Add`). |
+| **Novo**: `PUT /api/admin/products/{id}/customers` | `AdminOnly`. Corpo: `{ customerIds: Guid[] }`. Chama `Product.SetAllowedCustomers(...)` — substitui o conjunto inteiro (o formulário admin envia a seleção completa, não incrementalmente). |
+
+### Backend — bordado (Requisito 15)
+
+`OrderService.CreateStoreOrderAsync` tem uma lacuna a corrigir: hoje só repassa `itemRequest.OptionsJson` para itens **sem** `ProductId` (linha avulsa de encomenda personalizada); para itens de catálogo, `order.AddItem(...)` é chamado **sem** o quarto parâmetro. Passa a ser:
+
+```csharp
+product.Reserve(itemRequest.Quantity);
+order.AddItem(product.Id, product.Name, product.Price, itemRequest.Quantity, itemRequest.OptionsJson);
+```
+
+Sem validação extra no backend de que `OptionsJson` só venha preenchido para produtos exclusivos — é uma regra de UI (Requisito 15, item 2), não de integridade de dados; um `OptionsJson` presente em um produto público não quebra nada, só não é oferecido pela interface.
+
+`AdminOrderDetail` (frontend) desserializa `OptionsJson` de cada item e, se tiver `embroideryText`, exibe "Bordado: {texto}" na linha do item.
+
+### Frontend — visibilidade e formulário admin (Requisito 14)
+
+- `Product` (model) ganha `isExclusive: boolean`.
+- `AdminProductForm` ganha uma seção "Acesso exclusivo": lista de clientes (via novo `CustomerService.listForAdmin()` → `GET /api/admin/customers`) com checkbox por cliente; ao salvar, chama `PUT /api/admin/products/{id}/customers` com os IDs marcados. Produto novo (ainda sem ID) só ganha essa seção depois do primeiro salvamento (mesma limitação que já existe hoje para ajustar estoque em produto novo).
+- `Shop`/`Home`/`ProductDetail` não precisam de mudança de autenticação — o token já viaja via `authInterceptor` quando o cliente está logado; a API decide o que incluir.
+- Produtos exclusivos exibidos para quem tem acesso ganham um badge visual "Exclusivo pra você" (`badge-soft`, mesmo padrão usado em outras páginas) — diferenciação de UX, não é um requisito de dado novo.
+
+### Frontend — bordado no carrinho (Requisito 15)
+
+- `CartItem` (model) ganha `embroideryText?: string`.
+- `CartService.add(product, quantity, embroideryText?)`: a chave de mesclagem passa de `product.id` para `(product.id, embroideryText ?? null)` — dois itens do mesmo produto com bordado diferente NÃO se somam; com o mesmo texto (ou ambos sem bordado), somam a quantidade normalmente.
+- O botão rápido "Adicionar" nas grades de produto (`Shop`, `Home`) continua chamando `cart.add(product, 1)` sem bordado — só funciona assim para produtos **não exclusivos**. Para um produto exclusivo, o card não mostra o botão rápido; o clique leva para `ProductDetail`, que ganha um campo "Texto para bordar" (obrigatório quando `product.isExclusive`) antes do botão "Adicionar ao carrinho".
+- `Checkout.submit()`: para cada item do carrinho, `optionsJson` passa de sempre `null` para `item.embroideryText ? JSON.stringify({ embroideryText: item.embroideryText }) : null`.
+- `CartPage` exibe o texto do bordado (se houver) abaixo do nome do produto em cada linha.
+
+### Diagrama — resolução de visibilidade em `GET /api/products`
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Cliente as Cliente (ou Visitante)
+    participant Ep as ProductEndpoints
+    participant Svc as ProductService
+    participant Repo as IProductRepository
+
+    Cliente->>Ep: GET /api/products (Authorization opcional)
+    alt token de cliente válido presente
+        Ep->>Ep: customerId = http.User.GetUserId()
+    else sem token ou token inválido
+        Ep->>Ep: customerId = null
+    end
+    Ep->>Svc: ListAsync(category, onlyActive: true, customerId, page, pageSize)
+    Svc->>Repo: ListAsync(..., customerId, ...)
+    Repo-->>Svc: produtos públicos + exclusivos liberados para customerId
+    Svc-->>Ep: PagedResult<ProductDto> (com IsExclusive)
+    Ep-->>Cliente: 200 OK
+```
