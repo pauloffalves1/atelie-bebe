@@ -58,8 +58,10 @@ public sealed class Order : Entity, IAggregateRoot
     {
         if (string.IsNullOrWhiteSpace(customerName))
             throw new DomainException("O nome do cliente é obrigatório.");
+        if (string.IsNullOrWhiteSpace(customerPhone))
+            throw new DomainException("O telefone/WhatsApp é obrigatório.");
 
-        return new Order(Guid.NewGuid(), customerId, customerName.Trim(), customerEmail, customerPhone,
+        return new Order(Guid.NewGuid(), customerId, customerName.Trim(), customerEmail, customerPhone.Trim(),
             type, notes, customDetailsJson, shippingAddressJson);
     }
 
@@ -80,7 +82,7 @@ public sealed class Order : Entity, IAggregateRoot
         if (_items.Count == 0 && Type == OrderType.Loja)
             throw new DomainException("O pedido precisa ter pelo menos um item.");
 
-        AddDomainEvent(new OrderCreatedDomainEvent(Id, CustomerName, CustomerEmail.Value, Total.Amount));
+        AddDomainEvent(new OrderCreatedDomainEvent(Id, CustomerName, CustomerEmail.Value, CustomerPhone!, Total.Amount));
     }
 
     public void ChangeStatus(OrderStatus newStatus)
@@ -93,6 +95,6 @@ public sealed class Order : Entity, IAggregateRoot
         var oldStatus = Status;
         Status = newStatus;
         UpdatedAt = DateTime.UtcNow;
-        AddDomainEvent(new OrderStatusChangedDomainEvent(Id, CustomerEmail.Value, oldStatus, newStatus));
+        AddDomainEvent(new OrderStatusChangedDomainEvent(Id, CustomerName, CustomerEmail.Value, CustomerPhone!, oldStatus, newStatus));
     }
 }

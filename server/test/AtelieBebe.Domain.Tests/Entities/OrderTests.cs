@@ -20,7 +20,14 @@ public class OrderTests
     public void Create_WithEmptyCustomerName_Throws()
     {
         Assert.Throws<DomainException>(() =>
-            Order.Create(null, " ", CustomerEmail, null, OrderType.Loja));
+            Order.Create(null, " ", CustomerEmail, "11999999999", OrderType.Loja));
+    }
+
+    [Fact]
+    public void Create_WithEmptyPhone_Throws()
+    {
+        Assert.Throws<DomainException>(() =>
+            Order.Create(null, "Maria Silva", CustomerEmail, null, OrderType.Loja));
     }
 
     [Fact]
@@ -60,6 +67,7 @@ public class OrderTests
         var raised = Assert.Single(order.DomainEvents.OfType<OrderCreatedDomainEvent>());
         Assert.Equal(order.Id, raised.OrderId);
         Assert.Equal(139.80m, raised.TotalAmount);
+        Assert.Equal("11999999999", raised.CustomerPhone);
     }
 
     [Fact]
@@ -137,6 +145,7 @@ public class OrderTests
         var raised = Assert.Single(order.DomainEvents.OfType<OrderStatusChangedDomainEvent>());
         Assert.Equal(OrderStatus.Recebido, raised.OldStatus);
         Assert.Equal(OrderStatus.EmProducao, raised.NewStatus);
+        Assert.Equal("11999999999", raised.CustomerPhone);
     }
 
     /// <summary>Walks the order through the shortest valid path to reach an arbitrary status, for test setup.</summary>

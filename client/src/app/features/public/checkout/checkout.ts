@@ -26,7 +26,7 @@ export class Checkout implements OnInit {
   readonly form = this.fb.nonNullable.group({
     customerName: ['', Validators.required],
     customerEmail: ['', [Validators.required, Validators.email]],
-    customerPhone: [''],
+    customerPhone: ['', Validators.required],
     zipCode: ['', Validators.required],
     street: ['', Validators.required],
     number: ['', Validators.required],

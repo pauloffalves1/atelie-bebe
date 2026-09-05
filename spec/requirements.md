@@ -253,3 +253,25 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 4. A quantidade de um item do carrinho representa o número de peças que recebem aquele mesmo texto de bordado.
 5. QUANDO o pedido é criado, O SISTEMA DEVE persistir o texto de bordado de cada item no campo `OptionsJson` do `OrderItem` correspondente (mecanismo já existente no domínio, hoje não preenchido para itens de catálogo).
 6. QUANDO um administrador visualiza o detalhe de uma encomenda, O SISTEMA DEVE exibir o texto de bordado de cada item que o possuir.
+
+---
+
+## Requisito 16: Notificações por WhatsApp
+
+> **Status:** proposto — depende de configuração externa (conta Meta WhatsApp Business Cloud API) que o administrador ainda não criou.
+
+**User Story:** Como cliente e como administrador, quero receber as notificações do site (confirmação de pedido, mudança de status, boas-vindas, confirmação de contato, alerta de estoque baixo) por WhatsApp em vez de e-mail, para acompanhar tudo no canal que já uso no dia a dia.
+
+**Rastreamento:** RF29.
+
+**Acceptance Criteria**
+1. QUANDO um pedido de loja ou encomenda personalizada é criado, O SISTEMA DEVE enviar ao cliente uma mensagem de WhatsApp confirmando o recebimento do pedido.
+2. QUANDO o status de um pedido muda (ex.: "Recebido" → "Em produção" → "Pronto" → "Enviado" → "Entregue"), O SISTEMA DEVE enviar ao cliente uma mensagem de WhatsApp informando o novo status.
+3. QUANDO um cliente cria uma conta, O SISTEMA DEVE enviar uma mensagem de WhatsApp de boas-vindas.
+4. QUANDO alguém envia o formulário de contato (`POST /api/contact`), O SISTEMA DEVE enviar uma mensagem de WhatsApp confirmando o recebimento.
+5. QUANDO o estoque de um produto atinge o limite de estoque baixo, O SISTEMA DEVE enviar uma mensagem de WhatsApp de alerta para o número de WhatsApp do próprio ateliê (configurado, não é o número de um cliente).
+6. Como o telefone é agora o canal de entrega das notificações, o SISTEMA DEVE exigir telefone/WhatsApp: (a) no cadastro de cliente (`POST /api/auth/register`); (b) no checkout de loja (`POST /api/orders/store`); (c) na encomenda personalizada (`POST /api/orders/custom`); (d) no formulário de contato (`POST /api/contact`, que ganha um campo de telefone que hoje não existe). Um pedido/cadastro/contato sem telefone É REJEITADO com uma mensagem de erro clara.
+7. O envio por WhatsApp usa a Meta WhatsApp Business Cloud API oficial (Graph API `POST /{phone-number-id}/messages`), autenticada por um token de acesso configurado via `dotnet user-secrets` (nunca commitado), no mesmo padrão já usado para `Jwt:Secret`.
+8. Cada tipo de notificação corresponde a um *message template* pré-aprovado pela Meta (a Cloud API exige template aprovado para mensagens iniciadas pela empresa fora da janela de 24h de atendimento) — o sistema não tenta enviar texto livre para essas notificações automáticas.
+9. QUANDO o envio de uma notificação por WhatsApp falha (credenciais ausentes/inválidas, número inválido, template não aprovado, etc.), O SISTEMA NÃO DEVE afetar a operação que originou o evento (criar pedido, mudar status, cadastrar cliente) — a falha fica registrada no outbox (`Attempts`/`Error`) e é reprocessada nas tentativas seguintes, como já ocorre hoje para qualquer falha de notificação.
+10. Este requisito substitui o canal de notificação simulado (log) por um canal real — mas o mecanismo de outbox/at-least-once/retry (Requisito de eventos de domínio já implementado) não muda.

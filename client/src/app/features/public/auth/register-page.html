@@ -26,8 +26,12 @@
               }
             </div>
             <div class="mb-3">
-              <label for="register-phone" class="form-label small fw-semibold">Telefone (opcional)</label>
-              <input type="text" id="register-phone" class="form-control" formControlName="phone">
+              <label for="register-phone" class="form-label small fw-semibold">Telefone / WhatsApp</label>
+              <input type="text" id="register-phone" class="form-control" formControlName="phone"
+                [class.is-invalid]="form.controls.phone.invalid && form.controls.phone.touched">
+              @if (form.controls.phone.invalid && form.controls.phone.touched) {
+                <div class="invalid-feedback">Telefone/WhatsApp é obrigatório — usamos para te avisar sobre pedidos.</div>
+              }
             </div>
             <div class="mb-3">
               <label for="register-password" class="form-label small fw-semibold">Senha</label>

@@ -5,4 +5,5 @@ namespace AtelieBebe.Domain.Events;
 public sealed record ContactMessageReceivedDomainEvent(
     Guid MessageId,
     string Name,
-    string Email) : DomainEventBase;
+    string Email,
+    string Phone) : DomainEventBase;

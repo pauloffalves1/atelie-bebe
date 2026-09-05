@@ -31,9 +31,11 @@ public sealed class Customer : Entity, IAggregateRoot
             throw new DomainException("O nome é obrigatório.");
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new DomainException("A senha é obrigatória.");
+        if (string.IsNullOrWhiteSpace(phone))
+            throw new DomainException("O telefone/WhatsApp é obrigatório.");
 
-        var customer = new Customer(Guid.NewGuid(), name.Trim(), email, passwordHash, phone);
-        customer.AddDomainEvent(new CustomerRegisteredDomainEvent(customer.Id, customer.Name, customer.Email.Value));
+        var customer = new Customer(Guid.NewGuid(), name.Trim(), email, passwordHash, phone.Trim());
+        customer.AddDomainEvent(new CustomerRegisteredDomainEvent(customer.Id, customer.Name, customer.Email.Value, customer.Phone!));
         return customer;
     }
 

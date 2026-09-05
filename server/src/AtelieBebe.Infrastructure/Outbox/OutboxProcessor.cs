@@ -101,19 +101,19 @@ public sealed class OutboxProcessor : BackgroundService
         switch (domainEvent)
         {
             case OrderCreatedDomainEvent e:
-                await sender.SendOrderCreatedAsync(e.OrderId, e.CustomerName, e.CustomerEmail, e.TotalAmount, ct);
+                await sender.SendOrderCreatedAsync(e.OrderId, e.CustomerName, e.CustomerPhone, e.TotalAmount, ct);
                 break;
             case OrderStatusChangedDomainEvent e:
-                await sender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerEmail, e.OldStatus.ToString(), e.NewStatus.ToString(), ct);
+                await sender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerName, e.CustomerPhone, e.OldStatus.ToString(), e.NewStatus.ToString(), ct);
                 break;
             case CustomerRegisteredDomainEvent e:
-                await sender.SendWelcomeEmailAsync(e.CustomerId, e.Name, e.Email, ct);
+                await sender.SendWelcomeMessageAsync(e.CustomerId, e.Name, e.Phone, ct);
                 break;
             case ProductLowStockDomainEvent e:
                 await sender.SendLowStockAlertAsync(e.ProductId, e.ProductName, e.RemainingStock, ct);
                 break;
             case ContactMessageReceivedDomainEvent e:
-                await sender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Email, ct);
+                await sender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Phone, ct);
                 break;
             default:
                 throw new InvalidOperationException($"Nenhum handler registrado para o evento {domainEvent.GetType().Name}.");

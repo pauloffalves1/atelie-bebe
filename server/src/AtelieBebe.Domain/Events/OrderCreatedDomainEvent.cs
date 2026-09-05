@@ -6,4 +6,5 @@ public sealed record OrderCreatedDomainEvent(
     Guid OrderId,
     string CustomerName,
     string CustomerEmail,
+    string CustomerPhone,
     decimal TotalAmount) : DomainEventBase;

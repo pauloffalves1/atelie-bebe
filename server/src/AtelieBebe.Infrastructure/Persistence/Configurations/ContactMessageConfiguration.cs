@@ -13,6 +13,7 @@ public sealed class ContactMessageConfiguration : IEntityTypeConfiguration<Conta
         builder.HasKey(m => m.Id);
 
         builder.Property(m => m.Name).IsRequired().HasMaxLength(200);
+        builder.Property(m => m.Phone).IsRequired().HasMaxLength(30).HasDefaultValue("");
         builder.Property(m => m.Message).IsRequired().HasMaxLength(4000);
 
         builder.Property(m => m.Email)

@@ -13,7 +13,7 @@ public sealed class ContactService : IContactService
 
     public async Task SubmitAsync(SubmitContactRequest request, CancellationToken ct = default)
     {
-        var message = ContactMessage.Create(request.Name, Email.Create(request.Email), request.Message);
+        var message = ContactMessage.Create(request.Name, Email.Create(request.Email), request.Phone, request.Message);
         _unitOfWork.ContactMessages.Add(message);
         await _unitOfWork.SaveChangesAsync(ct);
     }
@@ -22,7 +22,7 @@ public sealed class ContactService : IContactService
     {
         var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
         var (messages, totalItems) = await _unitOfWork.ContactMessages.ListAsync(normalizedPage, normalizedPageSize, ct);
-        var items = messages.Select(m => new ContactMessageDto(m.Id, m.Name, m.Email.Value, m.Message, m.CreatedAt)).ToList();
+        var items = messages.Select(m => new ContactMessageDto(m.Id, m.Name, m.Email.Value, m.Phone, m.Message, m.CreatedAt)).ToList();
         return new PagedResult<ContactMessageDto>(items, normalizedPage, normalizedPageSize, totalItems);
     }
 }
