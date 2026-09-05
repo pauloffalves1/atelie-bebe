@@ -1,4 +1,5 @@
 using AtelieBebe.Application.Abstractions;
+using AtelieBebe.Application.Common;
 using AtelieBebe.Application.Exceptions;
 using AtelieBebe.Domain.Entities;
 using AtelieBebe.Domain.Enums;
@@ -70,14 +71,15 @@ public sealed class OrderService : IOrderService
         return await GetByIdAsync(order.Id, ct);
     }
 
-    public async Task<IReadOnlyList<OrderDto>> ListAsync(string? status, CancellationToken ct = default)
+    public async Task<PagedResult<OrderDto>> ListAsync(string? status, int page, int pageSize, CancellationToken ct = default)
     {
         OrderStatus? parsedStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
             parsedStatus = ParseStatus(status);
 
-        var orders = await _unitOfWork.Orders.ListAsync(parsedStatus, ct);
-        return orders.Select(ToDto).OrderByDescending(o => o.CreatedAt).ToList();
+        var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
+        var (orders, totalItems) = await _unitOfWork.Orders.ListAsync(parsedStatus, normalizedPage, normalizedPageSize, ct);
+        return new PagedResult<OrderDto>(orders.Select(ToDto).ToList(), normalizedPage, normalizedPageSize, totalItems);
     }
 
     public async Task<IReadOnlyList<OrderDto>> ListMineAsync(Guid customerId, CancellationToken ct = default)

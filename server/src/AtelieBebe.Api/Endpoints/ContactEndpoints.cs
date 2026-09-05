@@ -12,8 +12,8 @@ public static class ContactEndpoints
             return Results.NoContent();
         }).WithTags("Contato");
 
-        app.MapGet("/api/admin/contact-messages", async (IContactService service, CancellationToken ct) =>
-            Results.Ok(await service.ListAsync(ct)))
+        app.MapGet("/api/admin/contact-messages", async (IContactService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
+            Results.Ok(await service.ListAsync(page, pageSize, ct)))
             .WithTags("Contato (admin)")
             .RequireAuthorization("AdminOnly");
     }

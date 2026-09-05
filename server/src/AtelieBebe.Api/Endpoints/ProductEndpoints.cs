@@ -8,8 +8,8 @@ public static class ProductEndpoints
     {
         var group = app.MapGroup("/api/products").WithTags("Produtos");
 
-        group.MapGet("/", async (string? category, IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.ListAsync(category, onlyActive: true, ct)));
+        group.MapGet("/", async (string? category, IProductService service, CancellationToken ct, int page = 1, int pageSize = 12) =>
+            Results.Ok(await service.ListAsync(category, onlyActive: true, page, pageSize, ct)));
 
         group.MapGet("/featured", async (IProductService service, CancellationToken ct) =>
             Results.Ok(await service.ListFeaturedAsync(ct)));
@@ -22,8 +22,8 @@ public static class ProductEndpoints
 
         var adminGroup = app.MapGroup("/api/admin/products").WithTags("Produtos (admin)").RequireAuthorization("AdminOnly");
 
-        adminGroup.MapGet("/", async (IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.ListAsync(null, onlyActive: false, ct)));
+        adminGroup.MapGet("/", async (IProductService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
+            Results.Ok(await service.ListAsync(null, onlyActive: false, page, pageSize, ct)));
 
         adminGroup.MapGet("/{id:guid}", async (Guid id, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.GetByIdAsync(id, ct)));

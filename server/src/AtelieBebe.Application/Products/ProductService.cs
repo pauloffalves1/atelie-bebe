@@ -12,10 +12,11 @@ public sealed class ProductService : IProductService
 
     public ProductService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task<IReadOnlyList<ProductDto>> ListAsync(string? category, bool onlyActive, CancellationToken ct = default)
+    public async Task<PagedResult<ProductDto>> ListAsync(string? category, bool onlyActive, int page, int pageSize, CancellationToken ct = default)
     {
-        var products = await _unitOfWork.Products.ListAsync(category, onlyActive, ct);
-        return products.Select(ToDto).ToList();
+        var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
+        var (products, totalItems) = await _unitOfWork.Products.ListAsync(category, onlyActive, normalizedPage, normalizedPageSize, ct);
+        return new PagedResult<ProductDto>(products.Select(ToDto).ToList(), normalizedPage, normalizedPageSize, totalItems);
     }
 
     public async Task<IReadOnlyList<ProductDto>> ListFeaturedAsync(CancellationToken ct = default)

@@ -16,7 +16,7 @@ public sealed class ProductRepository : IProductRepository
     public Task<Product?> GetBySlugAsync(string slug, CancellationToken ct = default) =>
         _dbContext.Products.FirstOrDefaultAsync(p => p.Slug == slug, ct);
 
-    public async Task<IReadOnlyList<Product>> ListAsync(string? category = null, bool onlyActive = true, CancellationToken ct = default)
+    public async Task<(IReadOnlyList<Product> Items, int TotalItems)> ListAsync(string? category, bool onlyActive, int page, int pageSize, CancellationToken ct = default)
     {
         var query = _dbContext.Products.AsQueryable();
 
@@ -26,7 +26,12 @@ public sealed class ProductRepository : IProductRepository
         if (!string.IsNullOrWhiteSpace(category))
             query = query.Where(p => p.Category == category);
 
-        return await query.OrderBy(p => p.Name).ToListAsync(ct);
+        query = query.OrderBy(p => p.Name);
+
+        var totalItems = await query.CountAsync(ct);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+
+        return (items, totalItems);
     }
 
     public async Task<IReadOnlyList<Product>> ListFeaturedAsync(CancellationToken ct = default) =>

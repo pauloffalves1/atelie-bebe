@@ -32,8 +32,8 @@ public static class OrderEndpoints
 
         var adminGroup = app.MapGroup("/api/admin/orders").WithTags("Encomendas (admin)").RequireAuthorization("AdminOnly");
 
-        adminGroup.MapGet("/", async (string? status, IOrderService service, CancellationToken ct) =>
-            Results.Ok(await service.ListAsync(status, ct)));
+        adminGroup.MapGet("/", async (string? status, IOrderService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
+            Results.Ok(await service.ListAsync(status, page, pageSize, ct)));
 
         adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, IOrderService service, CancellationToken ct) =>
             Results.Ok(await service.ChangeStatusAsync(id, request, ct)));

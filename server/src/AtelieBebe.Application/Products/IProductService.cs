@@ -1,8 +1,10 @@
+using AtelieBebe.Application.Common;
+
 namespace AtelieBebe.Application.Products;
 
 public interface IProductService
 {
-    Task<IReadOnlyList<ProductDto>> ListAsync(string? category, bool onlyActive, CancellationToken ct = default);
+    Task<PagedResult<ProductDto>> ListAsync(string? category, bool onlyActive, int page, int pageSize, CancellationToken ct = default);
     Task<IReadOnlyList<ProductDto>> ListFeaturedAsync(CancellationToken ct = default);
     Task<IReadOnlyList<string>> ListCategoriesAsync(CancellationToken ct = default);
     Task<ProductDto> GetBySlugAsync(string slug, CancellationToken ct = default);

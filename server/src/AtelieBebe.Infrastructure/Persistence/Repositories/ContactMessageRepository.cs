@@ -12,6 +12,13 @@ public sealed class ContactMessageRepository : IContactMessageRepository
 
     public void Add(ContactMessage message) => _dbContext.ContactMessages.Add(message);
 
-    public async Task<IReadOnlyList<ContactMessage>> ListAsync(CancellationToken ct = default) =>
-        await _dbContext.ContactMessages.ToListAsync(ct);
+    public async Task<(IReadOnlyList<ContactMessage> Items, int TotalItems)> ListAsync(int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = _dbContext.ContactMessages.OrderByDescending(m => m.CreatedAt);
+
+        var totalItems = await query.CountAsync(ct);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+
+        return (items, totalItems);
+    }
 }

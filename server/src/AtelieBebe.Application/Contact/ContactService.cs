@@ -1,4 +1,5 @@
 using AtelieBebe.Application.Abstractions;
+using AtelieBebe.Application.Common;
 using AtelieBebe.Domain.Entities;
 using AtelieBebe.Domain.ValueObjects;
 
@@ -17,12 +18,11 @@ public sealed class ContactService : IContactService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyList<ContactMessageDto>> ListAsync(CancellationToken ct = default)
+    public async Task<PagedResult<ContactMessageDto>> ListAsync(int page, int pageSize, CancellationToken ct = default)
     {
-        var messages = await _unitOfWork.ContactMessages.ListAsync(ct);
-        return messages
-            .OrderByDescending(m => m.CreatedAt)
-            .Select(m => new ContactMessageDto(m.Id, m.Name, m.Email.Value, m.Message, m.CreatedAt))
-            .ToList();
+        var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
+        var (messages, totalItems) = await _unitOfWork.ContactMessages.ListAsync(normalizedPage, normalizedPageSize, ct);
+        var items = messages.Select(m => new ContactMessageDto(m.Id, m.Name, m.Email.Value, m.Message, m.CreatedAt)).ToList();
+        return new PagedResult<ContactMessageDto>(items, normalizedPage, normalizedPageSize, totalItems);
     }
 }

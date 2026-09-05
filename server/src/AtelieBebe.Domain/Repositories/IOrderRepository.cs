@@ -6,7 +6,7 @@ namespace AtelieBebe.Domain.Repositories;
 public interface IOrderRepository
 {
     Task<Order?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<IReadOnlyList<Order>> ListAsync(OrderStatus? status = null, CancellationToken ct = default);
+    Task<(IReadOnlyList<Order> Items, int TotalItems)> ListAsync(OrderStatus? status, int page, int pageSize, CancellationToken ct = default);
     Task<IReadOnlyList<Order>> ListByCustomerAsync(Guid customerId, CancellationToken ct = default);
     void Add(Order order);
 }
