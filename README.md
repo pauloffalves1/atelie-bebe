@@ -12,7 +12,7 @@
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=flat&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![Vitest](https://img.shields.io/badge/Tests-Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)](https://vitest.dev/)
 
-Plataforma de e-commerce e gestão de encomendas para um ateliê de enxovais e itens artesanais de bebê. O sistema cobre a jornada completa: vitrine pública com catálogo e carrinho, checkout com ou sem cadastro, pedidos personalizados sob medida, área do cliente, e um painel administrativo para gestão de produtos, encomendas e mensagens de contato.
+Plataforma de e-commerce e gestão de encomendas para um ateliê especializado em **fraldas de ombro e boca bordadas à mão** (individuais ou em kit). O sistema cobre a jornada completa: vitrine pública com catálogo e carrinho, checkout com ou sem cadastro, pedidos personalizados sob medida, área do cliente, e um painel administrativo para gestão de produtos, encomendas e mensagens de contato.
 
 Monorepo com dois projetos independentes:
 

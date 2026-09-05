@@ -207,7 +207,7 @@ Cada endpoint aplica seu próprio `pageSize` padrão antes de repassar ao servi�
 
 Entidades de domínio (`AtelieBebe.Domain/Entities`), todas herdando de `Entity` (Id + eventos de domínio) e implementando `IAggregateRoot` quando expostas por repositório próprio:
 
-- **Product** — `Name, Slug, Description, Price (Money), Category, ImageUrl, Stock, Active, Featured`. Invariantes: nome/slug/categoria obrigatórios, estoque ≥ 0, `LowStockThreshold = 3`.
+- **Product** — `Name, Slug, Description, Price (Money), Category, ImageUrl, Stock, Active, Featured`. Invariantes: nome/slug/categoria obrigatórios, estoque ≥ 0, `LowStockThreshold = 3`. Catálogo especializado (Requisito 1): `DbInitializer.SeedProductsAsync` remove qualquer produto cuja `Category` esteja fora do conjunto permitido ("Kit Ombro e Boca", "Fralda de Ombro", "Fralda de Boca") a cada inicialização, antes de semear os produtos que faltarem — não há relação de chave estrangeira entre `OrderItem.ProductId` e `Product`, então excluir um produto não afeta pedidos que já o referenciam.
 - **Order** (raiz) + **OrderItem** (filho) — `CustomerId?, CustomerName, CustomerEmail (Email), Type (Loja|Personalizada), Status, Items[]`. `Total` é uma propriedade computada (soma dos subtotais dos itens), nunca persistida.
 - **Customer** — `Name, Email (Email), PasswordHash, Phone?`.
 - **Admin** — `Name, Email (Email), PasswordHash`. Única instância, semeada na inicialização.

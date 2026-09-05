@@ -59,8 +59,9 @@ Este plano reflete o que já está **implementado e verificado** no sistema (mar
   - [x] 7.6 Testes de frontend: `CartService`, `Contact` (mensagem WhatsApp), guards, `ProductService` (25 testes)
 
 - [x] 8. Dados de catálogo
-  - [x] 8.1 Semear categorias e produtos iniciais (Bodies, Mantas, Saída de Maternidade, Kits Enxoval, Acessórios)
-  - [x] 8.2 Adicionar produtos bordados nas categorias Roupinhas, Acessórios e Toalhas (Requisito 1)
+  - [x] 8.1 ~~Semear categorias e produtos iniciais (Bodies, Mantas, Saída de Maternidade, Kits Enxoval, Acessórios)~~ — descontinuado no item 8.3
+  - [x] 8.2 ~~Adicionar produtos bordados nas categorias Roupinhas, Acessórios e Toalhas~~ — descontinuado no item 8.3
+  - [x] 8.3 Especializar o catálogo exclusivamente em fraldas de ombro e boca (Requisito 1): remover do banco todo produto fora das categorias "Kit Ombro e Boca", "Fralda de Ombro" e "Fralda de Boca" (`DbInitializer` passa a limpar categorias descontinuadas a cada start) e semear os 9 produtos das 3 categorias novas. Reescrever home, sobre, rodapé, `index.html` e os tipos de peça do formulário de encomenda personalizada para refletir a especialização.
 
 - [x] 9. Documentação e operação
   - [x] 9.1 `README.md` — arquitetura, tecnologias, regras de negócio, requisitos numerados (RF/RNF)

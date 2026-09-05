@@ -2,7 +2,7 @@
 
 ## Introdução
 
-O Ateliê Bebê é uma plataforma de e-commerce e gestão de encomendas para um ateliê de enxovais e itens artesanais de bebê. Este documento formaliza, no padrão *Spec-Driven Development* (user story + critérios de aceite em EARS — Easy Approach to Requirements Syntax), os requisitos do sistema **tal como construído**. Ele complementa (não substitui) `README.md`, que mantém a tabela de requisitos numerados (RF01–RF26, RNF01–RNF08) usada como referência rápida — cada requisito abaixo cita o(s) RF/RNF correspondente(s) para rastreabilidade.
+O Ateliê Bebê é uma plataforma de e-commerce e gestão de encomendas para um ateliê especializado em fraldas de ombro e boca bordadas à mão (individuais ou em kit). Este documento formaliza, no padrão *Spec-Driven Development* (user story + critérios de aceite em EARS — Easy Approach to Requirements Syntax), os requisitos do sistema **tal como construído**. Ele complementa (não substitui) `README.md`, que mantém a tabela de requisitos numerados (RF01–RF26, RNF01–RNF08) usada como referência rápida — cada requisito abaixo cita o(s) RF/RNF correspondente(s) para rastreabilidade.
 
 Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente** (autenticado com papel `customer`), **Administrador** (autenticado com papel `admin`) e **Sistema** (comportamentos automáticos, sem ator humano direto).
 
@@ -22,6 +22,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 5. QUANDO um visitante acessa um produto por slug válido, O SISTEMA DEVE exibir nome, categoria, preço, descrição, imagem e estoque disponível.
 6. SE o slug não corresponder a nenhum produto, ENTÃO O SISTEMA DEVE responder com 404 e a UI DEVE exibir uma página "produto não encontrado" com um link de volta à loja.
 7. O SISTEMA NUNCA DEVE incluir produtos com `Active = false` nas listagens públicas (loja, destaque, busca por categoria).
+8. O catálogo é especializado exclusivamente em fraldas de ombro e boca — as únicas categorias vendidas são "Kit Ombro e Boca", "Fralda de Ombro" e "Fralda de Boca". O SISTEMA DEVE remover qualquer produto fora dessas categorias (ex.: restaurado de um backup antigo com o catálogo genérico anterior) em vez de exibi-lo.
 
 ---
 

@@ -34,6 +34,8 @@ dotnet test AtelieBebe.slnx                         # runs both test projects (d
 
 The API applies EF Core migrations and seeds the admin user + demo products automatically on startup (`DbInitializer.InitializeAsync`, called from `Program.cs`). The SQLite file lives at `src/AtelieBebe.Api/atelie-bebe.db`. Default seeded admin login is `admin@ateliebebe.com.br` / `admin123` (overridable via `AdminSeed:Email` / `AdminSeed:Password` config).
 
+The catalog is specialized exclusively in shoulder/mouth burp cloths ("fraldas de ombro e boca") — the only categories are "Kit Ombro e Boca", "Fralda de Ombro", and "Fralda de Boca". `DbInitializer.SeedProductsAsync` enforces this on every startup: it deletes any product whose category isn't in that set (e.g. left over from the earlier general-purpose baby-goods catalog) before adding whatever seed products are missing. If you ever reintroduce a broader catalog, update `allowedCategories` there first or the new products will be deleted on the next restart.
+
 ### Frontend (`client/`)
 
 ```bash
