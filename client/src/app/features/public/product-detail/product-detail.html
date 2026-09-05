@@ -37,12 +37,29 @@
             @if (p.isExclusive) {
               <div class="my-4">
                 <label for="embroidery-text" class="fw-semibold small">Texto para bordar</label>
-                <input type="text" id="embroidery-text" class="form-control" placeholder="Ex: ANA" maxlength="30"
-                  [class.is-invalid]="embroideryTouched() && !embroideryText().trim()"
-                  [ngModel]="embroideryText()" (ngModelChange)="embroideryText.set($event)">
+                <div class="d-flex gap-2">
+                  <input type="text" id="embroidery-text" class="form-control" placeholder="Ex: ANA" maxlength="30"
+                    [class.is-invalid]="embroideryTouched() && !embroideryText().trim()"
+                    [ngModel]="embroideryText()" (ngModelChange)="embroideryText.set($event)">
+                  <button type="button" class="btn btn-outline-secondary flex-shrink-0" title="Apagar última letra" (click)="removeLastLetter()">
+                    <i class="bi bi-backspace"></i>
+                  </button>
+                </div>
                 @if (embroideryTouched() && !embroideryText().trim()) {
-                  <div class="invalid-feedback">Informe as letras que devem ser bordadas.</div>
+                  <div class="invalid-feedback d-block">Informe as letras que devem ser bordadas.</div>
                 }
+
+                <div class="mt-2 p-2 border rounded-4 bg-light">
+                  <span class="small text-secondary d-block mb-2">Ou toque nas letras para montar o bordado:</span>
+                  <div class="d-flex flex-wrap gap-1">
+                    @for (letter of alphabet; track letter) {
+                      <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle"
+                        style="width: 2.1rem; height: 2.1rem; padding: 0" (click)="appendLetter(letter)">{{ letter }}</button>
+                    }
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" (click)="appendSpace()">espaço</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" (click)="clearEmbroideryText()">limpar</button>
+                  </div>
+                </div>
               </div>
             }
 

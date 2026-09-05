@@ -314,6 +314,7 @@ Sem validação extra no backend de que `OptionsJson` só venha preenchido para 
 - `CartItem` (model) ganha `embroideryText?: string`.
 - `CartService.add(product, quantity, embroideryText?)`: a chave de mesclagem passa de `product.id` para `(product.id, embroideryText ?? null)` — dois itens do mesmo produto com bordado diferente NÃO se somam; com o mesmo texto (ou ambos sem bordado), somam a quantidade normalmente.
 - O botão rápido "Adicionar" nas grades de produto (`Shop`, `Home`) continua chamando `cart.add(product, 1)` sem bordado — só funciona assim para produtos **não exclusivos**. Para um produto exclusivo, o card não mostra o botão rápido; o clique leva para `ProductDetail`, que ganha um campo "Texto para bordar" (obrigatório quando `product.isExclusive`) antes do botão "Adicionar ao carrinho".
+- Ao lado do campo de texto, `ProductDetail` mostra um teclado de alfabeto (A-Z, mais "espaço"/"limpar"/apagar-última-letra) que escreve no mesmo `embroideryText` signal — o cliente pode digitar direto no campo ou tocar nas letras, os dois métodos convergem para o mesmo texto (`appendLetter`/`appendSpace`/`removeLastLetter`/`clearEmbroideryText`, respeitando o `maxlength` de 30).
 - `Checkout.submit()`: para cada item do carrinho, `optionsJson` passa de sempre `null` para `item.embroideryText ? JSON.stringify({ embroideryText: item.embroideryText }) : null`.
 - `CartPage` exibe o texto do bordado (se houver) abaixo do nome do produto em cada linha.
 

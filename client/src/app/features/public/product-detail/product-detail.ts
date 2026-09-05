@@ -7,6 +7,8 @@ import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
 
+const MAX_EMBROIDERY_LENGTH = 30;
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
@@ -14,6 +16,8 @@ import { ProductService } from '../../../core/services/product.service';
   templateUrl: './product-detail.html',
 })
 export class ProductDetail implements OnInit {
+  readonly alphabet = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+
   readonly product = signal<Product | null>(null);
   readonly loading = signal(true);
   readonly notFound = signal(false);
@@ -47,6 +51,24 @@ export class ProductDetail implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  appendLetter(letter: string): void {
+    if (this.embroideryText().length >= MAX_EMBROIDERY_LENGTH) return;
+    this.embroideryText.update((text) => text + letter);
+  }
+
+  appendSpace(): void {
+    if (this.embroideryText().length >= MAX_EMBROIDERY_LENGTH || this.embroideryText().endsWith(' ')) return;
+    this.embroideryText.update((text) => text + ' ');
+  }
+
+  removeLastLetter(): void {
+    this.embroideryText.update((text) => text.slice(0, -1));
+  }
+
+  clearEmbroideryText(): void {
+    this.embroideryText.set('');
   }
 
   addToCart(): void {
