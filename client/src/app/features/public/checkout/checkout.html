@@ -33,6 +33,24 @@
         <div class="stat-card mb-4">
           <h5 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Endereço de entrega</h5>
           <div class="row g-3">
+            <div class="col-md-4">
+              <label for="checkout-zipCode" class="form-label small fw-semibold">CEP</label>
+              <div class="position-relative">
+                <input type="text" id="checkout-zipCode" class="form-control" formControlName="zipCode"
+                  placeholder="00000-000" maxlength="9"
+                  [class.is-invalid]="(form.controls.zipCode.invalid && form.controls.zipCode.touched) || cepError()">
+                @if (cepLoading()) {
+                  <span class="spinner-border spinner-border-sm position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></span>
+                }
+              </div>
+              @if (form.controls.zipCode.invalid && form.controls.zipCode.touched) {
+                <div class="invalid-feedback d-block">CEP é obrigatório.</div>
+              } @else if (cepError()) {
+                <div class="invalid-feedback d-block">{{ cepError() }}</div>
+              } @else {
+                <span class="form-text">Digite o CEP para preencher o endereço automaticamente.</span>
+              }
+            </div>
             <div class="col-md-8">
               <label for="checkout-street" class="form-label small fw-semibold">Rua</label>
               <input type="text" id="checkout-street" class="form-control" formControlName="street"
@@ -49,7 +67,7 @@
                 <div class="invalid-feedback">Número é obrigatório.</div>
               }
             </div>
-            <div class="col-md-6">
+            <div class="col-md-8">
               <label for="checkout-complement" class="form-label small fw-semibold">Complemento</label>
               <input type="text" id="checkout-complement" class="form-control" formControlName="complement">
             </div>
@@ -61,7 +79,7 @@
                 <div class="invalid-feedback">Bairro é obrigatório.</div>
               }
             </div>
-            <div class="col-md-5">
+            <div class="col-md-4">
               <label for="checkout-city" class="form-label small fw-semibold">Cidade</label>
               <input type="text" id="checkout-city" class="form-control" formControlName="city"
                 [class.is-invalid]="form.controls.city.invalid && form.controls.city.touched">
@@ -69,20 +87,12 @@
                 <div class="invalid-feedback">Cidade é obrigatória.</div>
               }
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <label for="checkout-state" class="form-label small fw-semibold">Estado</label>
               <input type="text" id="checkout-state" class="form-control" formControlName="state" maxlength="2" placeholder="UF"
                 [class.is-invalid]="form.controls.state.invalid && form.controls.state.touched">
               @if (form.controls.state.invalid && form.controls.state.touched) {
                 <div class="invalid-feedback">Obrigatório.</div>
-              }
-            </div>
-            <div class="col-md-4">
-              <label for="checkout-zipCode" class="form-label small fw-semibold">CEP</label>
-              <input type="text" id="checkout-zipCode" class="form-control" formControlName="zipCode"
-                [class.is-invalid]="form.controls.zipCode.invalid && form.controls.zipCode.touched">
-              @if (form.controls.zipCode.invalid && form.controls.zipCode.touched) {
-                <div class="invalid-feedback">CEP é obrigatório.</div>
               }
             </div>
           </div>

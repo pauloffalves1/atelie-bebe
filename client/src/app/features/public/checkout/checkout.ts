@@ -2,8 +2,10 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { catchError, debounceTime, distinctUntilChanged, filter, map, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
+import { CepService } from '../../../core/services/cep.service';
 import { OrderService } from '../../../core/services/order.service';
 
 @Component({
@@ -14,21 +16,24 @@ import { OrderService } from '../../../core/services/order.service';
 })
 export class Checkout implements OnInit {
   private readonly fb = inject(FormBuilder);
+  private readonly cepService = inject(CepService);
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly cepLoading = signal(false);
+  readonly cepError = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     customerName: ['', Validators.required],
     customerEmail: ['', [Validators.required, Validators.email]],
     customerPhone: [''],
+    zipCode: ['', Validators.required],
     street: ['', Validators.required],
     number: ['', Validators.required],
     complement: [''],
     neighborhood: ['', Validators.required],
     city: ['', Validators.required],
     state: ['', Validators.required],
-    zipCode: ['', Validators.required],
     notes: [''],
   });
 
@@ -49,6 +54,32 @@ export class Checkout implements OnInit {
     if (user) {
       this.form.patchValue({ customerName: user.name, customerEmail: user.email });
     }
+
+    this.form.controls.zipCode.valueChanges
+      .pipe(
+        map((value) => value.replace(/\D/g, '')),
+        distinctUntilChanged(),
+        tap(() => this.cepError.set(null)),
+        filter((digits) => digits.length === 8),
+        tap(() => this.cepLoading.set(true)),
+        debounceTime(300),
+        switchMap((digits) => this.cepService.lookup(digits).pipe(catchError(() => of(null)))),
+      )
+      .subscribe((address) => {
+        this.cepLoading.set(false);
+
+        if (!address || address.erro) {
+          this.cepError.set('CEP não encontrado. Confira o número ou preencha o endereço manualmente.');
+          return;
+        }
+
+        this.form.patchValue({
+          street: address.logradouro,
+          neighborhood: address.bairro,
+          city: address.localidade,
+          state: address.uf,
+        });
+      });
   }
 
   submit(): void {
