@@ -195,3 +195,24 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 4. QUANDO uma exceção não tratada ocorre, O SISTEMA DEVE responder com HTTP 500 e uma mensagem genérica ao cliente, registrando os detalhes apenas no log do servidor — nunca na resposta.
 5. A interface DEVE ser responsiva e inteiramente localizada em português brasileiro (pt-BR), incluindo rotas, rótulos, mensagens de validação e dados de exemplo.
 6. Nenhum segredo de assinatura de token (JWT) DEVE ser versionado em texto plano no repositório — deve residir em `dotnet user-secrets` (dev) ou variável de ambiente/cofre (produção).
+
+---
+
+## Requisito 13: Paginação de listagens
+
+> **Status:** proposto — ainda não implementado. Rastreamento provisório; ao ser aprovado, será adicionado ao README como RF26.
+
+**User Story:** Como visitante ou administrador, quero navegar por listas longas em páginas menores, para que a tela carregue rápido e a navegação não fique poluída conforme o catálogo, as encomendas e as mensagens crescem.
+
+**Escopo confirmado:** `/loja` (catálogo público), `/admin/produtos`, `/admin/encomendas`, `/admin/mensagens`. Fora de escopo por ora: produtos em destaque na home, lista de categorias, "Minhas encomendas" do cliente.
+
+**Acceptance Criteria**
+1. QUANDO um visitante acessa `/loja`, O SISTEMA DEVE exibir no máximo **12 produtos por página**, com controles para avançar/voltar página.
+2. QUANDO um administrador acessa `/admin/produtos`, `/admin/encomendas` ou `/admin/mensagens`, O SISTEMA DEVE exibir no máximo **20 itens por página** em cada uma, com os mesmos controles de navegação.
+3. As chamadas `GET /api/products`, `GET /api/admin/products`, `GET /api/admin/orders` e `GET /api/admin/contact` DEVEM aceitar os parâmetros de consulta `page` (1-based, padrão 1) e `pageSize` (padrão conforme item 1/2, com um teto máximo de 100 para evitar abuso).
+4. A resposta dessas chamadas DEVE trazer, além dos itens da página, o total de itens (`totalItems`) e o total de páginas (`totalPages`), em um envelope consistente reutilizado pelas quatro listagens.
+5. QUANDO o filtro de categoria (loja) OU de status (encomendas) muda, O SISTEMA DEVE retornar à página 1 automaticamente.
+6. SE `page` solicitado for maior que `totalPages`, ENTÃO O SISTEMA DEVE retornar uma lista de itens vazia (não um erro), mantendo `totalItems`/`totalPages` corretos.
+7. A ordenação dentro de cada listagem (mais recente primeiro para encomendas/mensagens; ordem atual para produtos) DEVE ser preservada — a paginação apenas recorta a lista já ordenada, nunca reordena.
+8. Os controles de paginação no frontend DEVEM refletir a página atual e o total de páginas, e desabilitar "Anterior"/"Próxima" nos limites (primeira/última página).
+9. Trocar de página NÃO DEVE exigir recarregar a aplicação inteira — apenas uma nova chamada à API e atualização da lista renderizada.
