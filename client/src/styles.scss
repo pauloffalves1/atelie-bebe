@@ -116,6 +116,27 @@ a {
   font-style: italic;
 }
 
+// Embroidered-wreath frame around the atelier's name (navbar, footer, login screens):
+// a stitched dashed border flanked by two small florals, echoing the hand-embroidered products.
+.brand-embroidered {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  padding: .2em 1em;
+  border: 1.5px dashed var(--atelie-blush-strong);
+  border-radius: 999px;
+  line-height: 1.2;
+}
+
+.brand-embroidered::before,
+.brand-embroidered::after {
+  content: "❀";
+  flex-shrink: 0;
+  font-size: .65em;
+  font-style: normal;
+  color: var(--atelie-sage);
+}
+
 .btn {
   font-weight: 600;
   letter-spacing: .01em;
