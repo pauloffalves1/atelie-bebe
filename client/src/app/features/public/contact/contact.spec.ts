@@ -41,7 +41,7 @@ describe('Contact', () => {
     component.submit();
 
     const url = submittedUrl();
-    expect(url).toContain('https://wa.me/5511912345678?text=');
+    expect(url).toContain('https://wa.me/5511942361443?text=');
     const text = decodeURIComponent(url.split('text=')[1]);
     expect(text).toContain('Maria Silva');
     expect(text).toContain('gostaria de saber o prazo');

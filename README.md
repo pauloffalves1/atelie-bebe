@@ -327,7 +327,7 @@ npm test        # testes unitários (Vitest)
 - A página pública **"Contato e Encomendas"** (`/contato`) unifica dúvida geral e pedido de encomenda personalizada em um único formulário. Um alternador ("É uma encomenda personalizada") revela os campos específicos da peça (tipo, tamanho, tecido, cor, nome para bordar); os demais campos (nome, e-mail e telefone) são compartilhados pelos dois casos.
 - Ao enviar, o formulário **não chama a API** — ele monta uma mensagem de texto a partir dos campos preenchidos e abre `https://wa.me/<número-do-ateliê>?text=<mensagem>` em uma nova aba, iniciando a conversa diretamente no WhatsApp. Nenhum dado do formulário é persistido pelo backend nesse fluxo.
 - A rota antiga `/encomenda-personalizada` foi mantida como redirecionamento (`redirectTo`) para `/contato`, preservando links e favoritos existentes.
-- O número de WhatsApp usado no link (`WHATSAPP_NUMBER` em `contact.ts`, `+55 11 91234-5678`) é o número real do ateliê, o mesmo já exibido publicamente na página e no rodapé.
+- O número de WhatsApp usado no link (`WHATSAPP_NUMBER` em `contact.ts`, `+55 11 94236-1443`) é o número real do ateliê, o mesmo já exibido publicamente na página e no rodapé.
 - O endpoint `POST /api/contact` e o serviço `ContactService` continuam implementados e funcionais (persistem a mensagem e disparam `ContactMessageReceivedDomainEvent`), mas não são mais chamados por nenhuma tela pública — ficam disponíveis para um canal futuro (ex.: um formulário alternativo, ou integração server-side) sem exigir mudança de backend.
 
 ### Valores monetários

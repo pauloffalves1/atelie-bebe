@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
 /** Atelier's WhatsApp number in E.164 (no symbols), used to build the wa.me deep link. */
-const WHATSAPP_NUMBER = '5511912345678';
+const WHATSAPP_NUMBER = '5511942361443';
 
 @Component({
   selector: 'app-contact',
