@@ -8,6 +8,10 @@
             <h4 class="mt-2">Entrar na sua conta</h4>
           </div>
 
+          @if (returnUrl() === '/checkout') {
+            <div class="alert alert-info small rounded-4">Entre na sua conta para finalizar o pedido.</div>
+          }
+
           <form [formGroup]="form" (ngSubmit)="submit()">
             <div class="mb-3">
               <label for="login-email" class="form-label small fw-semibold">E-mail</label>
@@ -39,7 +43,8 @@
           </form>
 
           <p class="text-center small text-secondary mt-4 mb-0">
-            Ainda não tem conta? <a routerLink="/cadastro" class="text-blush fw-semibold">Cadastre-se</a>
+            Ainda não tem conta?
+            <a routerLink="/cadastro" [queryParams]="{ returnUrl: returnUrl() }" class="text-blush fw-semibold">Cadastre-se</a>
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
@@ -10,11 +10,13 @@ import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.direct
   imports: [ReactiveFormsModule, RouterLink, PhoneMaskDirective],
   templateUrl: './register-page.html',
 })
-export class RegisterPage {
+export class RegisterPage implements OnInit {
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly returnUrl = signal('/minha-conta');
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -28,6 +30,11 @@ export class RegisterPage {
     private readonly auth: AuthService,
     private readonly router: Router,
   ) {}
+
+  ngOnInit(): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl) this.returnUrl.set(returnUrl);
+  }
 
   submit(): void {
     if (this.form.invalid) {
@@ -48,7 +55,7 @@ export class RegisterPage {
         phone: value.phone || null,
       })
       .subscribe({
-        next: () => this.router.navigate(['/minha-conta']),
+        next: () => this.router.navigateByUrl(this.returnUrl()),
         error: (err) => {
           this.submitting.set(false);
           this.errorMessage.set(err?.error?.detail ?? 'Não foi possível criar sua conta.');

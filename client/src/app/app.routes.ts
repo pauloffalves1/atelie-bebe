@@ -85,6 +85,7 @@ export const routes: Routes = [
       {
         path: 'checkout',
         title: `Finalizar compra — ${SITE_NAME}`,
+        canActivate: [customerGuard],
         loadComponent: () => import('./features/public/checkout/checkout').then((m) => m.Checkout),
       },
       { path: 'encomenda-personalizada', redirectTo: 'contato', pathMatch: 'full' },
