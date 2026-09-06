@@ -329,3 +329,17 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. QUANDO o `returnUrl` aponta para `/checkout`, AMBAS as telas (login e cadastro) DEVEM exibir uma mensagem contextual explicando que a autenticação é para finalizar o pedido.
 4. QUANDO o login ou o cadastro é concluído com sucesso, O SISTEMA DEVE navegar o cliente para o `returnUrl` (ou para `/minha-conta` na ausência de um) em vez do destino fixo anterior.
 5. Este requisito remove o checkout como convidado — o carrinho (mantido em `localStorage`, independente de autenticação) permanece intacto durante o desvio para login/cadastro.
+
+---
+
+## Requisito 21: Pré-preenchimento de dados no checkout
+
+**User Story:** Como cliente que já tem conta e já fez pedido antes, quero que o checkout venha com meus dados e endereço já preenchidos, para não ter que redigitar tudo de novo a cada compra.
+
+**Rastreamento:** RF34.
+
+**Acceptance Criteria**
+1. QUANDO um cliente autenticado abre `/checkout`, O SISTEMA DEVE preencher automaticamente nome, e-mail, telefone e CPF com os dados salvos na conta (`GET /api/auth/me`).
+2. QUANDO esse cliente já tem pelo menos um pedido anterior com endereço de entrega registrado, O SISTEMA DEVE preencher automaticamente CEP, rua, número, complemento, bairro, cidade e estado com o endereço do pedido mais recente que tiver essa informação (`GET /api/orders/mine`, já ordenado do mais recente para o mais antigo).
+3. Todos os campos pré-preenchidos PERMANECEM editáveis — o cliente pode alterar qualquer um antes de confirmar o pedido.
+4. QUANDO o cliente não tem telefone/CPF salvos na conta, ou nenhum pedido anterior com endereço, os campos correspondentes ficam em branco (comportamento atual, sem erro).

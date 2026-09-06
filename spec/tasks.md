@@ -205,4 +205,13 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 20.2 `login-page.ts`/`register-page.ts`: signal `returnUrl` lido da query string, usado em `navigateByUrl` no sucesso (em vez do destino fixo `/minha-conta`); `login-page.html`/`register-page.html`: link cruzado entre as duas telas propaga `returnUrl`; alerta contextual quando `returnUrl === '/checkout'`
   - [x] 20.3 `ng test` completo (27 frontend); verificado no navegador: `/checkout` sem sessão redireciona para `/entrar?returnUrl=/checkout`, link "Cadastre-se" preserva o parâmetro, cadastro concluído retorna a `/checkout` com o carrinho intacto
   - [x] 20.4 `README.md` (RF33) e `spec/requirements.md`/`spec/design.md` (Requisito 20) atualizados
+
+- [x] 21. Pré-preenchimento de dados no checkout (Requisito 21 / RF34, design em `spec/design.md`)
+  - Backend
+    - [x] 21.1 `CustomerProfileDto`; `ICustomerAuthService`/`CustomerAuthService.GetProfileAsync` (busca por `GetByIdAsync`, 404 se não encontrado); `GET /api/auth/me` (`CustomerOnly`) em `AuthEndpoints`
+  - Frontend
+    - [x] 21.2 `AuthService.getProfile()`; `checkout.ts` chama `getProfile()` para preencher nome/e-mail/telefone/CPF, e `OrderService.listMine()` para achar o pedido mais recente com `shippingAddressJson` e preencher CEP/rua/número/complemento/bairro/cidade/estado
+  - Verificação e documentação
+    - [x] 21.3 `dotnet test`/`ng test` completos (72+20 backend, 27 frontend); verificado no navegador: pedido de teste criado com endereço, checkout seguinte já veio com todos os campos (dados + endereço) preenchidos e editáveis
+    - [x] 21.4 `README.md` (RF34) e `spec/requirements.md`/`spec/design.md` (Requisito 21) atualizados
   - [x] 16.3 `spec/requirements.md` (Requisito 15: user story e critérios reescritos, nota de histórico da mudança de escopo) e `spec/design.md` (seção "Frontend — bordado em todos os produtos") atualizados
