@@ -23,7 +23,7 @@ export class Contact implements OnInit {
     isCustomOrder: [false],
     customerName: ['', Validators.required],
     customerEmail: ['', Validators.email],
-    customerPhone: [''],
+    customerPhone: ['', Validators.required],
     tipoPeca: [this.pieceTypes[0]],
     tamanho: [this.sizes[0]],
     tecido: [''],

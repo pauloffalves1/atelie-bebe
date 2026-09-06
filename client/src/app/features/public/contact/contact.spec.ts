@@ -36,7 +36,11 @@ describe('Contact', () => {
   });
 
   it('opens a wa.me link with the atelier phone number for a general message', () => {
-    component.form.patchValue({ customerName: 'Maria Silva', message: 'Olá, gostaria de saber o prazo.' });
+    component.form.patchValue({
+      customerName: 'Maria Silva',
+      customerPhone: '(11) 91234-5678',
+      message: 'Olá, gostaria de saber o prazo.',
+    });
 
     component.submit();
 
@@ -51,6 +55,7 @@ describe('Contact', () => {
   it('includes the piece details in the message only when isCustomOrder is checked', () => {
     component.form.patchValue({
       customerName: 'Maria Silva',
+      customerPhone: '(11) 91234-5678',
       isCustomOrder: true,
       tipoPeca: 'Fralda de Ombro',
       tamanho: 'Padrão',
@@ -68,18 +73,27 @@ describe('Contact', () => {
     expect(text).toContain('Cor: rosa claro');
   });
 
-  it('appends email and phone to the message only when provided', () => {
+  it('appends email only when provided, and always appends phone', () => {
     component.form.patchValue({
       customerName: 'Maria Silva',
-      customerEmail: 'maria@example.com',
+      customerPhone: '(11) 91234-5678',
       message: 'Mensagem de teste.',
     });
 
     component.submit();
 
     const text = decodeURIComponent(submittedUrl().split('text=')[1]);
-    expect(text).toContain('E-mail: maria@example.com');
-    expect(text).not.toContain('Telefone:');
+    expect(text).not.toContain('E-mail:');
+    expect(text).toContain('Telefone: (11) 91234-5678');
+  });
+
+  it('does not open WhatsApp when phone is missing', () => {
+    component.form.patchValue({ customerName: 'Maria Silva', message: 'Mensagem de teste.' });
+
+    component.submit();
+
+    expect(windowOpenSpy).not.toHaveBeenCalled();
+    expect(component.form.controls.customerPhone.touched).toBe(true);
   });
 
   it('prefills name and email for a logged-in customer', () => {

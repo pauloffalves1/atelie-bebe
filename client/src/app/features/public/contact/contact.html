@@ -67,9 +67,13 @@
               }
             </div>
             <div class="col-md-6">
-              <label for="contact-customerPhone" class="form-label small fw-semibold">Telefone (opcional)</label>
+              <label for="contact-customerPhone" class="form-label small fw-semibold">Telefone</label>
               <input type="text" id="contact-customerPhone" class="form-control" formControlName="customerPhone" appPhoneMask
-                placeholder="(11) 91234-5678">
+                placeholder="(11) 91234-5678"
+                [class.is-invalid]="form.controls.customerPhone.invalid && form.controls.customerPhone.touched">
+              @if (form.controls.customerPhone.invalid && form.controls.customerPhone.touched) {
+                <div class="invalid-feedback">Telefone é obrigatório.</div>
+              }
             </div>
           </div>
 
