@@ -18,6 +18,7 @@ public sealed class UnitOfWork : IUnitOfWork
     public ICustomerRepository Customers { get; }
     public IAdminRepository Admins { get; }
     public IContactMessageRepository ContactMessages { get; }
+    public ISiteImageRepository SiteImages { get; }
 
     public UnitOfWork(AppDbContext dbContext)
     {
@@ -27,6 +28,7 @@ public sealed class UnitOfWork : IUnitOfWork
         Customers = new CustomerRepository(dbContext);
         Admins = new AdminRepository(dbContext);
         ContactMessages = new ContactMessageRepository(dbContext);
+        SiteImages = new SiteImageRepository(dbContext);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _dbContext.SaveChangesAsync(ct);

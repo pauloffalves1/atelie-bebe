@@ -13,6 +13,7 @@ public interface IUnitOfWork
     ICustomerRepository Customers { get; }
     IAdminRepository Admins { get; }
     IContactMessageRepository ContactMessages { get; }
+    ISiteImageRepository SiteImages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

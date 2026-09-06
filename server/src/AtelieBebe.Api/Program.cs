@@ -65,12 +65,21 @@ app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 
+var uploadsPath = builder.Configuration["Uploads:Path"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+Directory.CreateDirectory(uploadsPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = builder.Configuration["Uploads:PublicPath"] ?? "/api/uploads",
+});
+
 app.MapAuthEndpoints();
 app.MapProductEndpoints();
 app.MapOrderEndpoints();
 app.MapDashboardEndpoints();
 app.MapContactEndpoints();
 app.MapCustomerEndpoints();
+app.MapSiteImageEndpoints();
 
 await DbInitializer.InitializeAsync(app.Services);
 

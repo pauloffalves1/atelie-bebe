@@ -5,6 +5,7 @@ using AtelieBebe.Infrastructure.Outbox;
 using AtelieBebe.Infrastructure.Persistence;
 using AtelieBebe.Infrastructure.Persistence.Queries;
 using AtelieBebe.Infrastructure.Security;
+using AtelieBebe.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHttpClient<INotificationSender, WhatsAppNotificationSender>(client =>
             client.BaseAddress = new Uri("https://graph.facebook.com/"));
 

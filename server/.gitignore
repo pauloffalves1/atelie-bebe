@@ -11,6 +11,9 @@ obj/
 *.db-shm
 *.db-wal
 
+# Admin-uploaded site images (runtime content, not source)
+src/AtelieBebe.Api/uploads/
+
 # Rider / VS Code
 .idea/
 .vscode/
