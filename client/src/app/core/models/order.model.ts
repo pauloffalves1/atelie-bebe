@@ -20,6 +20,8 @@ export interface Order {
   customerCpf: string | null;
   type: OrderType;
   status: OrderStatus;
+  itemsTotal: number;
+  shippingCost: number;
   total: number;
   notes: string | null;
   customDetailsJson: string | null;
@@ -44,6 +46,7 @@ export interface CreateStoreOrderRequest {
   customerCpf: string;
   notes: string | null;
   shippingAddressJson: string | null;
+  shippingCost: number;
   items: CreateOrderItemRequest[];
 }
 

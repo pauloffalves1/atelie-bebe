@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, debounceTime, distinctUntilChanged, filter, map, of, switchMap, tap } from 'rxjs';
@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { CepService } from '../../../core/services/cep.service';
 import { OrderService } from '../../../core/services/order.service';
+import { ShippingService } from '../../../core/services/shipping.service';
 import { ShippingAddress } from '../../../core/models/order.model';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
@@ -19,11 +20,17 @@ import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.direct
 export class Checkout implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cepService = inject(CepService);
+  private readonly shippingService = inject(ShippingService);
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly cepLoading = signal(false);
   readonly cepError = signal<string | null>(null);
+  readonly destinationState = signal('');
+
+  readonly shippingCost = computed(() =>
+    this.shippingService.estimate(this.destinationState(), this.cart.totalItems()),
+  );
 
   readonly form = this.fb.nonNullable.group({
     customerName: ['', Validators.required],
@@ -83,6 +90,8 @@ export class Checkout implements OnInit {
       });
     }
 
+    this.form.controls.state.valueChanges.subscribe((state) => this.destinationState.set(state));
+
     this.form.controls.zipCode.valueChanges
       .pipe(
         map((value) => value.replace(/\D/g, '')),
@@ -138,6 +147,7 @@ export class Checkout implements OnInit {
         customerCpf: value.customerCpf,
         notes: value.notes || null,
         shippingAddressJson: JSON.stringify(shippingAddress),
+        shippingCost: this.shippingCost(),
         items: this.cart.items().map((item) => ({
           productId: item.product.id,
           productName: item.product.name,

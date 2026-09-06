@@ -18,6 +18,8 @@ public sealed record OrderDto(
     string? CustomerCpf,
     string Type,
     string Status,
+    decimal ItemsTotal,
+    decimal ShippingCost,
     decimal Total,
     string? Notes,
     string? CustomDetailsJson,
@@ -35,6 +37,7 @@ public sealed record CreateStoreOrderRequest(
     string CustomerCpf,
     string? Notes,
     string? ShippingAddressJson,
+    decimal ShippingCost,
     IReadOnlyList<CreateOrderItemRequest> Items);
 
 public sealed record CreateCustomOrderRequest(

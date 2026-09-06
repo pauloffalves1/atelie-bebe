@@ -215,3 +215,16 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 21.3 `dotnet test`/`ng test` completos (72+20 backend, 27 frontend); verificado no navegador: pedido de teste criado com endereço, checkout seguinte já veio com todos os campos (dados + endereço) preenchidos e editáveis
     - [x] 21.4 `README.md` (RF34) e `spec/requirements.md`/`spec/design.md` (Requisito 21) atualizados
   - [x] 16.3 `spec/requirements.md` (Requisito 15: user story e critérios reescritos, nota de histórico da mudança de escopo) e `spec/design.md` (seção "Frontend — bordado em todos os produtos") atualizados
+
+- [x] 22. Cálculo de frete no checkout (Requisito 22 / RF35, design em `spec/design.md`)
+  - Backend
+    - [x] 22.1 `Order`: nova propriedade `ShippingCost` (`Money`, default zero); `ItemsTotal` extraído do antigo cálculo de `Total`; `Total = ItemsTotal + ShippingCost`; `Order.Create(...)` ganha `shippingCost` opcional; `OrderTests.cs` atualizado (`Total_WithoutShippingCost_DefaultsToZero`, `Total_IncludesShippingCostOnTopOfItemsTotal`)
+    - [x] 22.2 `OrderConfiguration`: coluna `ShippingCostAmount` (`decimal(18,2)`, `DEFAULT 0`, não retroativo); migration `AddOrderShippingCost`; `builder.Ignore(o => o.ItemsTotal)`
+    - [x] 22.3 `CreateStoreOrderRequest` ganha `ShippingCost` (obrigatório, calculado e enviado pelo frontend); `OrderDto` ganha `ItemsTotal`/`ShippingCost`
+  - Frontend
+    - [x] 22.4 Novo `ShippingService` (`core/services/shipping.service.ts`) — estimativa por faixa de UF + acréscimo por item, sem chamada HTTP (não usa API oficial dos Correios, que exigiria contrato/credenciais e peso/dimensão por produto, nenhum dos dois existente hoje)
+    - [x] 22.5 `checkout.ts`/`.html`: signal `destinationState` + `shippingCost` computado a partir do estado e da quantidade de itens; resumo do pedido mostra subtotal/frete/total separados; `shippingCost` enviado em `createStoreOrder(...)`
+    - [x] 22.6 `order-confirmation.html`/`admin-order-detail.html`: mostram subtotal/frete quando `shippingCost > 0`
+  - Verificação e documentação
+    - [x] 22.7 `dotnet test`/`ng test` completos (74+20 backend, 27 frontend); verificado no navegador: checkout com UF=SP mostrou frete R$12,90, pedido confirmado persistiu e exibiu Subtotal/Frete/Total corretamente na confirmação; migration aplicada localmente sem quebrar pedidos existentes (coluna com default 0)
+    - [x] 22.8 `README.md` (RF35) e `spec/requirements.md`/`spec/design.md` (Requisito 22) atualizados

@@ -35,6 +35,13 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnName("CustomerCpf")
             .HasMaxLength(11);
 
+        builder.Property(o => o.ShippingCost)
+            .HasConversion(money => money.Amount, amount => Money.FromReais(amount))
+            .HasColumnName("ShippingCostAmount")
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValueSql("0")
+            .IsRequired();
+
         // Items are a child collection of the Order aggregate, only ever mutated through
         // Order's own methods (AddItem). EF is pointed at the private backing field so no
         // public setter is ever exposed to callers outside the aggregate.
@@ -46,6 +53,7 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Metadata.FindNavigation(nameof(Order.Items))!
             .SetPropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.Ignore(o => o.ItemsTotal);
         builder.Ignore(o => o.Total);
     }
 }

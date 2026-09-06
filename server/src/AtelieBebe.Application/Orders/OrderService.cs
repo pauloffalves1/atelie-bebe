@@ -27,7 +27,8 @@ public sealed class OrderService : IOrderService
             OrderType.Loja,
             request.Notes,
             customDetailsJson: null,
-            request.ShippingAddressJson);
+            request.ShippingAddressJson,
+            Money.FromReais(request.ShippingCost));
 
         foreach (var itemRequest in request.Items)
         {
@@ -123,6 +124,8 @@ public sealed class OrderService : IOrderService
         o.CustomerCpf?.Value,
         o.Type.ToString(),
         o.Status.ToString(),
+        o.ItemsTotal.Amount,
+        o.ShippingCost.Amount,
         o.Total.Amount,
         o.Notes,
         o.CustomDetailsJson,

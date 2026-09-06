@@ -266,6 +266,7 @@ npm test        # testes unitários (Vitest)
 | RF32 | O sistema deve exigir um CPF válido no checkout de loja (`POST /api/orders/store`) e na encomenda personalizada (`POST /api/orders/custom`), rejeitando pedido sem CPF ou com CPF inválido; pedidos criados antes deste requisito permanecem válidos sem CPF | Cliente |
 | RF33 | O sistema deve exigir que o cliente esteja autenticado para finalizar a compra — quem chega em `/checkout` sem sessão é levado para login/cadastro e retorna ao checkout após autenticar; não há mais checkout como convidado | Cliente |
 | RF34 | O sistema deve pré-preencher, no checkout, os dados do cliente autenticado — nome, e-mail, telefone e CPF a partir do cadastro (`GET /api/auth/me`), e o endereço de entrega a partir do pedido mais recente que tiver um (`GET /api/orders/mine`) — sem impedir que o cliente edite qualquer campo antes de confirmar | Cliente |
+| RF35 | O sistema deve calcular um frete estimado no checkout de loja, com base no estado (UF) de destino e na quantidade de itens do carrinho, somando-o ao subtotal dos produtos para compor o total do pedido (`Orders.ShippingCostAmount`); pedidos criados antes deste requisito permanecem com frete zero | Cliente |
 
 ### Requisitos não funcionais
 

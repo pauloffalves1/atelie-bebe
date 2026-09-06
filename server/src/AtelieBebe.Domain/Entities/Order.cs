@@ -28,18 +28,21 @@ public sealed class Order : Entity, IAggregateRoot
     public string? Notes { get; private set; }
     public string? CustomDetailsJson { get; private set; }
     public string? ShippingAddressJson { get; private set; }
+    public Money ShippingCost { get; private set; } = Money.Zero();
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
     private readonly List<OrderItem> _items = new();
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
-    public Money Total => _items.Aggregate(Money.Zero(), (acc, item) => acc.Add(item.Subtotal));
+    public Money ItemsTotal => _items.Aggregate(Money.Zero(), (acc, item) => acc.Add(item.Subtotal));
+    public Money Total => ItemsTotal.Add(ShippingCost);
 
     private Order() { } // EF Core
 
     private Order(Guid id, Guid? customerId, string customerName, Email customerEmail, string? customerPhone,
-        Cpf? customerCpf, OrderType type, string? notes, string? customDetailsJson, string? shippingAddressJson) : base(id)
+        Cpf? customerCpf, OrderType type, string? notes, string? customDetailsJson, string? shippingAddressJson,
+        Money shippingCost) : base(id)
     {
         CustomerId = customerId;
         CustomerName = customerName;
@@ -51,12 +54,14 @@ public sealed class Order : Entity, IAggregateRoot
         Notes = notes;
         CustomDetailsJson = customDetailsJson;
         ShippingAddressJson = shippingAddressJson;
+        ShippingCost = shippingCost;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
 
     public static Order Create(Guid? customerId, string customerName, Email customerEmail, string? customerPhone,
-        Cpf? customerCpf, OrderType type, string? notes = null, string? customDetailsJson = null, string? shippingAddressJson = null)
+        Cpf? customerCpf, OrderType type, string? notes = null, string? customDetailsJson = null, string? shippingAddressJson = null,
+        Money? shippingCost = null)
     {
         if (string.IsNullOrWhiteSpace(customerName))
             throw new DomainException("O nome do cliente é obrigatório.");
@@ -66,7 +71,7 @@ public sealed class Order : Entity, IAggregateRoot
             throw new DomainException("O CPF é obrigatório.");
 
         return new Order(Guid.NewGuid(), customerId, customerName.Trim(), customerEmail, customerPhone.Trim(),
-            customerCpf, type, notes, customDetailsJson, shippingAddressJson);
+            customerCpf, type, notes, customDetailsJson, shippingAddressJson, shippingCost ?? Money.Zero());
     }
 
     public void AddItem(Guid? productId, string productName, Money unitPrice, int quantity, string? optionsJson = null)

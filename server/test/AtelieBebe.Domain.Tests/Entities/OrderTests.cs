@@ -99,6 +99,25 @@ public class OrderTests
         Assert.Equal(35m, order.Total.Amount);
     }
 
+    [Fact]
+    public void Total_WithoutShippingCost_DefaultsToZero()
+    {
+        var order = CreateStoreOrder();
+
+        Assert.Equal(0m, order.ShippingCost.Amount);
+    }
+
+    [Fact]
+    public void Total_IncludesShippingCostOnTopOfItemsTotal()
+    {
+        var order = Order.Create(null, "Maria Silva", CustomerEmail, "11999999999", CustomerCpf, OrderType.Loja,
+            shippingCost: Money.FromReais(15.90m));
+        order.AddItem(Guid.NewGuid(), "Item A", Money.FromReais(10m), 2); // 20
+
+        Assert.Equal(20m, order.ItemsTotal.Amount);
+        Assert.Equal(35.90m, order.Total.Amount);
+    }
+
     [Theory]
     [InlineData(OrderStatus.Recebido, OrderStatus.EmProducao)]
     [InlineData(OrderStatus.Recebido, OrderStatus.Cancelado)]

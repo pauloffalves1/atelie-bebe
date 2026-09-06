@@ -343,3 +343,18 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. QUANDO esse cliente já tem pelo menos um pedido anterior com endereço de entrega registrado, O SISTEMA DEVE preencher automaticamente CEP, rua, número, complemento, bairro, cidade e estado com o endereço do pedido mais recente que tiver essa informação (`GET /api/orders/mine`, já ordenado do mais recente para o mais antigo).
 3. Todos os campos pré-preenchidos PERMANECEM editáveis — o cliente pode alterar qualquer um antes de confirmar o pedido.
 4. QUANDO o cliente não tem telefone/CPF salvos na conta, ou nenhum pedido anterior com endereço, os campos correspondentes ficam em branco (comportamento atual, sem erro).
+
+---
+
+## Requisito 22: Cálculo de frete no checkout
+
+**User Story:** Como ateliê, quero que o checkout calcule uma estimativa de frete com base no destino do pedido, para que o cliente veja o custo total (produtos + envio) antes de confirmar, em vez de descobrir o frete só depois pelo WhatsApp.
+
+**Rastreamento:** RF35.
+
+**Acceptance Criteria**
+1. QUANDO o cliente preenche ou tem preenchido automaticamente o estado (UF) de entrega no checkout, O SISTEMA DEVE calcular um frete estimado com base nesse estado e na quantidade total de itens no carrinho.
+2. O cálculo NÃO usa a API oficial dos Correios (exigiria contrato/credenciais que o ateliê não possui) — é uma estimativa por faixa de região (SP, Sul/Sudeste, Centro-Oeste/Nordeste, Norte) com acréscimo por item adicional, calculada inteiramente no frontend.
+3. O SISTEMA DEVE exibir, no resumo do pedido durante o checkout, o subtotal dos produtos, o frete estimado e o total (soma dos dois) separadamente.
+4. QUANDO o pedido é confirmado, O SISTEMA DEVE persistir o valor do frete (`Orders.ShippingCostAmount`) e o total do pedido (`Order.Total`) passa a ser subtotal dos itens + frete, refletido em toda tela que exibe o total do pedido (confirmação, "Minhas encomendas", admin).
+5. Pedidos criados antes deste requisito, que não têm frete registrado, PERMANECEM válidos com frete zero (`Order.ShippingCost` não é retroativo).
