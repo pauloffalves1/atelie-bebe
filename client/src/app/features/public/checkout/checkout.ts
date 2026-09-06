@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { CepService } from '../../../core/services/cep.service';
 import { OrderService } from '../../../core/services/order.service';
+import { ShippingAddress } from '../../../core/models/order.model';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
 @Component({
@@ -62,6 +63,22 @@ export class Checkout implements OnInit {
           customerEmail: profile.email,
           customerPhone: profile.phone ?? '',
           customerCpf: profile.cpf ?? '',
+        });
+      });
+
+      this.orderService.listMine().subscribe((orders) => {
+        const lastWithAddress = orders.find((o) => o.shippingAddressJson);
+        if (!lastWithAddress?.shippingAddressJson) return;
+
+        const address = JSON.parse(lastWithAddress.shippingAddressJson) as ShippingAddress;
+        this.form.patchValue({
+          zipCode: address.zipCode,
+          street: address.street,
+          number: address.number,
+          complement: address.complement ?? '',
+          neighborhood: address.neighborhood,
+          city: address.city,
+          state: address.state,
         });
       });
     }
