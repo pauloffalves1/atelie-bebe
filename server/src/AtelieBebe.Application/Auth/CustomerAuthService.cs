@@ -53,4 +53,12 @@ public sealed class CustomerAuthService : ICustomerAuthService
         var token = _jwtTokenGenerator.GenerateCustomerToken(customer);
         return new AuthResponse(token, customer.Id, customer.Name, customer.Email.Value);
     }
+
+    public async Task<CustomerProfileDto> GetProfileAsync(Guid customerId, CancellationToken ct = default)
+    {
+        var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, ct)
+            ?? throw new NotFoundException("Cliente", customerId);
+
+        return new CustomerProfileDto(customer.Id, customer.Name, customer.Email.Value, customer.Phone, customer.Cpf?.Value);
+    }
 }

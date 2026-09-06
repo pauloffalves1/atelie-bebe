@@ -55,6 +55,15 @@ export class Checkout implements OnInit {
     const user = this.auth.currentUser();
     if (user) {
       this.form.patchValue({ customerName: user.name, customerEmail: user.email });
+
+      this.auth.getProfile().subscribe((profile) => {
+        this.form.patchValue({
+          customerName: profile.name,
+          customerEmail: profile.email,
+          customerPhone: profile.phone ?? '',
+          customerCpf: profile.cpf ?? '',
+        });
+      });
     }
 
     this.form.controls.zipCode.valueChanges

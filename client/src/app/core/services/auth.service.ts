@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, AuthUser, LoginRequest, RegisterCustomerRequest } from '../models/auth.model';
+import { AuthResponse, AuthUser, CustomerProfile, LoginRequest, RegisterCustomerRequest } from '../models/auth.model';
 
 const STORAGE_KEY = 'atelie-bebe.customer.token';
 const USER_KEY = 'atelie-bebe.customer.user';
@@ -26,6 +26,10 @@ export class AuthService {
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, request)
       .pipe(tap((response) => this.persistSession(response)));
+  }
+
+  getProfile(): Observable<CustomerProfile> {
+    return this.http.get<CustomerProfile>(`${environment.apiUrl}/auth/me`);
   }
 
   logout(): void {

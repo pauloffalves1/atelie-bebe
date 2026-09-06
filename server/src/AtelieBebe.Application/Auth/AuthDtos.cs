@@ -5,3 +5,4 @@ public sealed record LoginRequest(string Email, string Password);
 public sealed record AdminLoginRequest(string Email, string Password);
 
 public sealed record AuthResponse(string Token, Guid Id, string Name, string Email);
+public sealed record CustomerProfileDto(Guid Id, string Name, string Email, string? Phone, string? Cpf);

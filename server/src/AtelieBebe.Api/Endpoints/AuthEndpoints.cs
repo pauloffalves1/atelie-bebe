@@ -1,3 +1,4 @@
+using AtelieBebe.Api.Common;
 using AtelieBebe.Application.Auth;
 
 namespace AtelieBebe.Api.Endpoints;
@@ -13,6 +14,10 @@ public static class AuthEndpoints
 
         customerGroup.MapPost("/login", async (LoginRequest request, ICustomerAuthService service, CancellationToken ct) =>
             Results.Ok(await service.LoginAsync(request, ct)));
+
+        customerGroup.MapGet("/me", async (HttpContext http, ICustomerAuthService service, CancellationToken ct) =>
+            Results.Ok(await service.GetProfileAsync(http.User.GetUserId(), ct)))
+            .RequireAuthorization("CustomerOnly");
 
         var adminGroup = app.MapGroup("/api/admin/auth").WithTags("Autenticação (admin)");
 
