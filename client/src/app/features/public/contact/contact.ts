@@ -4,7 +4,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
 /** Atelier's WhatsApp number in E.164 (no symbols), used to build the wa.me deep link. */
-const WHATSAPP_NUMBER = '5511942361443';
+const WHATSAPP_NUMBER = '5511913130481';
 
 @Component({
   selector: 'app-contact',
