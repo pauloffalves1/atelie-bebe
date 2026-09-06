@@ -30,6 +30,11 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasMaxLength(320)
             .IsRequired();
 
+        builder.Property(o => o.CustomerCpf)
+            .HasConversion(cpf => cpf == null ? null : cpf.Value, value => value == null ? null : Cpf.Create(value))
+            .HasColumnName("CustomerCpf")
+            .HasMaxLength(11);
+
         // Items are a child collection of the Order aggregate, only ever mutated through
         // Order's own methods (AddItem). EF is pointed at the private backing field so no
         // public setter is ever exposed to callers outside the aggregate.

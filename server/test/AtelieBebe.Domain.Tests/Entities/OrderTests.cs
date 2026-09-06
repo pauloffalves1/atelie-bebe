@@ -9,25 +9,33 @@ namespace AtelieBebe.Domain.Tests.Entities;
 public class OrderTests
 {
     private static readonly Email CustomerEmail = Email.Create("cliente@ateliebebe.com.br");
+    private static readonly Cpf CustomerCpf = Cpf.Create("529.982.247-25");
 
     private static Order CreateStoreOrder() =>
-        Order.Create(customerId: null, "Maria Silva", CustomerEmail, "11999999999", OrderType.Loja);
+        Order.Create(customerId: null, "Maria Silva", CustomerEmail, "11999999999", CustomerCpf, OrderType.Loja);
 
     private static Order CreateCustomOrder() =>
-        Order.Create(customerId: null, "Maria Silva", CustomerEmail, "11999999999", OrderType.Personalizada);
+        Order.Create(customerId: null, "Maria Silva", CustomerEmail, "11999999999", CustomerCpf, OrderType.Personalizada);
 
     [Fact]
     public void Create_WithEmptyCustomerName_Throws()
     {
         Assert.Throws<DomainException>(() =>
-            Order.Create(null, " ", CustomerEmail, "11999999999", OrderType.Loja));
+            Order.Create(null, " ", CustomerEmail, "11999999999", CustomerCpf, OrderType.Loja));
     }
 
     [Fact]
     public void Create_WithEmptyPhone_Throws()
     {
         Assert.Throws<DomainException>(() =>
-            Order.Create(null, "Maria Silva", CustomerEmail, null, OrderType.Loja));
+            Order.Create(null, "Maria Silva", CustomerEmail, null, CustomerCpf, OrderType.Loja));
+    }
+
+    [Fact]
+    public void Create_WithoutCpf_Throws()
+    {
+        Assert.Throws<DomainException>(() =>
+            Order.Create(null, "Maria Silva", CustomerEmail, "11999999999", null, OrderType.Loja));
     }
 
     [Fact]

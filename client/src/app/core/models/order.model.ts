@@ -17,6 +17,7 @@ export interface Order {
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;
+  customerCpf: string | null;
   type: OrderType;
   status: OrderStatus;
   total: number;
@@ -40,6 +41,7 @@ export interface CreateStoreOrderRequest {
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;
+  customerCpf: string;
   notes: string | null;
   shippingAddressJson: string | null;
   items: CreateOrderItemRequest[];

@@ -23,6 +23,7 @@ public sealed class OrderService : IOrderService
             request.CustomerName,
             Email.Create(request.CustomerEmail),
             request.CustomerPhone,
+            Cpf.Create(request.CustomerCpf),
             OrderType.Loja,
             request.Notes,
             customDetailsJson: null,
@@ -57,6 +58,7 @@ public sealed class OrderService : IOrderService
             request.CustomerName,
             Email.Create(request.CustomerEmail),
             request.CustomerPhone,
+            Cpf.Create(request.CustomerCpf),
             OrderType.Personalizada,
             request.Notes,
             request.CustomDetailsJson);
@@ -118,6 +120,7 @@ public sealed class OrderService : IOrderService
         o.CustomerName,
         o.CustomerEmail.Value,
         o.CustomerPhone,
+        o.CustomerCpf?.Value,
         o.Type.ToString(),
         o.Status.ToString(),
         o.Total.Amount,

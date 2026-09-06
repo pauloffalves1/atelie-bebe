@@ -15,6 +15,7 @@ public sealed record OrderDto(
     string CustomerName,
     string CustomerEmail,
     string? CustomerPhone,
+    string? CustomerCpf,
     string Type,
     string Status,
     decimal Total,
@@ -31,6 +32,7 @@ public sealed record CreateStoreOrderRequest(
     string CustomerName,
     string CustomerEmail,
     string? CustomerPhone,
+    string CustomerCpf,
     string? Notes,
     string? ShippingAddressJson,
     IReadOnlyList<CreateOrderItemRequest> Items);
@@ -39,6 +41,7 @@ public sealed record CreateCustomOrderRequest(
     string CustomerName,
     string CustomerEmail,
     string? CustomerPhone,
+    string CustomerCpf,
     string? Notes,
     string CustomDetailsJson,
     decimal EstimatedPrice);

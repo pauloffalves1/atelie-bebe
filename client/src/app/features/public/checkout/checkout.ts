@@ -28,6 +28,7 @@ export class Checkout implements OnInit {
     customerName: ['', Validators.required],
     customerEmail: ['', [Validators.required, Validators.email]],
     customerPhone: ['', Validators.required],
+    customerCpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/)]],
     zipCode: ['', Validators.required],
     street: ['', Validators.required],
     number: ['', Validators.required],
@@ -108,6 +109,7 @@ export class Checkout implements OnInit {
         customerName: value.customerName,
         customerEmail: value.customerEmail,
         customerPhone: value.customerPhone || null,
+        customerCpf: value.customerCpf,
         notes: value.notes || null,
         shippingAddressJson: JSON.stringify(shippingAddress),
         items: this.cart.items().map((item) => ({

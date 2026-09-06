@@ -22,6 +22,7 @@ public sealed class Order : Entity, IAggregateRoot
     public string CustomerName { get; private set; } = default!;
     public Email CustomerEmail { get; private set; } = default!;
     public string? CustomerPhone { get; private set; }
+    public Cpf? CustomerCpf { get; private set; }
     public OrderType Type { get; private set; }
     public OrderStatus Status { get; private set; }
     public string? Notes { get; private set; }
@@ -38,12 +39,13 @@ public sealed class Order : Entity, IAggregateRoot
     private Order() { } // EF Core
 
     private Order(Guid id, Guid? customerId, string customerName, Email customerEmail, string? customerPhone,
-        OrderType type, string? notes, string? customDetailsJson, string? shippingAddressJson) : base(id)
+        Cpf? customerCpf, OrderType type, string? notes, string? customDetailsJson, string? shippingAddressJson) : base(id)
     {
         CustomerId = customerId;
         CustomerName = customerName;
         CustomerEmail = customerEmail;
         CustomerPhone = customerPhone;
+        CustomerCpf = customerCpf;
         Type = type;
         Status = OrderStatus.Recebido;
         Notes = notes;
@@ -54,15 +56,17 @@ public sealed class Order : Entity, IAggregateRoot
     }
 
     public static Order Create(Guid? customerId, string customerName, Email customerEmail, string? customerPhone,
-        OrderType type, string? notes = null, string? customDetailsJson = null, string? shippingAddressJson = null)
+        Cpf? customerCpf, OrderType type, string? notes = null, string? customDetailsJson = null, string? shippingAddressJson = null)
     {
         if (string.IsNullOrWhiteSpace(customerName))
             throw new DomainException("O nome do cliente é obrigatório.");
         if (string.IsNullOrWhiteSpace(customerPhone))
             throw new DomainException("O telefone/WhatsApp é obrigatório.");
+        if (customerCpf is null)
+            throw new DomainException("O CPF é obrigatório.");
 
         return new Order(Guid.NewGuid(), customerId, customerName.Trim(), customerEmail, customerPhone.Trim(),
-            type, notes, customDetailsJson, shippingAddressJson);
+            customerCpf, type, notes, customDetailsJson, shippingAddressJson);
     }
 
     public void AddItem(Guid? productId, string productName, Money unitPrice, int quantity, string? optionsJson = null)
