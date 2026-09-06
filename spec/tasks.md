@@ -228,3 +228,9 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 22.7 `dotnet test`/`ng test` completos (74+20 backend, 27 frontend); verificado no navegador: checkout com UF=SP mostrou frete R$12,90, pedido confirmado persistiu e exibiu Subtotal/Frete/Total corretamente na confirmação; migration aplicada localmente sem quebrar pedidos existentes (coluna com default 0)
     - [x] 22.8 `README.md` (RF35) e `spec/requirements.md`/`spec/design.md` (Requisito 22) atualizados
+
+- [x] 23. CPF mascarado nas telas administrativas (Requisito 23 / RF36, design em `spec/design.md`)
+  - [x] 23.1 Novo `CpfMaskPipe` (`shared/pipes/cpf-mask.pipe.ts`); `cpf-mask.pipe.spec.ts` (CPF cru, formatado, nulo/vazio, inválido)
+  - [x] 23.2 Aplicado via `| cpfMask` em `admin-customer-list.html` e `admin-order-detail.html` — únicos pontos do frontend que exibem CPF fora de formulário; API continua retornando o CPF completo sem máscara
+  - [x] 23.3 `ng test` completo (31 frontend); verificado no navegador: `/admin/clientes` e `/admin/encomendas/:id` mostram `***.XXX.XXX-**`, cliente sem CPF continua mostrando `—`
+  - [x] 23.4 `README.md` (RF36) e `spec/requirements.md`/`spec/design.md` (Requisito 23) atualizados

@@ -23,7 +23,7 @@
                 <td class="fw-semibold">{{ customer.name }}</td>
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.phone || '—' }}</td>
-                <td>{{ customer.cpf || '—' }}</td>
+                <td>{{ customer.cpf | cpfMask }}</td>
                 <td>{{ customer.createdAt | date:'dd/MM/yyyy' }}</td>
               </tr>
             }

@@ -3,6 +3,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CustomOrderDetails, Order, ORDER_STATUS_LABELS, OrderItemOptions, OrderStatus, ShippingAddress } from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
+import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
 
 const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   Recebido: ['EmProducao', 'Cancelado'],
@@ -16,7 +17,7 @@ const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 @Component({
   selector: 'app-admin-order-detail',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, RouterLink],
+  imports: [CurrencyPipe, DatePipe, RouterLink, CpfMaskPipe],
   templateUrl: './admin-order-detail.html',
 })
 export class AdminOrderDetail implements OnInit {

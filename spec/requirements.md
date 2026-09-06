@@ -358,3 +358,16 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. O SISTEMA DEVE exibir, no resumo do pedido durante o checkout, o subtotal dos produtos, o frete estimado e o total (soma dos dois) separadamente.
 4. QUANDO o pedido é confirmado, O SISTEMA DEVE persistir o valor do frete (`Orders.ShippingCostAmount`) e o total do pedido (`Order.Total`) passa a ser subtotal dos itens + frete, refletido em toda tela que exibe o total do pedido (confirmação, "Minhas encomendas", admin).
 5. Pedidos criados antes deste requisito, que não têm frete registrado, PERMANECEM válidos com frete zero (`Order.ShippingCost` não é retroativo).
+
+---
+
+## Requisito 23: CPF mascarado nas telas administrativas
+
+**User Story:** Como ateliê, quero que o CPF do cliente apareça mascarado nas telas administrativas, para reduzir a exposição desse dado sensível (LGPD) no dia a dia de quem opera o painel.
+
+**Rastreamento:** RF36.
+
+**Acceptance Criteria**
+1. QUANDO um administrador visualiza a listagem de clientes (`/admin/clientes`) ou o detalhe de uma encomenda (`/admin/encomendas/:id`), O SISTEMA DEVE exibir o CPF mascarado, no formato `***.XXX.XXX-**` (oculta o primeiro bloco e os dígitos verificadores, mostra só o bloco do meio).
+2. QUANDO o cliente não tem CPF registrado, O SISTEMA DEVE continuar exibindo um traço (`—`), sem tentar mascarar um valor inexistente.
+3. Este requisito é só de exibição — o CPF continua armazenado por completo no banco e retornado sem máscara pela API (`GET /api/admin/customers`, `GET /api/admin/orders`); a máscara é aplicada no frontend, no momento de renderizar essas duas telas.
