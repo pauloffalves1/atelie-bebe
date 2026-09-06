@@ -188,4 +188,21 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 18.2 Nova tela `admin-customer-list` (`/admin/clientes`) + link no menu lateral do admin
   - [x] 18.3 `dotnet test`/`ng test` completos (71+20 backend, 26 frontend); verificado visualmente: tela lista clientes com `—` para telefone/CPF ausente; seletor de clientes exclusivos (Requisito 14) continua funcionando sem regressão
   - [x] 18.4 `README.md` (RF31) e `spec/requirements.md`/`spec/design.md` (Requisito 18) atualizados
+
+- [x] 19. CPF obrigatório no checkout (Requisito 19 / RF32, design em `spec/design.md`)
+  - Backend
+    - [x] 19.1 `Order`: nova propriedade `CustomerCpf` (`Cpf?`, nullable — não retroativo, mesmo padrão do Requisito 17); `Order.Create(...)` exige `Cpf` não nulo; `OrderTests.cs` atualizado (`Create_WithoutCpf_Throws`)
+    - [x] 19.2 `OrderConfiguration`: coluna `CustomerCpf` (nullable, conversor null-safe); migration `AddOrderCpf`
+    - [x] 19.3 `CreateStoreOrderRequest`/`CreateCustomOrderRequest` ganham `CustomerCpf` (obrigatório); `OrderService` chama `Cpf.Create(request.CustomerCpf)` antes de `Order.Create`; `OrderDto.CustomerCpf` (`string?`)
+  - Frontend
+    - [x] 19.4 `checkout.ts`/`.html`: novo campo "CPF" (`Validators.required` + `Validators.pattern`, mesmo padrão do cadastro) enviado em `CreateStoreOrderRequest`
+  - Verificação e documentação
+    - [x] 19.5 `dotnet test`/`ng test` completos (72+20 backend, 27 frontend); migration aplicada localmente sem quebrar pedidos existentes (coluna nullable)
+    - [x] 19.6 `README.md` (RF32), `spec/requirements.md` (Requisito 19) e `spec/design.md` (Requisito 19) atualizados
+
+- [x] 20. Login ou cadastro obrigatório para finalizar a compra (Requisito 20 / RF33, design em `spec/design.md`)
+  - [x] 20.1 `app.routes.ts`: rota `checkout` ganha `canActivate: [customerGuard]`; `customer.guard.ts` passa a preservar `returnUrl` (`state.url`) na `UrlTree` de redirecionamento; `customer.guard.spec.ts` atualizado
+  - [x] 20.2 `login-page.ts`/`register-page.ts`: signal `returnUrl` lido da query string, usado em `navigateByUrl` no sucesso (em vez do destino fixo `/minha-conta`); `login-page.html`/`register-page.html`: link cruzado entre as duas telas propaga `returnUrl`; alerta contextual quando `returnUrl === '/checkout'`
+  - [x] 20.3 `ng test` completo (27 frontend); verificado no navegador: `/checkout` sem sessão redireciona para `/entrar?returnUrl=/checkout`, link "Cadastre-se" preserva o parâmetro, cadastro concluído retorna a `/checkout` com o carrinho intacto
+  - [x] 20.4 `README.md` (RF33) e `spec/requirements.md`/`spec/design.md` (Requisito 20) atualizados
   - [x] 16.3 `spec/requirements.md` (Requisito 15: user story e critérios reescritos, nota de histórico da mudança de escopo) e `spec/design.md` (seção "Frontend — bordado em todos os produtos") atualizados

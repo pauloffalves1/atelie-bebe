@@ -445,3 +445,27 @@ sequenceDiagram
 - Reaproveita a infraestrutura já existente para o seletor de clientes exclusivos (Requisito 14): `ICustomerAdminService.ListAsync()` → `GET /api/admin/customers` → `CustomerSummary[]` no frontend (`core/services/customer-admin.service.ts`). Não pagina — o mesmo motivo que já valia para o seletor (precisa da lista completa) vale aqui.
 - `CustomerSummaryDto`/`CustomerSummary` (Application + frontend) ganham `Phone`, `Cpf`, `CreatedAt` — campos aditivos, não quebram o consumidor existente (o seletor de produtos só lê `id`/`name`/`email`).
 - Nova tela `features/admin/customers/admin-customer-list` (`/admin/clientes`), com link no menu lateral do admin entre "Encomendas" e "Mensagens". Tabela simples (sem paginação, sem filtro) — mostra `—` quando `phone`/`cpf` vêm `null` (contas anteriores ao Requisito 17).
+
+## Requisito 19 — CPF obrigatório no checkout
+
+### Modelo de dados
+
+- `Order.CustomerCpf` é `Cpf?` (nullable no C#/banco), mesmo padrão do Requisito 17 para `Customer.Cpf` — **não retroativo**: pedidos existentes antes deste requisito ficam com `CustomerCpf = null` depois da migration `AddOrderCpf` (coluna `Orders.CustomerCpf`, `TEXT`, `NULL`, tamanho 11, sem índice — CPF de pedido não precisa ser único, diferente do CPF de conta). `Order.Create(...)` exige um `Cpf` não nulo (lança `DomainException` caso contrário) — todo pedido novo passa a ter CPF, no mesmo padrão já usado para `customerPhone` obrigatório.
+- `CreateStoreOrderRequest`/`CreateCustomOrderRequest` (Application/Orders) ganham `CustomerCpf` (string, obrigatório); `OrderService` chama `Cpf.Create(request.CustomerCpf)` antes de `Order.Create` — erro de formato vira HTTP 400 (`DomainException`), mesmo padrão do Requisito 17. `OrderDto.CustomerCpf` é `string?` (reflete pedidos antigos sem CPF).
+
+### Frontend — formulário de checkout
+
+- `checkout.ts`: novo `FormControl` `customerCpf` (`Validators.required` + `Validators.pattern`, mesma regra do cadastro) enviado em `CreateStoreOrderRequest`.
+- `checkout.html`: campo "CPF" adicionado ao lado de "Telefone / WhatsApp" em "Seus dados", mesmo padrão visual (`is-invalid`/`invalid-feedback`, placeholder `000.000.000-00`) do campo equivalente em `register-page`.
+- A encomenda personalizada (`CreateCustomOrderRequest`/`createCustomOrder`) não tem UI própria hoje (ver nota de rastreamento do Requisito 15 sobre `/contato`), então o campo CPF nesse DTO existe só no contrato do backend, sem tela associada.
+
+## Requisito 20 — Login ou cadastro obrigatório para finalizar a compra
+
+### Fluxo
+
+- `app.routes.ts`: a rota `checkout` ganha `canActivate: [customerGuard]` (mesmo guard já usado em `minha-conta`).
+- `customer.guard.ts`: passa a ler `state.url` e, ao redirecionar um visitante não autenticado, inclui `queryParams: { returnUrl: state.url }` na `UrlTree` para `/entrar` — antes redirecionava sem preservar o destino.
+- `login-page.ts`/`register-page.ts`: novo signal `returnUrl` (lido de `route.snapshot.queryParamMap`, default `/minha-conta`); ao autenticar com sucesso, `router.navigateByUrl(this.returnUrl())` no lugar do `router.navigate(['/minha-conta'])` fixo anterior.
+- `login-page.html`/`register-page.html`: o link cruzado para a outra tela (`Cadastre-se`/`Entrar`) propaga `[queryParams]="{ returnUrl: returnUrl() }"`, para não perder o destino ao trocar de tela; quando `returnUrl() === '/checkout'`, um alerta contextual explica que a autenticação é para finalizar o pedido.
+- O carrinho (`CartService`, `localStorage`) não depende de autenticação e não é afetado pelo desvio para login/cadastro — o cliente volta ao checkout com os mesmos itens.
+- Checkout deixa de ser acessível como convidado; o preenchimento manual de nome/e-mail/telefone/CPF no formulário de checkout continua existindo (não são lidos automaticamente da conta), só que agora sempre atrás de uma sessão autenticada.

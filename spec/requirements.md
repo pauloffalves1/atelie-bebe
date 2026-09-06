@@ -300,3 +300,32 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 1. O SISTEMA DEVE oferecer uma tela administrativa (`/admin/clientes`) listando nome, e-mail, telefone, CPF e data de cadastro de todos os clientes.
 2. QUANDO um cliente não tem telefone ou CPF registrado (conta anterior ao Requisito 17), O SISTEMA DEVE exibir um traço (`—`) no lugar do dado ausente, sem quebrar a listagem.
 3. Esta tela reaproveita o endpoint `GET /api/admin/customers` já existente (usado pelo seletor de clientes exclusivos do Requisito 14) — não pagina, pelo mesmo motivo que o seletor precisa da lista completa de uma vez.
+
+---
+
+## Requisito 19: CPF obrigatório no checkout
+
+**User Story:** Como ateliê, quero registrar o CPF do cliente também nos pedidos (não só no cadastro de conta), para ter um identificador fiscal único mesmo de quem finaliza a compra sem já ter esse dado salvo.
+
+**Rastreamento:** RF32.
+
+**Acceptance Criteria**
+1. QUANDO um pedido de loja é criado (`POST /api/orders/store`), O SISTEMA DEVE exigir um CPF válido (mesma validação de formato/dígitos verificadores do Requisito 17) — um pedido sem CPF ou com CPF inválido É REJEITADO com uma mensagem de erro clara.
+2. A mesma exigência vale para a encomenda personalizada (`POST /api/orders/custom`).
+3. O formulário de checkout (`checkout.html`/`.ts`) ganha um campo "CPF" obrigatório, mesmo padrão visual e de validação do campo equivalente no cadastro (Requisito 17).
+4. Pedidos criados antes deste requisito, que não têm CPF registrado, PERMANECEM válidos (o campo fica em branco para eles) — este requisito não é retroativo.
+
+---
+
+## Requisito 20: Login ou cadastro obrigatório para finalizar a compra
+
+**User Story:** Como ateliê, quero que o cliente esteja autenticado ao finalizar a compra, para vincular cada pedido a uma conta e não depender de checkout como convidado.
+
+**Rastreamento:** RF33.
+
+**Acceptance Criteria**
+1. QUANDO um visitante não autenticado tenta acessar `/checkout`, O SISTEMA DEVE redirecioná-lo para a tela de login (`/entrar`), preservando a URL de destino (`returnUrl`).
+2. A tela de login exibe um link para a tela de cadastro (`/cadastro`) e vice-versa, preservando o `returnUrl` entre as duas.
+3. QUANDO o `returnUrl` aponta para `/checkout`, AMBAS as telas (login e cadastro) DEVEM exibir uma mensagem contextual explicando que a autenticação é para finalizar o pedido.
+4. QUANDO o login ou o cadastro é concluído com sucesso, O SISTEMA DEVE navegar o cliente para o `returnUrl` (ou para `/minha-conta` na ausência de um) em vez do destino fixo anterior.
+5. Este requisito remove o checkout como convidado — o carrinho (mantido em `localStorage`, independente de autenticação) permanece intacto durante o desvio para login/cadastro.
