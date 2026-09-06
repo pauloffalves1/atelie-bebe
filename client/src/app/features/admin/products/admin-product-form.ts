@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CustomerSummary } from '../../../core/models/customer.model';
 import { CustomerAdminService } from '../../../core/services/customer-admin.service';
 import { ProductService } from '../../../core/services/product.service';
+import { resolveAssetUrl } from '../../../core/utils/asset-url';
 
 @Component({
   selector: 'app-admin-product-form',
@@ -23,6 +24,8 @@ export class AdminProductForm implements OnInit {
   readonly selectedCustomerIds = signal<string[]>([]);
   readonly savingCustomers = signal(false);
   readonly customersSaved = signal(false);
+  readonly uploadingImage = signal(false);
+  readonly imageUploadError = signal<string | null>(null);
 
   private productId: string | null = null;
 
@@ -67,6 +70,32 @@ export class AdminProductForm implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  previewUrl(): string {
+    return resolveAssetUrl(this.form.value.imageUrl || '');
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.uploadingImage.set(true);
+    this.imageUploadError.set(null);
+
+    this.productService.uploadImage(file).subscribe({
+      next: ({ url }) => {
+        this.form.patchValue({ imageUrl: url });
+        this.uploadingImage.set(false);
+      },
+      error: (err) => {
+        this.uploadingImage.set(false);
+        this.imageUploadError.set(err?.error?.detail ?? 'Não foi possível enviar a imagem.');
+      },
+    });
+
+    input.value = '';
   }
 
   toggleCustomer(customerId: string, checked: boolean): void {

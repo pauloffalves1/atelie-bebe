@@ -80,6 +80,7 @@ app.MapDashboardEndpoints();
 app.MapContactEndpoints();
 app.MapCustomerEndpoints();
 app.MapSiteImageEndpoints();
+app.MapGalleryEndpoints();
 
 await DbInitializer.InitializeAsync(app.Services);
 

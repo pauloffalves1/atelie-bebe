@@ -1,3 +1,5 @@
+using AtelieBebe.Api.Common;
+using AtelieBebe.Application.Abstractions;
 using AtelieBebe.Application.Exceptions;
 using AtelieBebe.Application.SiteImages;
 
@@ -12,13 +14,6 @@ public static class SiteImageEndpoints
         "about",
     };
 
-    private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".jpg", ".jpeg", ".png", ".webp",
-    };
-
-    private const long MaxFileSizeBytes = 8 * 1024 * 1024; // 8 MB
-
     public static void MapSiteImageEndpoints(this WebApplication app)
     {
         app.MapGet("/api/site-images", async (ISiteImageService service, CancellationToken ct) =>
@@ -27,20 +22,13 @@ public static class SiteImageEndpoints
 
         var adminGroup = app.MapGroup("/api/admin/site-images").WithTags("Imagens do site (admin)").RequireAuthorization("AdminOnly");
 
-        adminGroup.MapPost("/{key}", async (string key, IFormFile file, Application.Abstractions.IFileStorageService fileStorage,
+        adminGroup.MapPost("/{key}", async (string key, IFormFile file, IFileStorageService fileStorage,
             ISiteImageService service, CancellationToken ct) =>
         {
             if (!AllowedKeys.Contains(key))
                 throw new ConflictException($"Chave de imagem inválida: '{key}'.");
 
-            var extension = Path.GetExtension(file.FileName);
-            if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension))
-                throw new ConflictException("Formato de imagem não suportado. Use JPG, PNG ou WEBP.");
-
-            if (file.Length == 0)
-                throw new ConflictException("O arquivo enviado está vazio.");
-            if (file.Length > MaxFileSizeBytes)
-                throw new ConflictException("A imagem deve ter no máximo 8MB.");
+            var extension = ImageUploadValidator.ValidateAndGetExtension(file);
 
             var fileName = $"{key}-{Guid.NewGuid():N}{extension}";
             await using var stream = file.OpenReadStream();

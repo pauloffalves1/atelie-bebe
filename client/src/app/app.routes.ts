@@ -61,6 +61,11 @@ export const routes: Routes = [
         title: `Imagens do site — ${SITE_NAME}`,
         loadComponent: () => import('./features/admin/site-images/admin-site-images').then((m) => m.AdminSiteImages),
       },
+      {
+        path: 'galeria',
+        title: `Galeria — ${SITE_NAME}`,
+        loadComponent: () => import('./features/admin/gallery/admin-gallery').then((m) => m.AdminGallery),
+      },
     ],
   },
   {

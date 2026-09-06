@@ -7,13 +7,14 @@ import { SITE_NAME } from '../../../core/constants/site';
 import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
+import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
 const MAX_EMBROIDERY_LENGTH = 30;
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CurrencyPipe, FormsModule, RouterLink],
+  imports: [CurrencyPipe, FormsModule, RouterLink, AssetUrlPipe],
   templateUrl: './product-detail.html',
 })
 export class ProductDetail implements OnInit {

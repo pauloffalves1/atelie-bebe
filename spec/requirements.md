@@ -371,3 +371,46 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 1. QUANDO um administrador visualiza a listagem de clientes (`/admin/clientes`) ou o detalhe de uma encomenda (`/admin/encomendas/:id`), O SISTEMA DEVE exibir o CPF mascarado, no formato `***.XXX.XXX-**` (oculta o primeiro bloco e os dígitos verificadores, mostra só o bloco do meio).
 2. QUANDO o cliente não tem CPF registrado, O SISTEMA DEVE continuar exibindo um traço (`—`), sem tentar mascarar um valor inexistente.
 3. Este requisito é só de exibição — o CPF continua armazenado por completo no banco e retornado sem máscara pela API (`GET /api/admin/customers`, `GET /api/admin/orders`); a máscara é aplicada no frontend, no momento de renderizar essas duas telas.
+
+---
+
+## Requisito 24: Imagens do site editáveis pelo admin
+
+**User Story:** Como ateliê, quero trocar a foto principal da página inicial e a foto da página "Sobre" direto pelo painel administrativo, para não precisar pedir um deploy de código toda vez que eu tiver uma foto nova.
+
+**Rastreamento:** RF37.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE oferecer uma tela administrativa (`/admin/imagens`) com um slot para a imagem principal da página inicial e um slot para a imagem da página "Sobre", cada um com a prévia atual e um botão para enviar um arquivo novo.
+2. QUANDO o administrador envia um arquivo para um desses slots, O SISTEMA DEVE salvar o arquivo em disco (fora da pasta de publicação, para sobreviver a um redeploy) e associá-lo à chave daquele slot (`home-hero` ou `about`).
+3. QUANDO a página inicial ou a página "Sobre" carregam, O SISTEMA DEVE exibir a imagem mais recente enviada para o slot correspondente; SE nenhuma imagem foi enviada ainda, exibe a imagem estática padrão que já existe hoje.
+4. Formatos aceitos: JPG, PNG e WEBP; tamanho máximo de 8MB — um upload fora desses limites é rejeitado com uma mensagem de erro clara.
+
+---
+
+## Requisito 25: Upload de foto do produto no admin
+
+**User Story:** Como ateliê, quero enviar a foto de um produto como arquivo ao cadastrar ou editar um produto, em vez de precisar descobrir e colar uma URL de imagem.
+
+**Rastreamento:** RF38.
+
+**Acceptance Criteria**
+1. O formulário de produto do admin (`/admin/produtos/novo`, `/admin/produtos/:id/editar`) DEVE oferecer, ao lado do campo "URL da imagem", um botão para enviar um arquivo diretamente.
+2. QUANDO o administrador envia um arquivo, O SISTEMA DEVE salvar o arquivo e preencher automaticamente o campo "URL da imagem" com o endereço salvo, mantendo a pré-visualização atualizada.
+3. O campo "URL da imagem" continua editável manualmente — o upload é uma forma alternativa de preenchê-lo, não substitui a opção de colar uma URL existente.
+4. Mesmos limites de formato/tamanho do Requisito 24 (JPG/PNG/WEBP, até 8MB).
+
+---
+
+## Requisito 26: Galeria gerenciável pelo admin
+
+**User Story:** Como ateliê, quero adicionar e remover fotos da galeria pública direto pelo painel administrativo, para manter a galeria atualizada sem depender de deploy de código.
+
+**Rastreamento:** RF39.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE oferecer uma tela administrativa (`/admin/galeria`) que lista todas as fotos da galeria, com um botão para adicionar uma foto nova (upload de arquivo) e um botão para remover cada foto existente.
+2. QUANDO uma foto é adicionada, O SISTEMA DEVE salvá-la e fazê-la aparecer na página pública `/galeria` (mais recente primeiro).
+3. QUANDO uma foto é removida, O SISTEMA DEVE apagar o registro E o arquivo salvo em disco, e ela deixa de aparecer em `/galeria` imediatamente.
+4. QUANDO não há nenhuma foto cadastrada ainda, a página pública `/galeria` exibe um conjunto de imagens de exemplo (placeholder), para a página não ficar vazia antes do primeiro upload.
+5. Mesmos limites de formato/tamanho do Requisito 24 (JPG/PNG/WEBP, até 8MB).

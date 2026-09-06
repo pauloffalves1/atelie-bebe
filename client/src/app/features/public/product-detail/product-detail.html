@@ -16,7 +16,7 @@
       <div class="row g-5 align-items-start">
         <div class="col-lg-6">
           <div class="ratio ratio-1x1 rounded-5 overflow-hidden shadow-sm">
-            <img [src]="p.imageUrl" [alt]="p.name" class="w-100 h-100 object-fit-cover">
+            <img [src]="p.imageUrl | assetUrl" [alt]="p.name" class="w-100 h-100 object-fit-cover">
           </div>
         </div>
 

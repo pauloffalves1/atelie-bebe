@@ -4,11 +4,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
 import { Pagination } from '../../../shared/components/pagination/pagination';
+import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
 @Component({
   selector: 'app-shop',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe, Pagination],
+  imports: [RouterLink, CurrencyPipe, Pagination, AssetUrlPipe],
   templateUrl: './shop.html',
 })
 export class Shop implements OnInit {

@@ -1,4 +1,5 @@
 using AtelieBebe.Api.Common;
+using AtelieBebe.Application.Abstractions;
 using AtelieBebe.Application.Products;
 
 namespace AtelieBebe.Api.Endpoints;
@@ -45,5 +46,16 @@ public static class ProductEndpoints
 
         adminGroup.MapPut("/{id:guid}/customers", async (Guid id, SetAllowedCustomersRequest request, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.SetAllowedCustomersAsync(id, request, ct)));
+
+        adminGroup.MapPost("/uploads", async (IFormFile file, IFileStorageService fileStorage, CancellationToken ct) =>
+        {
+            var extension = ImageUploadValidator.ValidateAndGetExtension(file);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            await using var stream = file.OpenReadStream();
+            var url = await fileStorage.SaveAsync("products", fileName, stream, ct);
+
+            return Results.Ok(new { url });
+        }).DisableAntiforgery();
     }
 }

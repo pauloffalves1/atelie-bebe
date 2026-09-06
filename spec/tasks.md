@@ -234,3 +234,29 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 23.2 Aplicado via `| cpfMask` em `admin-customer-list.html` e `admin-order-detail.html` — únicos pontos do frontend que exibem CPF fora de formulário; API continua retornando o CPF completo sem máscara
   - [x] 23.3 `ng test` completo (31 frontend); verificado no navegador: `/admin/clientes` e `/admin/encomendas/:id` mostram `***.XXX.XXX-**`, cliente sem CPF continua mostrando `—`
   - [x] 23.4 `README.md` (RF36) e `spec/requirements.md`/`spec/design.md` (Requisito 23) atualizados
+
+- [x] 24. Imagens do site editáveis pelo admin (Requisito 24 / RF37, design em `spec/design.md`)
+  - Backend (infra de upload compartilhada com as tasks 25/26)
+    - [x] 24.1 `IFileStorageService`/`LocalFileStorageService` (Infrastructure/Storage) — salva fora da pasta de publicação; `ImageUploadValidator` (Api/Common) — extensão/tamanho
+    - [x] 24.2 `app.UseStaticFiles(...)` em `Program.cs` servindo `Uploads:Path` sob `Uploads:PublicPath` (default `/api/uploads`, reaproveita o proxy `/api/*` do Nginx sem mudar config)
+    - [x] 24.3 `SiteImage` (Domain, Key único + Url); `ISiteImageRepository`/`SiteImageRepository`; migration `AddSiteImages`; `SiteImageService` (upsert por chave); `GET /api/site-images` / `POST /api/admin/site-images/{key}` (`SiteImageEndpoints`, chaves restritas a `home-hero`/`about`)
+  - Frontend
+    - [x] 24.4 `SiteImageService`, `resolveAssetUrl()` (`core/utils/asset-url.ts`); `home.ts`/`about.ts` buscam a imagem do slot e caem no asset estático atual se nada foi enviado ainda
+    - [x] 24.5 Nova tela `/admin/imagens` (`admin-site-images.ts`/`.html`) + link no menu lateral
+  - Verificação e documentação
+    - [x] 24.6 `dotnet test`/`ng test` completos (87+20 backend, 31 frontend); verificado via API (`curl` multipart) e no navegador: upload troca a imagem, `GET /api/site-images` reflete, home/about mostram a imagem enviada
+    - [x] 24.7 `README.md` (RF37) e `spec/requirements.md`/`spec/design.md` (Requisito 24) atualizados
+
+- [x] 25. Upload de foto do produto no admin (Requisito 25 / RF38, design em `spec/design.md`)
+  - [x] 25.1 `POST /api/admin/products/uploads` (`ProductEndpoints`, reaproveita `ImageUploadValidator`/`IFileStorageService`, pasta `products/`)
+  - [x] 25.2 `ProductService.uploadImage()` (frontend); `admin-product-form.ts`/`.html` ganham botão de upload ao lado do campo "URL da imagem", preenchendo-o com a URL retornada; `previewUrl()` usa `resolveAssetUrl` para a prévia funcionar em dev local
+  - [x] 25.3 `AssetUrlPipe` (`shared/pipes/asset-url.pipe.ts`) aplicado em todo `<img [src]="product.imageUrl">` público/admin (shop, home, cart, product-detail, admin-product-list) — necessário porque fotos de produto enviadas por upload também viram `/api/uploads/...`
+  - [x] 25.4 `dotnet test`/`ng test` completos (107 backend, 31 frontend); verificado via API (`curl`) e visualmente no formulário de produto
+
+- [x] 26. Galeria gerenciável pelo admin (Requisito 26 / RF39, design em `spec/design.md`)
+  - [x] 26.1 `GalleryImage` (Domain); `IGalleryImageRepository`/`GalleryImageRepository`; migration `AddGalleryImages`; `IFileStorageService.DeleteAsync` (novo método, usado ao remover uma foto)
+  - [x] 26.2 `GalleryImageService`; `GET /api/gallery-images` / `POST /api/admin/gallery-images` / `DELETE /api/admin/gallery-images/{id}` (`GalleryEndpoints`)
+  - [x] 26.3 `GalleryImageService` (frontend); `gallery.ts` busca a lista, mantém os 12 placeholders como fallback só quando a lista vem vazia
+  - [x] 26.4 Nova tela `/admin/galeria` (`admin-gallery.ts`/`.html`, grade com botão de excluir por foto + botão de adicionar) + link no menu lateral
+  - [x] 26.5 `dotnet test`/`ng test` completos (107+4 novos testes de domínio, 31 frontend); verificado via API (`curl`: upload, list, delete com confirmação de que o arquivo físico some) e no navegador (upload/exclusão refletidos em `/admin/galeria` e `/galeria`, lightbox continua funcionando)
+  - [x] 26.6 `README.md` (RF38, RF39) e `spec/requirements.md`/`spec/design.md` (Requisitos 25, 26) atualizados

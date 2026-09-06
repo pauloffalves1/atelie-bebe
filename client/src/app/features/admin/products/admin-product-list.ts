@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
 import { Pagination } from '../../../shared/components/pagination/pagination';
+import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
 @Component({
   selector: 'app-admin-product-list',
   standalone: true,
-  imports: [CurrencyPipe, RouterLink, Pagination],
+  imports: [CurrencyPipe, RouterLink, Pagination, AssetUrlPipe],
   templateUrl: './admin-product-list.html',
 })
 export class AdminProductList implements OnInit {

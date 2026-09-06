@@ -4,4 +4,7 @@ namespace AtelieBebe.Application.Abstractions;
 public interface IFileStorageService
 {
     Task<string> SaveAsync(string folder, string fileName, Stream content, CancellationToken ct = default);
+
+    /// <summary>Best-effort delete of a previously saved file, given the public URL SaveAsync returned.</summary>
+    Task DeleteAsync(string url, CancellationToken ct = default);
 }

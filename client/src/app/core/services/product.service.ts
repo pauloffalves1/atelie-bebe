@@ -55,4 +55,10 @@ export class ProductService {
   setActive(id: string, active: boolean): Observable<Product> {
     return this.http.patch<Product>(`${this.adminUrl}/${id}/active?active=${active}`, {});
   }
+
+  uploadImage(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.adminUrl}/uploads`, formData);
+  }
 }

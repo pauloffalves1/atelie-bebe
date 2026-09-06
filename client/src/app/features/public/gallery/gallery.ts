@@ -1,13 +1,31 @@
-import { Component, HostListener, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { GalleryImageService } from '../../../core/services/gallery-image.service';
+import { resolveAssetUrl } from '../../../core/utils/asset-url';
+
+const FALLBACK_IMAGES = Array.from(
+  { length: 12 },
+  (_, i) => `https://picsum.photos/seed/atelie-bebe-galeria-${i + 1}/600/700`,
+);
 
 @Component({
   selector: 'app-gallery',
   standalone: true,
   templateUrl: './gallery.html',
 })
-export class Gallery {
-  readonly images = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/atelie-bebe-galeria-${i + 1}/600/700`);
+export class Gallery implements OnInit {
+  readonly images = signal<string[]>(FALLBACK_IMAGES);
   readonly selectedIndex = signal<number | null>(null);
+
+  constructor(private readonly galleryImageService: GalleryImageService) {}
+
+  ngOnInit(): void {
+    this.galleryImageService.list().subscribe({
+      next: (images) => {
+        if (images.length > 0) this.images.set(images.map((i) => resolveAssetUrl(i.url)));
+      },
+      error: () => {},
+    });
+  }
 
   open(index: number): void {
     this.selectedIndex.set(index);
@@ -20,13 +38,13 @@ export class Gallery {
   next(): void {
     const index = this.selectedIndex();
     if (index === null) return;
-    this.selectedIndex.set((index + 1) % this.images.length);
+    this.selectedIndex.set((index + 1) % this.images().length);
   }
 
   previous(): void {
     const index = this.selectedIndex();
     if (index === null) return;
-    this.selectedIndex.set((index - 1 + this.images.length) % this.images.length);
+    this.selectedIndex.set((index - 1 + this.images().length) % this.images().length);
   }
 
   @HostListener('document:keydown', ['$event'])

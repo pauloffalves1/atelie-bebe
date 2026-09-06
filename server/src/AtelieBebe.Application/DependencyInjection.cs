@@ -1,6 +1,7 @@
 using AtelieBebe.Application.Auth;
 using AtelieBebe.Application.Contact;
 using AtelieBebe.Application.Customers;
+using AtelieBebe.Application.Gallery;
 using AtelieBebe.Application.Orders;
 using AtelieBebe.Application.Products;
 using AtelieBebe.Application.SiteImages;
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IContactService, ContactService>();
         services.AddScoped<ICustomerAdminService, CustomerAdminService>();
         services.AddScoped<ISiteImageService, SiteImageService>();
+        services.AddScoped<IGalleryImageService, GalleryImageService>();
         return services;
     }
 }

@@ -499,3 +499,32 @@ sequenceDiagram
 - Aplicado via `| cpfMask` em dois lugares — `admin-customer-list.html` (coluna CPF da tabela) e `admin-order-detail.html` (card "Cliente") — ambos os únicos pontos do frontend que hoje exibem CPF fora de um campo de formulário (formulários de cadastro/checkout continuam mostrando o valor real digitado pelo próprio usuário, sem máscara — não faz sentido mascarar o que a pessoa acabou de digitar).
 - Só a exibição é mascarada — os endpoints (`GET /api/admin/customers`, `GET /api/admin/orders`) continuam retornando o CPF completo (sem máscara) na resposta JSON; a máscara é uma decisão de UI, não uma restrição de API. Reduz exposição na tela/print/compartilhamento de tela, mas não impede alguém com acesso ao painel de inspecionar a resposta de rede.
 - `CpfMaskPipe` tem cobertura de teste unitário dedicada (`cpf-mask.pipe.spec.ts`) por lidar com dado pessoal sensível — casos: CPF cru (11 dígitos), CPF formatado, `null`/`undefined`/vazio, e valor inválido (não mascara).
+
+## Requisitos 24-26 — Upload de imagens pelo admin (site, produto, galeria)
+
+Os três requisitos compartilham a mesma infraestrutura de upload; documentados juntos.
+
+### Armazenamento de arquivos
+
+- Novo `IFileStorageService` (Application/Abstractions) — `SaveAsync(folder, fileName, stream)` devolve a URL pública; `DeleteAsync(url)` apaga o arquivo (best-effort, usado pela galeria ao remover uma foto). Implementação `LocalFileStorageService` (Infrastructure/Storage) salva em `Uploads:Path` (config; default `<content-root>/uploads` — em produção, deve apontar para uma pasta **fora** do diretório de publicação, ex. `/var/www/atelie-bebe/uploads` via `Uploads__Path` no `api.env`, porque `dotnet publish -o .../publish` substitui esse diretório inteiro a cada deploy).
+- `Program.cs` monta `app.UseStaticFiles(...)` servindo essa pasta sob `Uploads:PublicPath` (default `/api/uploads`) — de propósito um prefixo `/api/...`, para reaproveitar a regra de proxy `/api/*` que o Nginx já tem em produção, sem precisar editar a config do Nginx.
+- `ImageUploadValidator` (Api/Common) centraliza a validação (extensão em `.jpg/.jpeg/.png/.webp`, tamanho até 8MB) reaproveitada pelos três endpoints de upload abaixo.
+- Frontend: como a API devolve URLs raiz-relativas (corretas em produção, mesma origem via Nginx), `resolveAssetUrl()` (`core/utils/asset-url.ts`) resolve essas URLs contra a origem real da API — necessário só em dev local, onde `ng serve` (porta 4200) e `dotnet run` (porta 5120) são origens diferentes; em produção é um no-op. Um `AssetUrlPipe` (`shared/pipes/asset-url.pipe.ts`) expõe a mesma função como `| assetUrl` para uso direto em template (cards de produto em loop, onde não dá para pré-processar em TS).
+
+### Requisito 24 — Imagens do site (home-hero, about)
+
+- `SiteImage` (Domain): `Key` (único) + `Url` + `UpdatedAt`; upsert por chave (`SiteImageService.SetImageAsync`). `GET /api/site-images` (público, lista todas) e `POST /api/admin/site-images/{key}` (multipart, admin-only, chave restrita a `home-hero`/`about` via `AllowedKeys` em `SiteImageEndpoints`).
+- `home.ts`/`about.ts`: buscam a lista no `ngOnInit`, e se existir uma entrada para a chave do slot, substituem o `signal` que por padrão aponta para o asset estático atual (`/images/hero-fraldas.jpg`, `/images/sobre-fraldas.png`) — não há necessidade de seed no banco, o fallback já cobre a instalação nova.
+- Tela admin `/admin/imagens` (`admin-site-images.ts`/`.html`): dois slots fixos (definidos em `SLOTS`, espelhando `AllowedKeys` do backend), cada um com prévia + botão de upload.
+
+### Requisito 25 — Upload de foto do produto
+
+- Não precisou de entidade nova — `Product.ImageUrl` já existe. Novo endpoint `POST /api/admin/products/uploads` (multipart) salva em `products/` e devolve só `{ url }`; o formulário (`admin-product-form.ts`) usa essa URL para dar `patchValue({ imageUrl: url })` no `FormControl` existente — o fluxo de salvar o produto (criar/editar) não muda.
+- Campo "URL da imagem" continua um `<input type="text">` normal, editável — o botão de upload é um atalho ao lado, não substitui a digitação manual da URL.
+
+### Requisito 26 — Galeria gerenciável
+
+- `GalleryImage` (Domain): `Url` + `CreatedAt`, sem "slot" fixo — é uma coleção de tamanho variável (`GalleryImageService.AddAsync`/`DeleteAsync`, `IGalleryImageRepository.ListAsync` ordenado por `CreatedAt` desc). `DeleteAsync` remove a linha do banco E chama `IFileStorageService.DeleteAsync` para apagar o arquivo físico, evitando acúmulo de arquivos órfãos.
+- `GET /api/gallery-images` (público) / `POST /api/admin/gallery-images` (multipart, cria) / `DELETE /api/admin/gallery-images/{id}` (admin-only).
+- `gallery.ts` (público): busca a lista no `ngOnInit`; se vier vazia, mantém o array de 12 fotos placeholder (`picsum.photos`) que já existia — evita a página ficar vazia numa instalação nova, antes do primeiro upload. A navegação do lightbox (Requisito de galeria já existente) não muda, só a fonte dos dados.
+- Tela admin `/admin/galeria` (`admin-gallery.ts`/`.html`): grade de fotos com botão de exclusão em cada uma + botão "Adicionar foto" no topo.

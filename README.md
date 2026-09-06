@@ -268,6 +268,9 @@ npm test        # testes unitários (Vitest)
 | RF34 | O sistema deve pré-preencher, no checkout, os dados do cliente autenticado — nome, e-mail, telefone e CPF a partir do cadastro (`GET /api/auth/me`), e o endereço de entrega a partir do pedido mais recente que tiver um (`GET /api/orders/mine`) — sem impedir que o cliente edite qualquer campo antes de confirmar | Cliente |
 | RF35 | O sistema deve calcular um frete estimado no checkout de loja, com base no estado (UF) de destino e na quantidade de itens do carrinho, somando-o ao subtotal dos produtos para compor o total do pedido (`Orders.ShippingCostAmount`); pedidos criados antes deste requisito permanecem com frete zero | Cliente |
 | RF36 | O sistema deve mascarar o CPF do cliente nas telas administrativas que o exibem (listagem de clientes, detalhe de encomenda), mostrando apenas o bloco do meio (`***.XXX.XXX-**`) — o CPF completo continua armazenado e é retornado pela API normalmente, só a exibição nessas telas é mascarada | Administrador |
+| RF37 | O sistema deve permitir que o administrador troque, pelo painel (`/admin/imagens`), a foto principal da página inicial e a foto da página "Sobre", enviando um arquivo diretamente, sem precisar de deploy de código | Administrador |
+| RF38 | O sistema deve permitir que o administrador envie a foto de um produto como arquivo (upload), além de continuar aceitando colar uma URL, no formulário de produto do admin | Administrador |
+| RF39 | O sistema deve permitir que o administrador adicione e remova fotos da galeria pública (`/galeria`) pelo painel administrativo (`/admin/galeria`), sem precisar de deploy de código | Administrador |
 
 ### Requisitos não funcionais
 

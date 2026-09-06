@@ -32,4 +32,18 @@ public sealed class LocalFileStorageService : IFileStorageService
 
         return $"{_publicBasePath}/{folder}/{fileName}";
     }
+
+    public Task DeleteAsync(string url, CancellationToken ct = default)
+    {
+        if (!url.StartsWith(_publicBasePath, StringComparison.OrdinalIgnoreCase))
+            return Task.CompletedTask;
+
+        var relativePath = url[_publicBasePath.Length..].TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+        var filePath = Path.Combine(_rootPath, relativePath);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+
+        return Task.CompletedTask;
+    }
 }

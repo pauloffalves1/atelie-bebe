@@ -43,7 +43,21 @@
             </div>
             <div class="col-12">
               <label for="product-imageUrl" class="form-label small fw-semibold">URL da imagem</label>
-              <input type="text" id="product-imageUrl" class="form-control" formControlName="imageUrl" placeholder="https://...">
+              <div class="d-flex gap-2">
+                <input type="text" id="product-imageUrl" class="form-control" formControlName="imageUrl" placeholder="https://...">
+                <label class="btn btn-outline-secondary text-nowrap mb-0" [class.disabled]="uploadingImage()">
+                  @if (uploadingImage()) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    <i class="bi bi-upload"></i>
+                  }
+                  <input type="file" accept="image/jpeg,image/png,image/webp" class="d-none"
+                    [disabled]="uploadingImage()" (change)="onImageSelected($event)">
+                </label>
+              </div>
+              @if (imageUploadError()) {
+                <div class="small text-danger mt-1">{{ imageUploadError() }}</div>
+              }
             </div>
             <div class="col-12">
               <label for="product-description" class="form-label small fw-semibold">Descrição</label>
@@ -58,7 +72,7 @@
           <h6 class="mb-3">Pré-visualização</h6>
           <div class="ratio ratio-1x1 rounded-4 overflow-hidden bg-light mb-3">
             @if (form.value.imageUrl) {
-              <img [src]="form.value.imageUrl" alt="Prévia" class="w-100 h-100 object-fit-cover" loading="lazy">
+              <img [src]="previewUrl()" alt="Prévia" class="w-100 h-100 object-fit-cover" loading="lazy">
             }
           </div>
 

@@ -5,11 +5,12 @@ import { ProductService } from '../../../core/services/product.service';
 import { SiteImageService } from '../../../core/services/site-image.service';
 import { resolveAssetUrl } from '../../../core/utils/asset-url';
 import { Product } from '../../../core/models/product.model';
+import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, CurrencyPipe, AssetUrlPipe],
   templateUrl: './home.html',
 })
 export class Home implements OnInit {
