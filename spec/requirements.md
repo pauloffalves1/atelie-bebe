@@ -354,7 +354,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 **Acceptance Criteria**
 1. QUANDO o cliente preenche ou tem preenchido automaticamente o estado (UF) de entrega no checkout, O SISTEMA DEVE calcular um frete estimado com base nesse estado e na quantidade total de itens no carrinho.
-2. O cálculo NÃO usa a API oficial dos Correios (exigiria contrato/credenciais que o ateliê não possui) — é uma estimativa por faixa de região (SP, Sul/Sudeste, Centro-Oeste/Nordeste, Norte) com acréscimo por item adicional, calculada inteiramente no frontend.
+2. O cálculo NÃO usa a API oficial dos Correios (exigiria contrato/credenciais que o ateliê não possui) — é uma estimativa por faixa de região (SP, Sul/Sudeste, Centro-Oeste/Nordeste, Norte) com acréscimo por item adicional, mais uma margem de 50% sobre a tarifa estimada dos Correios (cobre embalagem/postagem), calculada inteiramente no frontend.
 3. O SISTEMA DEVE exibir, no resumo do pedido durante o checkout, o subtotal dos produtos, o frete estimado e o total (soma dos dois) separadamente.
 4. QUANDO o pedido é confirmado, O SISTEMA DEVE persistir o valor do frete (`Orders.ShippingCostAmount`) e o total do pedido (`Order.Total`) passa a ser subtotal dos itens + frete, refletido em toda tela que exibe o total do pedido (confirmação, "Minhas encomendas", admin).
 5. Pedidos criados antes deste requisito, que não têm frete registrado, PERMANECEM válidos com frete zero (`Order.ShippingCost` não é retroativo).
