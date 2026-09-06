@@ -81,7 +81,8 @@
           <h6 class="mb-3"><i class="bi bi-person me-2"></i>Cliente</h6>
           <p class="small mb-1"><strong>{{ o.customerName }}</strong></p>
           <p class="small mb-1">{{ o.customerEmail }}</p>
-          @if (o.customerPhone) { <p class="small mb-0">{{ o.customerPhone }}</p> }
+          @if (o.customerPhone) { <p class="small mb-1">{{ o.customerPhone }}</p> }
+          @if (o.customerCpf) { <p class="small mb-0">CPF: {{ o.customerCpf }}</p> }
         </div>
 
         <div class="stat-card">
