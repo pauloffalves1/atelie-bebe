@@ -6,3 +6,7 @@ public sealed record AdminLoginRequest(string Email, string Password);
 
 public sealed record AuthResponse(string Token, Guid Id, string Name, string Email);
 public sealed record CustomerProfileDto(Guid Id, string Name, string Email, string? Phone, string? Cpf);
+
+public sealed record ForgotPasswordRequest(string Email);
+public sealed record ResetPasswordRequest(string Token, string NewPassword);
+public sealed record DeleteAccountRequest(string Password);

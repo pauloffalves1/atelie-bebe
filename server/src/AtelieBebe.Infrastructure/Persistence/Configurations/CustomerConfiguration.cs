@@ -15,6 +15,7 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Name).IsRequired().HasMaxLength(200);
         builder.Property(c => c.PasswordHash).IsRequired();
         builder.Property(c => c.Phone).HasMaxLength(30);
+        builder.Property(c => c.IsAnonymized).HasDefaultValue(false).IsRequired();
 
         builder.Property(c => c.Email)
             .HasConversion(email => email.Value, value => Email.Create(value))

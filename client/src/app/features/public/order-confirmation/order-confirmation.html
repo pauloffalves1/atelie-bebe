@@ -49,6 +49,12 @@
                 }
               </div>
             }
+
+            @if (o.trackingCode) {
+              <div class="alert alert-light border rounded-4 mt-3 mb-0 small">
+                <i class="bi bi-truck me-1"></i>Código de rastreio: <strong>{{ o.trackingCode }}</strong>
+              </div>
+            }
           </div>
 
           <div class="stat-card mb-4">

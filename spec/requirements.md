@@ -573,3 +573,59 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. QUANDO o administrador salva a galeria, O SISTEMA DEVE substituir o conjunto anterior pelo conjunto atual, na ordem em que aparecem na tela.
 3. A página pública do produto DEVE exibir a foto de capa mais as fotos da galeria como miniaturas clicáveis, trocando a foto em destaque ao clicar em uma miniatura.
 4. QUANDO o produto não tem nenhuma foto de galeria, a página do produto DEVE continuar mostrando só a foto de capa, sem miniaturas.
+
+---
+
+## Requisito 38: Notificação do ateliê em cada novo pedido
+
+**User Story:** Como ateliê, quero ser avisado automaticamente sempre que um pedido novo chegar, para não depender de checar o painel manualmente.
+
+**Rastreamento:** RF50.
+
+**Acceptance Criteria**
+1. QUANDO um pedido é criado (loja ou personalizado), O SISTEMA DEVE, além de notificar o cliente, enviar um alerta ao ateliê pelos mesmos canais já existentes (e-mail via Resend, WhatsApp via Meta Cloud API), configurados em `AdminNotification:Email`/`AdminNotification:Phone`.
+2. Uma falha ou ausência de configuração no alerta do ateliê NÃO DEVE impedir a notificação do cliente, nem vice-versa — os canais continuam totalmente independentes entre si.
+
+---
+
+## Requisito 39: Redefinição de senha do cliente
+
+**User Story:** Como cliente, quero poder redefinir minha senha se eu esquecer, sem depender de criar uma conta nova.
+
+**Rastreamento:** RF51.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE oferecer uma tela (`/esqueci-senha`) onde o cliente informa o e-mail e recebe um link de redefinição por e-mail, caso a conta exista.
+2. A resposta dessa solicitação NÃO DEVE revelar se o e-mail informado está ou não cadastrado — o comportamento observável é o mesmo nos dois casos.
+3. O link de redefinição DEVE ser de uso único e expirar após 1 hora; uma segunda tentativa de uso do mesmo link, ou um link expirado, DEVE ser rejeitada com uma mensagem genérica.
+4. A tela de redefinição (`/redefinir-senha?token=...`) DEVE exigir a nova senha (mínimo 6 caracteres) e sua confirmação, sem exigir a senha atual.
+5. O SISTEMA NUNCA DEVE persistir o token em texto plano — apenas seu hash, de forma que um vazamento do banco não seja suficiente para redefinir senhas de clientes.
+
+---
+
+## Requisito 40: Código de rastreio da encomenda
+
+**User Story:** Como ateliê, quero anexar o código de rastreio de uma encomenda enviada, para o cliente conseguir acompanhar a entrega.
+
+**Rastreamento:** RF52.
+
+**Acceptance Criteria**
+1. O painel administrativo de uma encomenda DEVE permitir que o administrador informe (ou limpe) um código de rastreio livre, independente do status atual do pedido.
+2. QUANDO um código de rastreio está preenchido, a página pública do pedido (`/pedido/:id`) DEVE exibi-lo ao cliente.
+3. QUANDO não há código de rastreio, a página do pedido NÃO DEVE exibir nenhuma menção a rastreio.
+
+---
+
+## Requisito 41: Exclusão de conta pelo cliente (LGPD)
+
+**User Story:** Como cliente, quero poder solicitar a exclusão da minha conta, para exercer meu direito de remoção de dados pessoais.
+
+**Rastreamento:** RF53.
+
+**Acceptance Criteria**
+1. A tela "Minha conta" DEVE oferecer uma opção de exclusão de conta, exigindo a senha atual como confirmação antes de prosseguir.
+2. SE a senha informada estiver incorreta, O SISTEMA DEVE rejeitar a exclusão sem alterar nada.
+3. SE o cliente não tiver nenhuma encomenda registrada, O SISTEMA DEVE remover a conta por completo do banco de dados.
+4. SE o cliente tiver ao menos uma encomenda registrada, O SISTEMA DEVE anonimizar os dados pessoais da conta (nome, e-mail, telefone, CPF) e invalidar o login, em vez de remover a conta — o histórico de encomendas (que guarda sua própria cópia dos dados no momento da compra) DEVE permanecer intacto e visível ao administrador.
+5. Uma conta anonimizada NUNCA DEVE conseguir autenticar novamente, mesmo com a senha antiga.
+6. Após a exclusão bem-sucedida (removida ou anonimizada), O SISTEMA DEVE encerrar a sessão do cliente no navegador.

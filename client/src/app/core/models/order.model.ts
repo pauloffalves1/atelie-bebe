@@ -32,6 +32,7 @@ export interface Order {
   items: OrderItem[];
   paymentStatus: PaymentStatus;
   externalPaymentId: string | null;
+  trackingCode: string | null;
   paymentUrl: string | null;
 }
 

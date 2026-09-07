@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using AtelieBebe.Application.Abstractions;
 using AtelieBebe.Application.Exceptions;
 using AtelieBebe.Domain.Entities;
@@ -7,15 +9,19 @@ namespace AtelieBebe.Application.Auth;
 
 public sealed class CustomerAuthService : ICustomerAuthService
 {
+    private static readonly TimeSpan ResetTokenValidity = TimeSpan.FromHours(1);
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IAppUrlProvider _appUrlProvider;
 
-    public CustomerAuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtTokenGenerator jwtTokenGenerator)
+    public CustomerAuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtTokenGenerator jwtTokenGenerator, IAppUrlProvider appUrlProvider)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _appUrlProvider = appUrlProvider;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterCustomerRequest request, CancellationToken ct = default)
@@ -47,7 +53,7 @@ public sealed class CustomerAuthService : ICustomerAuthService
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
         var customer = await _unitOfWork.Customers.GetByEmailAsync(request.Email, ct);
-        if (customer is null || !_passwordHasher.Verify(request.Password, customer.PasswordHash))
+        if (customer is null || customer.IsAnonymized || !_passwordHasher.Verify(request.Password, customer.PasswordHash))
             throw new UnauthorizedAppException("E-mail ou senha inválidos.");
 
         var token = _jwtTokenGenerator.GenerateCustomerToken(customer);
@@ -61,4 +67,61 @@ public sealed class CustomerAuthService : ICustomerAuthService
 
         return new CustomerProfileDto(customer.Id, customer.Name, customer.Email.Value, customer.Phone, customer.Cpf?.Value);
     }
+
+    public async Task RequestPasswordResetAsync(string email, CancellationToken ct = default)
+    {
+        var customer = await _unitOfWork.Customers.GetByEmailAsync(email, ct);
+        if (customer is null || customer.IsAnonymized) return;
+
+        var rawToken = GenerateRawToken();
+        var token = PasswordResetToken.Create(customer.Id, HashToken(rawToken), ResetTokenValidity);
+        _unitOfWork.PasswordResetTokens.Add(token);
+
+        var resetUrl = $"{_appUrlProvider.PublicUrl.TrimEnd('/')}/redefinir-senha?token={rawToken}";
+        customer.RequestPasswordReset(resetUrl);
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task ResetPasswordAsync(string token, string newPassword, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new ConflictException("A senha deve ter pelo menos 6 caracteres.");
+
+        var resetToken = await _unitOfWork.PasswordResetTokens.GetByTokenHashAsync(HashToken(token), ct);
+        if (resetToken is null || !resetToken.IsValid)
+            throw new UnauthorizedAppException("Link inválido ou expirado. Solicite uma nova redefinição de senha.");
+
+        var customer = await _unitOfWork.Customers.GetByIdAsync(resetToken.CustomerId, ct)
+            ?? throw new UnauthorizedAppException("Link inválido ou expirado. Solicite uma nova redefinição de senha.");
+
+        resetToken.MarkUsed();
+        customer.UpdatePassword(_passwordHasher.Hash(newPassword));
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteAccountAsync(Guid customerId, string password, CancellationToken ct = default)
+    {
+        var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, ct)
+            ?? throw new NotFoundException("Cliente", customerId);
+
+        if (customer.IsAnonymized || !_passwordHasher.Verify(password, customer.PasswordHash))
+            throw new UnauthorizedAppException("Senha incorreta.");
+
+        // Orders keep their own snapshot of the customer's data at purchase time, so deleting the
+        // account never loses order history — only whether the *account itself* survives depends
+        // on there being anything to retain it for (a legal/fiscal reason to keep the profile row).
+        var orders = await _unitOfWork.Orders.ListByCustomerAsync(customerId, ct);
+        if (orders.Count == 0)
+            _unitOfWork.Customers.Remove(customer);
+        else
+            customer.Anonymize(_passwordHasher.Hash(Guid.NewGuid().ToString("N")));
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    private static string GenerateRawToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+
+    private static string HashToken(string rawToken) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
 }

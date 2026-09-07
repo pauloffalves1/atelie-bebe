@@ -32,6 +32,20 @@ export class AuthService {
     return this.http.get<CustomerProfile>(`${environment.apiUrl}/auth/me`);
   }
 
+  forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/reset-password`, { token, newPassword });
+  }
+
+  deleteAccount(password: string): Observable<void> {
+    return this.http
+      .post<void>(`${environment.apiUrl}/auth/delete-account`, { password })
+      .pipe(tap(() => this.logout()));
+  }
+
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(USER_KEY);

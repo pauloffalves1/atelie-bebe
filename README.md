@@ -131,6 +131,8 @@ Quando uma entidade de domínio muda de forma relevante (pedido criado, status a
 
 Um `BackgroundService` (`OutboxProcessor`) faz *polling* a cada 5 segundos, lê lotes de até 20 mensagens pendentes, desserializa cada evento pelo seu tipo CLR e despacha para **dois canais independentes**: `INotificationSender` (WhatsApp, via `WhatsAppNotificationSender`) e `IEmailSender` (e-mail, via `ResendEmailSender`, RF47). O e-mail é tentado primeiro e suas exceções são sempre capturadas e logadas ali mesmo — uma falha ou ausência de configuração num canal nunca impede o outro. A entrega é *at-least-once*, mas só em relação ao WhatsApp: falhas ali incrementam o contador de tentativas da mensagem (até 5, então o registro é abandonado); e-mail, por ser tentado a cada passagem sem afetar esse contador, tem sua própria tentativa em toda vez que a mensagem ainda não foi processada.
 
+Um pedido criado (`OrderCreatedDomainEvent`) dispara **duas** mensagens em cada canal: a confirmação para o cliente e um alerta de "novo pedido" para o ateliê (`Admin:NotificationEmail`/`Admin:NotificationPhone`, RF50) — mesma infraestrutura, dois destinatários. Já a redefinição de senha (`PasswordResetRequestedDomainEvent`, RF51) usa **só** o canal de e-mail: um link de redefinição não justifica a burocracia de aprovar mais um template no WhatsApp Business, e e-mail já cobre bem esse caso de uso.
+
 Exemplo de ponta a ponta — criação de um pedido de loja:
 
 ```mermaid
@@ -195,6 +197,8 @@ dotnet run --project src/AtelieBebe.Api        # http://localhost:5120
 `PagBank:Token` (RF40) segue o mesmo padrão — vazio em `appsettings.json`, configurado localmente via `dotnet user-secrets set "PagBank:Token" "<token>" --project src/AtelieBebe.Api` e, em produção, pela variável de ambiente `PagBank__Token` (mais `PagBank__Sandbox=true` se o token for de uma conta de teste, em vez da conta real). Sem token configurado **em produção**, o checkout de loja funciona normalmente, só sem oferecer pagamento online (`IPaymentGateway.IsConfigured` retorna `false`, e `CreatePreferenceAsync` não é chamado). Em **desenvolvimento** (`dotnet run`), sem token configurado, entra em ação um `FakePaymentGateway` que simula a página de pagamento hospedada pela própria SPA (`/pagamento-simulado/:orderId`) — deixa pré-visualizar o fluxo completo de pagamento antes das credenciais reais existirem, sem chamar nenhuma API externa.
 
 `Resend:ApiKey` (RF47) segue o mesmo padrão de segredo em branco — `dotnet user-secrets set "Resend:ApiKey" "<chave>" --project src/AtelieBebe.Api` localmente, `Resend__ApiKey` em produção. `Resend:FromEmail` precisa ser um endereço de um domínio verificado no painel do Resend (mesmo processo de DNS já usado para o e-mail do domínio) — sem isso o envio falha mesmo com a chave certa.
+
+`AdminNotification:Email`/`AdminNotification:Phone` (RF50) não são segredos — ficam direto em `appsettings.json` (o telefone já vem preenchido com o WhatsApp do ateliê; o e-mail fica em branco até o admin decidir para onde mandar os alertas de novo pedido).
 
 Ao subir, a API aplica automaticamente as migrations pendentes e semeia um administrador padrão (`admin@ateliebebe.com.br` / `admin123`, salvo configuração em contrário) e um catálogo de produtos de exemplo. O banco SQLite fica em `src/AtelieBebe.Api/atelie-bebe.db`.
 
@@ -323,6 +327,10 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 | RF47 | O sistema deve enviar e-mails transacionais (pedido recebido, status atualizado, boas-vindas, confirmação de contato) via Resend, como canal independente do WhatsApp — a falha ou ausência de configuração de um canal nunca impede o outro; sem `Resend:ApiKey` configurado, nenhum e-mail é enviado, sem erro visível ao usuário | Sistema |
 | RF48 | O sistema deve permitir que o administrador exporte a listagem de encomendas (respeitando os filtros de status/pagamento ativos) como um arquivo CSV, pelo botão "Exportar CSV" em `/admin/encomendas` | Administrador |
 | RF49 | O sistema deve permitir que o administrador adicione, remova e substitua fotos adicionais de um produto (além da foto de capa), exibidas como galeria com miniaturas clicáveis na página pública do produto | Administrador / Visitante |
+| RF50 | O sistema deve notificar o ateliê (e-mail e/ou WhatsApp, conforme configurado) sempre que um novo pedido for criado, além da confirmação já enviada ao cliente | Sistema |
+| RF51 | O sistema deve permitir que um cliente redefina sua senha por e-mail (`/esqueci-senha`, `/redefinir-senha`) através de um link de uso único válido por 1 hora, sem exigir a senha atual; a resposta de solicitação nunca revela se o e-mail informado está cadastrado | Cliente |
+| RF52 | O sistema deve permitir que o administrador anexe um código de rastreio a uma encomenda, exibido ao cliente na página do pedido | Administrador / Cliente |
+| RF53 | O sistema deve permitir que um cliente autenticado exclua sua própria conta (`/minha-conta`), mediante confirmação de senha — contas sem nenhum pedido são removidas por completo; contas com pedido têm os dados pessoais anonimizados e o login desativado, mantendo o histórico de pedidos (nome/e-mail/telefone/CPF da compra são uma cópia própria do pedido, não afetada pela anonimização) | Cliente |
 
 ### Requisitos não funcionais
 
@@ -379,7 +387,8 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
   ```
 
   `Entregue` e `Cancelado` são estados terminais: nenhuma transição é permitida a partir deles. Qualquer transição fora do mapa acima é rejeitada com erro de domínio.
-- Toda transição de status válida emite `OrderStatusChangedDomainEvent` (notificação ao cliente); a criação/confirmação de um pedido emite `OrderCreatedDomainEvent`.
+- Toda transição de status válida emite `OrderStatusChangedDomainEvent` (notificação ao cliente); a criação/confirmação de um pedido emite `OrderCreatedDomainEvent`, que também dispara o alerta de novo pedido para o ateliê (RF50).
+- O administrador pode anexar um código de rastreio livre (`Orders.TrackingCode`, RF52) a qualquer momento — não é uma etapa obrigatória do fluxo de status, mas a tela de edição só exibe o campo a partir do status `Enviado`. O código aparece para o cliente na página do pedido assim que salvo; string em branco limpa o código.
 - O pagamento é rastreado separadamente do status de produção/entrega, em `Orders.PaymentStatus` (`Pendente` | `Pago` | `Recusado`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo. Ao criar um pedido de loja, se o gateway de pagamento (PagBank) estiver configurado, um checkout hospedado é criado e sua URL é devolvida na resposta (`PaymentUrl`) para redirecionar o cliente; sem configuração (`PagBank:Token` em branco), o pedido é criado normalmente e nenhuma URL é retornada — igual ao padrão já usado para notificações via WhatsApp. O webhook (`POST /api/payments/pagbank/webhook`) nunca confia no conteúdo da notificação recebida, apenas no id do pedido do PagBank: sempre reconsulta `GET /orders/{id}` na API do PagBank antes de atualizar o pedido correspondente (pelo campo `reference_id`, que é o id do nosso pedido), e a marcação como `Pago` é idempotente — uma notificação duplicada ou fora de ordem nunca rebaixa um pagamento já aprovado.
 
 ### Contas de cliente e administrador
@@ -389,6 +398,8 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 - Não existe rota pública de cadastro de administrador: o único admin é criado pela seed inicial do banco.
 - E-mails são normalizados (trim + minúsculas) e validados por formato antes de virarem um value object `Email` — inválidos são rejeitados na borda do domínio, não na camada de apresentação.
 - O administrador pode editar nome, e-mail, CPF e telefone de qualquer conta de cliente (`/admin/clientes/:id/editar`) — mas não a senha; a edição rejeita e-mail ou CPF já usados por **outra** conta (a própria conta pode manter os mesmos valores sem conflito).
+- **Redefinição de senha (RF51)**: `PasswordResetToken` guarda só o hash SHA-256 do token (nunca o valor bruto, que só existe no link do e-mail e na requisição que o resgata), com validade de 1 hora e uso único (`UsedAt` marcado no resgate, uma segunda tentativa com o mesmo token falha). `POST /api/auth/forgot-password` sempre responde `204`, exista ou não o e-mail, para não revelar quais contas estão cadastradas.
+- **Exclusão de conta pelo cliente (RF53, LGPD)**: exige a senha atual. Sem nenhum pedido vinculado, a conta é removida do banco. Com pedido(s), a conta é **anonimizada** em vez de removida — `Customer.Anonymize` zera nome (`"Cliente removido"`), e-mail (substituído por um endereço sintético único), telefone e CPF, e invalida a senha, mas mantém a linha — porque `Orders.CustomerName/Email/Phone/Cpf` são uma cópia própria feita no momento da compra, não uma referência viva ao cadastro, e o ateliê pode ter obrigação legal/fiscal de manter esse histórico. Uma conta anonimizada nunca mais consegue logar e some da tela de edição administrativa (`isAnonymized: true`).
 
 ### Contato
 

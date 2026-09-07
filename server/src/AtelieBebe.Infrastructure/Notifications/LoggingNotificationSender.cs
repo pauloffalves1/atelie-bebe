@@ -40,4 +40,12 @@ public sealed class LoggingNotificationSender : INotificationSender
         _logger.LogInformation("[notificação] Confirmação de recebimento de contato enviada para {Name} <{Phone}>.", name, phone);
         return Task.CompletedTask;
     }
+
+    public Task SendNewOrderAdminAlertAsync(Guid orderId, string customerName, decimal total, CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "[notificação] Alerta de novo pedido {OrderId} de {CustomerName} — total R$ {Total:0.00} enviado ao admin.",
+            orderId, customerName, total);
+        return Task.CompletedTask;
+    }
 }

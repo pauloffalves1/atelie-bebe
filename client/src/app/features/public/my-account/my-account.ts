@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Order, ORDER_STATUS_LABELS } from '../../../core/models/order.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { OrderService } from '../../../core/services/order.service';
@@ -16,9 +16,15 @@ export class MyAccount implements OnInit {
   readonly loading = signal(true);
   readonly statusLabels = ORDER_STATUS_LABELS;
 
+  readonly confirmingDelete = signal(false);
+  readonly deletePassword = signal('');
+  readonly deleting = signal(false);
+  readonly deleteError = signal<string | null>(null);
+
   constructor(
     readonly auth: AuthService,
     private readonly orderService: OrderService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -28,6 +34,35 @@ export class MyAccount implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  startDeleteAccount(): void {
+    this.confirmingDelete.set(true);
+    this.deleteError.set(null);
+  }
+
+  cancelDeleteAccount(): void {
+    this.confirmingDelete.set(false);
+    this.deletePassword.set('');
+    this.deleteError.set(null);
+  }
+
+  confirmDeleteAccount(): void {
+    if (!this.deletePassword()) {
+      this.deleteError.set('Informe sua senha para confirmar.');
+      return;
+    }
+
+    this.deleting.set(true);
+    this.deleteError.set(null);
+
+    this.auth.deleteAccount(this.deletePassword()).subscribe({
+      next: () => this.router.navigateByUrl('/'),
+      error: (err) => {
+        this.deleting.set(false);
+        this.deleteError.set(err?.error?.detail ?? 'Não foi possível excluir a conta.');
+      },
     });
   }
 }

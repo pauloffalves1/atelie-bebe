@@ -27,12 +27,14 @@ public sealed class WhatsAppNotificationSender : INotificationSender
 
     private readonly HttpClient _httpClient;
     private readonly WhatsAppOptions _options;
+    private readonly AdminNotificationOptions _adminOptions;
     private readonly ILogger<WhatsAppNotificationSender> _logger;
 
-    public WhatsAppNotificationSender(HttpClient httpClient, IOptions<WhatsAppOptions> options, ILogger<WhatsAppNotificationSender> logger)
+    public WhatsAppNotificationSender(HttpClient httpClient, IOptions<WhatsAppOptions> options, IOptions<AdminNotificationOptions> adminOptions, ILogger<WhatsAppNotificationSender> logger)
     {
         _httpClient = httpClient;
         _options = options.Value;
+        _adminOptions = adminOptions.Value;
         _logger = logger;
     }
 
@@ -47,6 +49,9 @@ public sealed class WhatsAppNotificationSender : INotificationSender
 
     public Task SendContactAcknowledgementAsync(Guid messageId, string name, string phone, CancellationToken ct = default) =>
         SendTemplateAsync(phone, "confirmacao_contato", ct, name);
+
+    public Task SendNewOrderAdminAlertAsync(Guid orderId, string customerName, decimal total, CancellationToken ct = default) =>
+        SendTemplateAsync(_adminOptions.Phone, "novo_pedido_admin", ct, customerName, ShortId(orderId), FormatMoney(total));
 
     private async Task SendTemplateAsync(string toPhone, string templateName, CancellationToken ct, params string[] bodyParams)
     {

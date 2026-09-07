@@ -19,6 +19,24 @@ public static class AuthEndpoints
             Results.Ok(await service.GetProfileAsync(http.User.GetUserId(), ct)))
             .RequireAuthorization("CustomerOnly");
 
+        customerGroup.MapPost("/forgot-password", async (ForgotPasswordRequest request, ICustomerAuthService service, CancellationToken ct) =>
+        {
+            await service.RequestPasswordResetAsync(request.Email, ct);
+            return Results.NoContent();
+        });
+
+        customerGroup.MapPost("/reset-password", async (ResetPasswordRequest request, ICustomerAuthService service, CancellationToken ct) =>
+        {
+            await service.ResetPasswordAsync(request.Token, request.NewPassword, ct);
+            return Results.NoContent();
+        });
+
+        customerGroup.MapPost("/delete-account", async (DeleteAccountRequest request, HttpContext http, ICustomerAuthService service, CancellationToken ct) =>
+        {
+            await service.DeleteAccountAsync(http.User.GetUserId(), request.Password, ct);
+            return Results.NoContent();
+        }).RequireAuthorization("CustomerOnly");
+
         var adminGroup = app.MapGroup("/api/admin/auth").WithTags("Autenticação (admin)");
 
         adminGroup.MapPost("/login", async (AdminLoginRequest request, IAdminAuthService service, CancellationToken ct) =>

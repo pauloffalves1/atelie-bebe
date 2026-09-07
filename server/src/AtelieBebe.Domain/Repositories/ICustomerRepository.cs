@@ -11,4 +11,5 @@ public interface ICustomerRepository
     Task<bool> CpfExistsAsync(string cpf, CancellationToken ct = default);
     Task<IReadOnlyList<Customer>> ListAsync(CancellationToken ct = default);
     void Add(Customer customer);
+    void Remove(Customer customer);
 }

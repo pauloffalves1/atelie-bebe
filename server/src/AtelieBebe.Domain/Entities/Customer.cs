@@ -13,6 +13,7 @@ public sealed class Customer : Entity, IAggregateRoot
     public string PasswordHash { get; private set; } = default!;
     public string? Phone { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public bool IsAnonymized { get; private set; }
 
     private Customer() { } // EF Core
 
@@ -63,5 +64,34 @@ public sealed class Customer : Entity, IAggregateRoot
         Email = email;
         Cpf = cpf;
         Phone = phone.Trim();
+    }
+
+    /// <summary>Raises the event that carries a one-time reset link to the customer's e-mail — the link/token itself is generated and persisted by the application layer, this only records the intent.</summary>
+    public void RequestPasswordReset(string resetUrl)
+    {
+        if (string.IsNullOrWhiteSpace(resetUrl))
+            throw new DomainException("A URL de redefinição de senha é obrigatória.");
+
+        AddDomainEvent(new PasswordResetRequestedDomainEvent(Id, Name, Email.Value, resetUrl));
+    }
+
+    /// <summary>
+    /// Scrubs personal data (LGPD account-deletion request) while keeping the row itself — orders
+    /// already store their own snapshot of name/e-mail/phone/CPF at purchase time, so this never
+    /// erases order history, only the ability to log in or be identified going forward.
+    /// <paramref name="unusablePasswordHash"/> must be a real hash of an unguessable value (never a
+    /// raw/malformed string) — Domain has no hashing abstraction, so the caller supplies it via
+    /// <c>IPasswordHasher</c>.
+    /// </summary>
+    public void Anonymize(string unusablePasswordHash)
+    {
+        if (IsAnonymized) return;
+
+        Name = "Cliente removido";
+        Email = Email.Create($"cliente-removido-{Id}@removido.local");
+        Cpf = null;
+        Phone = null;
+        PasswordHash = unusablePasswordHash;
+        IsAnonymized = true;
     }
 }

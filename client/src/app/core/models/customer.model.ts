@@ -5,6 +5,7 @@ export interface CustomerSummary {
   phone: string | null;
   cpf: string | null;
   createdAt: string;
+  isAnonymized: boolean;
 }
 
 export interface UpdateCustomerRequest {

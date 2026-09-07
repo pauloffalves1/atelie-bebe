@@ -107,7 +107,13 @@ public sealed class OutboxProcessor : BackgroundService
         {
             case OrderCreatedDomainEvent e:
                 await TrySendEmailAsync(() => emailSender.SendOrderCreatedAsync(e.OrderId, e.CustomerName, e.CustomerEmail, e.TotalAmount, ct), logger);
+                await TrySendEmailAsync(() => emailSender.SendNewOrderAdminAlertAsync(e.OrderId, e.CustomerName, e.TotalAmount, ct), logger);
                 await sender.SendOrderCreatedAsync(e.OrderId, e.CustomerName, e.CustomerPhone, e.TotalAmount, ct);
+                await sender.SendNewOrderAdminAlertAsync(e.OrderId, e.CustomerName, e.TotalAmount, ct);
+                break;
+            case PasswordResetRequestedDomainEvent e:
+                // E-mail only — see IEmailSender.SendPasswordResetAsync for why WhatsApp is skipped here.
+                await TrySendEmailAsync(() => emailSender.SendPasswordResetAsync(e.Name, e.Email, e.ResetUrl, ct), logger);
                 break;
             case OrderStatusChangedDomainEvent e:
                 await TrySendEmailAsync(() => emailSender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerName, e.CustomerEmail, e.OldStatus.ToString(), e.NewStatus.ToString(), ct), logger);

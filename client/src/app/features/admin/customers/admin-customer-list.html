@@ -21,13 +21,20 @@
           <tbody>
             @for (customer of customers(); track customer.id) {
               <tr>
-                <td class="fw-semibold">{{ customer.name }}</td>
+                <td class="fw-semibold">
+                  {{ customer.name }}
+                  @if (customer.isAnonymized) {
+                    <span class="badge bg-secondary ms-2">Conta excluída</span>
+                  }
+                </td>
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.phone || '—' }}</td>
                 <td>{{ customer.cpf | cpfMask }}</td>
                 <td>{{ customer.createdAt | date:'dd/MM/yyyy' }}</td>
                 <td class="text-end">
-                  <a [routerLink]="['/admin/clientes', customer.id, 'editar']" class="btn btn-sm btn-outline-secondary rounded-pill">Editar</a>
+                  @if (!customer.isAnonymized) {
+                    <a [routerLink]="['/admin/clientes', customer.id, 'editar']" class="btn btn-sm btn-outline-secondary rounded-pill">Editar</a>
+                  }
                 </td>
               </tr>
             }

@@ -41,6 +41,10 @@ export class OrderService {
     return this.http.patch<Order>(`${this.adminUrl}/${id}/status`, { status });
   }
 
+  setTrackingCode(id: string, trackingCode: string | null): Observable<Order> {
+    return this.http.patch<Order>(`${this.adminUrl}/${id}/tracking-code`, { trackingCode });
+  }
+
   generatePaymentLink(orderId: string): Observable<{ paymentUrl: string }> {
     return this.http.post<{ paymentUrl: string }>(`${this.adminUrl}/${orderId}/payment-link`, {});
   }

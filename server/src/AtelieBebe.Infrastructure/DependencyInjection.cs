@@ -32,8 +32,10 @@ public static class DependencyInjection
         services.Configure<ResendOptions>(configuration.GetSection(ResendOptions.SectionName));
         services.Configure<PagBankOptions>(configuration.GetSection(PagBankOptions.SectionName));
         services.Configure<AppUrlOptions>(configuration.GetSection(AppUrlOptions.SectionName));
+        services.Configure<AdminNotificationOptions>(configuration.GetSection(AdminNotificationOptions.SectionName));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IAppUrlProvider, AppUrlProvider>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

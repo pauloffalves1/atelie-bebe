@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<GalleryImage> GalleryImages => Set<GalleryImage>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

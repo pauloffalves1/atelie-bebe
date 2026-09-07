@@ -42,4 +42,6 @@ public sealed class CustomerRepository : ICustomerRepository
         await _dbContext.Customers.OrderBy(c => c.Name).ToListAsync(ct);
 
     public void Add(Customer customer) => _dbContext.Customers.Add(customer);
+
+    public void Remove(Customer customer) => _dbContext.Customers.Remove(customer);
 }

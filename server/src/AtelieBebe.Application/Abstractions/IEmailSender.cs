@@ -12,4 +12,10 @@ public interface IEmailSender
     Task SendOrderStatusChangedAsync(Guid orderId, string customerName, string customerEmail, string oldStatus, string newStatus, CancellationToken ct = default);
     Task SendWelcomeMessageAsync(Guid customerId, string name, string email, CancellationToken ct = default);
     Task SendContactAcknowledgementAsync(Guid messageId, string name, string email, CancellationToken ct = default);
+
+    /// <summary>Alerts the ateliê's own inbox (Admin:NotificationEmail) that a new order came in — a second, admin-facing e-mail for the same OrderCreated event, not a reply to the customer.</summary>
+    Task SendNewOrderAdminAlertAsync(Guid orderId, string customerName, decimal total, CancellationToken ct = default);
+
+    /// <summary>Only channel used for password resets — WhatsApp templates need Meta pre-approval, which a reset link's one-off nature doesn't justify.</summary>
+    Task SendPasswordResetAsync(string name, string email, string resetUrl, CancellationToken ct = default);
 }

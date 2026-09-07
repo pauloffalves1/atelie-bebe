@@ -374,3 +374,39 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 38.5 `dotnet test`/`ng test` completos (109+20 backend, 31 frontend); `dotnet build`/`ng build` sem erros; verificado de ponta a ponta local: upload via `curl` → `PUT .../images` → `GET` admin e público confirmam `imageUrls` persistido → miniatura aparece em `/produto/:slug` e troca a imagem principal ao clicar (confirmado no navegador)
     - [x] 38.6 `README.md` (RF49) e `spec/requirements.md`/`spec/design.md` (Requisito 37) atualizados
+
+- [x] 39. Notificação do ateliê em cada novo pedido (Requisito 38 / RF50, design em `spec/design.md`)
+  - [x] 39.1 `AdminNotificationOptions` (`Email`/`Phone`, não-secretos, `appsettings.json`); `INotificationSender`/`IEmailSender` ganham `SendNewOrderAdminAlertAsync`; implementado em `WhatsAppNotificationSender`, `ResendEmailSender` e `LoggingNotificationSender`
+  - [x] 39.2 `OutboxProcessor` dispara o alerta do admin logo após a notificação do cliente, no case de `OrderCreatedDomainEvent`, nos dois canais
+  - [x] 39.3 Verificado via curl local: criação de pedido gera duas tentativas de e-mail (cliente + admin) nos logs, ambas falhando graciosamente sem Resend configurado (sem exceção não tratada)
+  - [x] 39.4 `README.md` (RF50) e `spec/requirements.md`/`spec/design.md` (Requisito 38) atualizados
+
+- [x] 40. Redefinição de senha do cliente (Requisito 39 / RF51, design em `spec/design.md`)
+  - Backend
+    - [x] 40.1 `PasswordResetToken` (Domain, `IAggregateRoot`, hash SHA-256 do token, validade + uso único); `PasswordResetRequestedDomainEvent`; `Customer.RequestPasswordReset`; migration; testes de domínio (7 casos novos: `PasswordResetTokenTests` + `Customer.RequestPasswordReset`)
+    - [x] 40.2 `IAppUrlProvider` (Application/Abstractions) + `AppUrlProvider` (Infrastructure) para montar a URL de redefinição sem o Application depender de `AppUrlOptions` da Infrastructure
+    - [x] 40.3 `CustomerAuthService.RequestPasswordResetAsync`/`ResetPasswordAsync`; `POST /api/auth/forgot-password` (sempre 204) e `POST /api/auth/reset-password`; `IEmailSender.SendPasswordResetAsync` (único canal, sem WhatsApp)
+  - Frontend
+    - [x] 40.4 `forgot-password-page`/`reset-password-page` (`/esqueci-senha`, `/redefinir-senha`); link "Esqueci minha senha" em `login-page`
+  - Verificação e documentação
+    - [x] 40.5 `dotnet test` (122 testes); verificado de ponta a ponta local via curl (token real capturado com log temporário, removido antes do commit): senha curta rejeitada, redefinição válida funciona, login com a senha nova funciona, reuso do token rejeitado, token inexistente rejeitado; telas `/esqueci-senha` e `/redefinir-senha` confirmadas no navegador (sucesso, link ausente, link inválido)
+    - [x] 40.6 `README.md` (RF51) e `spec/requirements.md`/`spec/design.md` (Requisito 39) atualizados
+
+- [x] 41. Código de rastreio da encomenda (Requisito 40 / RF52, design em `spec/design.md`)
+  - [x] 41.1 `Order.TrackingCode`/`SetTrackingCode`; migration; testes de domínio (3 casos novos)
+  - [x] 41.2 `IOrderService.SetTrackingCodeAsync`; `PATCH /api/admin/orders/{id}/tracking-code`; `OrderDto.TrackingCode`; coluna extra no export CSV
+  - [x] 41.3 `admin-order-detail.html`: card de código de rastreio (visível a partir de "Enviado"); `order-confirmation.html`: exibição pública do código
+  - [x] 41.4 Verificado no navegador: avançado um pedido real até "Enviado", código salvo e persistido após reload, exibido corretamente na página pública do pedido
+  - [x] 41.5 `README.md` (RF52) e `spec/requirements.md`/`spec/design.md` (Requisito 40) atualizados
+
+- [x] 42. Exclusão de conta pelo cliente — LGPD (Requisito 41 / RF53, design em `spec/design.md`)
+  - Backend
+    - [x] 42.1 `Customer.IsAnonymized`/`Anonymize`; `ICustomerRepository.Remove`; migration; testes de domínio (2 casos novos)
+    - [x] 42.2 `CustomerAuthService.DeleteAccountAsync` (verifica senha, decide remover vs. anonimizar conforme `ListByCustomerAsync`); `LoginAsync` passa a checar `IsAnonymized`; `CustomerAdminService.UpdateAsync` rejeita editar conta anonimizada
+    - [x] 42.3 `POST /api/auth/delete-account` (`CustomerOnly`)
+  - Frontend
+    - [x] 42.4 `my-account.html`/`.ts`: seção "Excluir conta" com confirmação em duas etapas (senha + confirmar); `AuthService.deleteAccount` desloga em caso de sucesso
+    - [x] 42.5 `admin-customer-list.html`: badge "Conta excluída" e link de editar escondido para contas anonimizadas; `CustomerSummaryDto.IsAnonymized`
+  - Verificação e documentação
+    - [x] 42.6 Verificado via curl local os dois caminhos: cliente sem pedido → remoção total (some da lista admin); cliente com pedido → anonimização (`isAnonymized: true`, dados do pedido permanecem com nome/e-mail originais); senha errada rejeitada nos dois casos. Fluxo de remoção também confirmado no navegador (login → excluir conta → sessão encerrada → redirecionado à home)
+    - [x] 42.7 `README.md` (RF53) e `spec/requirements.md`/`spec/design.md` (Requisito 41) atualizados

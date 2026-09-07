@@ -29,6 +29,9 @@ public sealed class CustomerAdminService : ICustomerAdminService
         var customer = await _unitOfWork.Customers.GetByIdAsync(id, ct)
             ?? throw new NotFoundException("Cliente", id);
 
+        if (customer.IsAnonymized)
+            throw new ConflictException("Esta conta foi excluída pelo cliente e não pode mais ser editada.");
+
         var email = Email.Create(request.Email);
         var existingByEmail = await _unitOfWork.Customers.GetByEmailAsync(request.Email, ct);
         if (existingByEmail is not null && existingByEmail.Id != id)
@@ -46,5 +49,5 @@ public sealed class CustomerAdminService : ICustomerAdminService
     }
 
     private static CustomerSummaryDto ToDto(Customer c) =>
-        new(c.Id, c.Name, c.Email.Value, c.Phone, c.Cpf?.Value, c.CreatedAt);
+        new(c.Id, c.Name, c.Email.Value, c.Phone, c.Cpf?.Value, c.CreatedAt, c.IsAnonymized);
 }

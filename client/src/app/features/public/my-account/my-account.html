@@ -32,5 +32,49 @@
         }
       </div>
     }
+
+    <div class="mt-5 pt-4 border-top">
+      <h6 class="text-danger">Excluir conta</h6>
+
+      @if (loading()) {
+        <!-- avoid showing an order-count-dependent message before we know the count -->
+      } @else if (!confirmingDelete()) {
+        <p class="small text-secondary mb-2">
+          Você pode solicitar a exclusão da sua conta a qualquer momento.
+          @if (orders().length > 0) {
+            Como você já tem encomendas registradas, seus dados pessoais (nome, e-mail, telefone, CPF) serão removidos e o login deixará de funcionar — o histórico de compras é mantido pelo ateliê apenas para fins fiscais/garantia.
+          } @else {
+            Como você ainda não tem encomendas, sua conta é apagada por completo.
+          }
+        </p>
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" (click)="startDeleteAccount()">
+          Excluir minha conta
+        </button>
+      } @else {
+        <div class="alert alert-danger small rounded-4">
+          <p class="mb-2">Tem certeza? Essa ação não pode ser desfeita. Digite sua senha para confirmar.</p>
+          <input
+            type="password"
+            class="form-control form-control-sm mb-2"
+            placeholder="Sua senha"
+            [value]="deletePassword()"
+            (input)="deletePassword.set($any($event.target).value)">
+          @if (deleteError()) {
+            <p class="text-danger mb-2">{{ deleteError() }}</p>
+          }
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-danger rounded-pill" [disabled]="deleting()" (click)="confirmDeleteAccount()">
+              @if (deleting()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Confirmar exclusão
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" [disabled]="deleting()" (click)="cancelDeleteAccount()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 </section>

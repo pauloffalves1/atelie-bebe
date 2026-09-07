@@ -31,6 +31,7 @@ public sealed class Order : Entity, IAggregateRoot
     public Money ShippingCost { get; private set; } = Money.Zero();
     public PaymentStatus PaymentStatus { get; private set; } = PaymentStatus.Pendente;
     public string? ExternalPaymentId { get; private set; }
+    public string? TrackingCode { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -112,6 +113,13 @@ public sealed class Order : Entity, IAggregateRoot
 
         PaymentStatus = PaymentStatus.Recusado;
         ExternalPaymentId = externalPaymentId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Empty/whitespace clears the code — kept free-form (Correios and private couriers use different formats).</summary>
+    public void SetTrackingCode(string? trackingCode)
+    {
+        TrackingCode = string.IsNullOrWhiteSpace(trackingCode) ? null : trackingCode.Trim();
         UpdatedAt = DateTime.UtcNow;
     }
 

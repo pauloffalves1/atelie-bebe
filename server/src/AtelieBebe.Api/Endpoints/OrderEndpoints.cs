@@ -40,6 +40,9 @@ public static class OrderEndpoints
         adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, IOrderService service, CancellationToken ct) =>
             Results.Ok(await service.ChangeStatusAsync(id, request, ct)));
 
+        adminGroup.MapPatch("/{id:guid}/tracking-code", async (Guid id, SetTrackingCodeRequest request, IOrderService service, CancellationToken ct) =>
+            Results.Ok(await service.SetTrackingCodeAsync(id, request, ct)));
+
         // Lets an admin (re)generate a payment link for an order — e.g. the customer abandoned the
         // original Checkout Pro page, or the order was created before the gateway was configured.
         adminGroup.MapPost("/{id:guid}/payment-link", async (Guid id, IOrderService service, CancellationToken ct) =>
@@ -58,7 +61,7 @@ public static class OrderEndpoints
     {
         var culture = CultureInfo.GetCultureInfo("pt-BR");
         var sb = new StringBuilder();
-        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Subtotal;Frete;Total");
+        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Subtotal;Frete;Total;Código de rastreio");
 
         foreach (var o in orders)
         {
@@ -75,6 +78,7 @@ public static class OrderEndpoints
                 o.ItemsTotal.ToString("0.00", culture),
                 o.ShippingCost.ToString("0.00", culture),
                 o.Total.ToString("0.00", culture),
+                Escape(o.TrackingCode ?? ""),
             }));
         }
 

@@ -29,6 +29,7 @@ public sealed record OrderDto(
     IReadOnlyList<OrderItemDto> Items,
     string PaymentStatus,
     string? ExternalPaymentId,
+    string? TrackingCode,
     string? PaymentUrl = null);
 
 public sealed record CreateOrderItemRequest(Guid? ProductId, string ProductName, decimal UnitPrice, int Quantity, string? OptionsJson);
@@ -53,3 +54,4 @@ public sealed record CreateCustomOrderRequest(
     decimal EstimatedPrice);
 
 public sealed record UpdateOrderStatusRequest(string Status);
+public sealed record SetTrackingCodeRequest(string? TrackingCode);

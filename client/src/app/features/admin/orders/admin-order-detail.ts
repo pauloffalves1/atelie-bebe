@@ -41,6 +41,11 @@ export class AdminOrderDetail implements OnInit {
   readonly paymentLink = signal<string | null>(null);
   readonly paymentLinkCopied = signal(false);
 
+  readonly trackingCodeInput = signal('');
+  readonly savingTrackingCode = signal(false);
+  readonly trackingCodeError = signal<string | null>(null);
+  readonly trackingCodeSaved = signal(false);
+
   private orderId!: string;
 
   constructor(
@@ -110,6 +115,25 @@ export class AdminOrderDetail implements OnInit {
     );
   }
 
+  saveTrackingCode(): void {
+    this.savingTrackingCode.set(true);
+    this.trackingCodeError.set(null);
+    this.trackingCodeSaved.set(false);
+
+    this.orderService.setTrackingCode(this.orderId, this.trackingCodeInput().trim() || null).subscribe({
+      next: (order) => {
+        this.order.set(order);
+        this.savingTrackingCode.set(false);
+        this.trackingCodeSaved.set(true);
+        setTimeout(() => this.trackingCodeSaved.set(false), 2000);
+      },
+      error: (err) => {
+        this.savingTrackingCode.set(false);
+        this.trackingCodeError.set(err?.error?.detail ?? 'Não foi possível salvar o código de rastreio.');
+      },
+    });
+  }
+
   parsedCustomDetails(): CustomOrderDetails | null {
     const json = this.order()?.customDetailsJson;
     if (!json) return null;
@@ -144,6 +168,7 @@ export class AdminOrderDetail implements OnInit {
     this.orderService.getById(this.orderId).subscribe({
       next: (order) => {
         this.order.set(order);
+        this.trackingCodeInput.set(order.trackingCode ?? '');
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

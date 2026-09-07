@@ -1,3 +1,4 @@
+using System.Linq;
 using AtelieBebe.Domain.Entities;
 using AtelieBebe.Domain.Events;
 using AtelieBebe.Domain.Exceptions;
@@ -92,5 +93,53 @@ public class CustomerTests
         var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
 
         Assert.Throws<DomainException>(() => customer.UpdateDetails("Maria Silva", CustomerEmail, CustomerCpf, null));
+    }
+
+    [Fact]
+    public void RequestPasswordReset_Valid_RaisesEvent()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        customer.RequestPasswordReset("https://layettebaby.com.br/redefinir-senha?token=abc");
+
+        var domainEvent = Assert.Single(customer.DomainEvents.OfType<PasswordResetRequestedDomainEvent>());
+        Assert.Equal(customer.Id, domainEvent.CustomerId);
+        Assert.Equal("https://layettebaby.com.br/redefinir-senha?token=abc", domainEvent.ResetUrl);
+    }
+
+    [Fact]
+    public void RequestPasswordReset_WithEmptyUrl_Throws()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        Assert.Throws<DomainException>(() => customer.RequestPasswordReset(" "));
+    }
+
+    [Fact]
+    public void Anonymize_ScrubsPersonalDataAndDisablesLogin()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "old-hash", "11999999999");
+
+        customer.Anonymize("unusable-hash");
+
+        Assert.True(customer.IsAnonymized);
+        Assert.Equal("Cliente removido", customer.Name);
+        Assert.Null(customer.Cpf);
+        Assert.Null(customer.Phone);
+        Assert.Equal("unusable-hash", customer.PasswordHash);
+        Assert.NotEqual(CustomerEmail, customer.Email);
+    }
+
+    [Fact]
+    public void Anonymize_CalledTwice_IsIdempotent()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "old-hash", "11999999999");
+
+        customer.Anonymize("first-hash");
+        var emailAfterFirst = customer.Email;
+        customer.Anonymize("second-hash");
+
+        Assert.Equal(emailAfterFirst, customer.Email);
+        Assert.Equal("first-hash", customer.PasswordHash);
     }
 }

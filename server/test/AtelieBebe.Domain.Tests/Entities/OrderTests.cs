@@ -237,4 +237,35 @@ public class OrderTests
             if (status == target) return;
         }
     }
+
+    [Fact]
+    public void SetTrackingCode_Valid_SetsValue()
+    {
+        var order = CreateStoreOrder();
+
+        order.SetTrackingCode("BR123456789BR");
+
+        Assert.Equal("BR123456789BR", order.TrackingCode);
+    }
+
+    [Fact]
+    public void SetTrackingCode_TrimsWhitespace()
+    {
+        var order = CreateStoreOrder();
+
+        order.SetTrackingCode("  BR123456789BR  ");
+
+        Assert.Equal("BR123456789BR", order.TrackingCode);
+    }
+
+    [Fact]
+    public void SetTrackingCode_EmptyOrWhitespace_ClearsValue()
+    {
+        var order = CreateStoreOrder();
+        order.SetTrackingCode("BR123456789BR");
+
+        order.SetTrackingCode("   ");
+
+        Assert.Null(order.TrackingCode);
+    }
 }

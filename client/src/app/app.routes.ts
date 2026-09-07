@@ -130,6 +130,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/public/auth/register-page').then((m) => m.RegisterPage),
       },
       {
+        path: 'esqueci-senha',
+        title: `Esqueci minha senha — ${SITE_NAME}`,
+        loadComponent: () =>
+          import('./features/public/auth/forgot-password-page').then((m) => m.ForgotPasswordPage),
+      },
+      {
+        path: 'redefinir-senha',
+        title: `Redefinir senha — ${SITE_NAME}`,
+        loadComponent: () => import('./features/public/auth/reset-password-page').then((m) => m.ResetPasswordPage),
+      },
+      {
         path: 'minha-conta',
         title: `Minha conta — ${SITE_NAME}`,
         canActivate: [customerGuard],

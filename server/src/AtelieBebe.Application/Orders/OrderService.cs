@@ -178,6 +178,17 @@ public sealed class OrderService : IOrderService
         return preference.CheckoutUrl;
     }
 
+    public async Task<OrderDto> SetTrackingCodeAsync(Guid orderId, SetTrackingCodeRequest request, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, ct)
+            ?? throw new NotFoundException("Pedido", orderId);
+
+        order.SetTrackingCode(request.TrackingCode);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return ToDto(order);
+    }
+
     public async Task<OrderDto> SimulatePaymentAsync(Guid orderId, bool approved, CancellationToken ct = default)
     {
         var order = await _unitOfWork.Orders.GetByIdAsync(orderId, ct)
@@ -236,5 +247,6 @@ public sealed class OrderService : IOrderService
         o.UpdatedAt,
         o.Items.Select(i => new OrderItemDto(i.Id, i.ProductId, i.ProductName, i.UnitPrice.Amount, i.Quantity, i.Subtotal.Amount, i.OptionsJson)).ToList(),
         o.PaymentStatus.ToString(),
-        o.ExternalPaymentId);
+        o.ExternalPaymentId,
+        o.TrackingCode);
 }

@@ -26,12 +26,14 @@ public sealed class ResendEmailSender : IEmailSender
 
     private readonly HttpClient _httpClient;
     private readonly ResendOptions _options;
+    private readonly AdminNotificationOptions _adminOptions;
     private readonly ILogger<ResendEmailSender> _logger;
 
-    public ResendEmailSender(HttpClient httpClient, IOptions<ResendOptions> options, ILogger<ResendEmailSender> logger)
+    public ResendEmailSender(HttpClient httpClient, IOptions<ResendOptions> options, IOptions<AdminNotificationOptions> adminOptions, ILogger<ResendEmailSender> logger)
     {
         _httpClient = httpClient;
         _options = options.Value;
+        _adminOptions = adminOptions.Value;
         _logger = logger;
     }
 
@@ -73,6 +75,29 @@ public sealed class ResendEmailSender : IEmailSender
             Wrap($"""
                 <p>Olá, {name}!</p>
                 <p>Recebemos sua mensagem e vamos responder em breve pelo WhatsApp ou e-mail.</p>
+                """),
+            ct);
+
+    public Task SendNewOrderAdminAlertAsync(Guid orderId, string customerName, decimal total, CancellationToken ct = default) =>
+        SendAsync(
+            _adminOptions.Email,
+            $"Novo pedido #{ShortId(orderId)} — {FormatMoney(total)}",
+            Wrap($"""
+                <p>Novo pedido recebido!</p>
+                <p><strong>#{ShortId(orderId)}</strong> — {customerName} — <strong>{FormatMoney(total)}</strong></p>
+                <p>Acesse o painel administrativo para ver os detalhes.</p>
+                """),
+            ct);
+
+    public Task SendPasswordResetAsync(string name, string email, string resetUrl, CancellationToken ct = default) =>
+        SendAsync(
+            email,
+            "Redefinição de senha",
+            Wrap($"""
+                <p>Olá, {name}!</p>
+                <p>Recebemos um pedido para redefinir sua senha. Clique no link abaixo para escolher uma nova (válido por 1 hora):</p>
+                <p><a href="{resetUrl}">{resetUrl}</a></p>
+                <p>Se você não pediu essa redefinição, pode ignorar este e-mail — sua senha continua a mesma.</p>
                 """),
             ct);
 
