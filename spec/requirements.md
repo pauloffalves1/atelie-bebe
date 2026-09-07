@@ -419,7 +419,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ## Requisito 27: Pagamento online no checkout (Mercado Pago)
 
-**User Story:** Como ateliê, quero oferecer PIX, boleto e cartão de crédito como formas de pagamento no checkout, para que o cliente pague no ato da compra em vez de combinar o pagamento por fora.
+**User Story:** Como ateliê, quero oferecer PIX e cartão de crédito como formas de pagamento no checkout, para que o cliente pague no ato da compra em vez de combinar o pagamento por fora.
 
 **Rastreamento:** RF40.
 
@@ -432,6 +432,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 6. UMA VEZ que um pedido está com `PaymentStatus = Pago`, o SISTEMA NÃO DEVE rebaixá-lo para `Recusado` ou `Pendente` em razão de uma notificação de webhook posterior, duplicada ou fora de ordem (idempotência).
 7. O endpoint de webhook DEVE sempre responder HTTP 200, mesmo quando a notificação vem malformada, sem id de pagamento reconhecível, ou referenciando um pedido inexistente — para que o Mercado Pago não fique retentando indefinidamente uma notificação que nunca vai ser processável.
 8. `PaymentStatus` (`Pendente` | `Pago` | `Recusado`) é independente do status de produção/entrega do pedido (`Order.Status`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo.
+9. A página de pagamento hospedada DEVE oferecer apenas Pix e cartão de crédito — boleto e qualquer outro meio de pagamento que o Mercado Pago ofereça (débito, carteira digital, etc.) DEVEM ser excluídos da preferência criada.
 
 ---
 

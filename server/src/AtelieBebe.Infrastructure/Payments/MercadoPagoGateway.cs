@@ -8,10 +8,10 @@ using Microsoft.Extensions.Options;
 namespace AtelieBebe.Infrastructure.Payments;
 
 /// <summary>
-/// Creates Checkout Pro preferences (a hosted payment page covering PIX, boleto and credit card)
-/// and resolves payment status by re-querying the Mercado Pago API — webhook payloads are only a
-/// "something changed, go check" ping and are never trusted for the actual status, per Mercado
-/// Pago's own integration guidance.
+/// Creates Checkout Pro preferences (a hosted payment page restricted to PIX and credit card —
+/// see <c>excluded_payment_types</c> below) and resolves payment status by re-querying the
+/// Mercado Pago API — webhook payloads are only a "something changed, go check" ping and are
+/// never trusted for the actual status, per Mercado Pago's own integration guidance.
 /// </summary>
 public sealed class MercadoPagoGateway : IPaymentGateway
 {
@@ -46,6 +46,22 @@ public sealed class MercadoPagoGateway : IPaymentGateway
             back_urls = new { success = orderUrl, pending = orderUrl, failure = orderUrl },
             auto_return = "approved",
             notification_url = $"{_appUrls.ApiPublicUrl}/api/payments/mercadopago/webhook",
+            // Ateliê only wants to offer PIX and credit card — everything else Checkout Pro
+            // would otherwise show (boleto/"ticket", debit card, prepaid card, digital wallet,
+            // digital currency, ATM) is explicitly excluded rather than relying on an allow-list,
+            // since Mercado Pago's API only supports narrowing via exclusion.
+            payment_methods = new
+            {
+                excluded_payment_types = new[]
+                {
+                    new { id = "ticket" },
+                    new { id = "debit_card" },
+                    new { id = "prepaid_card" },
+                    new { id = "digital_wallet" },
+                    new { id = "digital_currency" },
+                    new { id = "atm" },
+                },
+            },
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "checkout/preferences") { Content = JsonContent.Create(payload) };

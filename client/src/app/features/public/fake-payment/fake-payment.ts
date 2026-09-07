@@ -6,7 +6,7 @@ import { SITE_NAME } from '../../../core/constants/site';
 import { Order } from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
 
-type FakePaymentMethod = 'pix' | 'boleto' | 'cartao';
+type FakePaymentMethod = 'pix' | 'cartao';
 
 @Component({
   selector: 'app-fake-payment',

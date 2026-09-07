@@ -34,14 +34,6 @@
               <button
                 type="button"
                 class="btn text-start rounded-4 py-3"
-                [class.btn-primary]="method() === 'boleto'"
-                [class.btn-outline-secondary]="method() !== 'boleto'"
-                (click)="selectMethod('boleto')">
-                <i class="bi bi-upc-scan me-2"></i>Boleto bancário
-              </button>
-              <button
-                type="button"
-                class="btn text-start rounded-4 py-3"
                 [class.btn-primary]="method() === 'cartao'"
                 [class.btn-outline-secondary]="method() !== 'cartao'"
                 (click)="selectMethod('cartao')">
