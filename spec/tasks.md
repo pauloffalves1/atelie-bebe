@@ -292,3 +292,35 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 28.5 `dotnet test`/`ng test` completos (111 backend, 31 frontend); `dotnet build`/`ng build` sem erros; verificado no navegador: filtro por pagamento na listagem, geração de link no detalhe abrindo a página correspondente
     - [x] 28.6 `README.md` (RF41) e `spec/requirements.md`/`spec/design.md` (Requisito 28) atualizados
+
+- [x] 29. SEO das páginas públicas (Requisito 29 / RF42, design em `spec/design.md`)
+  - [x] 29.1 `SeoService` (`core/services/seo.service.ts`) — title/description/Open Graph/Twitter Card/canonical; `environment.siteUrl` novo nos dois arquivos de ambiente
+  - [x] 29.2 Aplicado em `home`, `shop`, `about`, `gallery`, `contact` (descrição fixa por página) e `product-detail` (substituindo a definição manual de `Title`/`Meta` anterior — `type: 'product'` + imagem do próprio produto)
+  - [x] 29.3 Tags Open Graph/Twitter Card estáticas de fallback em `index.html`
+  - [x] 29.4 `GET /api/sitemap.xml` (`SitemapEndpoints`, gerado a cada requisição a partir das páginas fixas + produtos ativos/públicos via `IProductService.ListAsync`); `robots.txt` estático (`client/public/`) apontando `Sitemap:` para essa URL e bloqueando áreas administrativas/de conta
+  - [x] 29.5 `dotnet build`/`ng build`/`ng test` sem erros; verificado no navegador (`document.querySelector` das meta tags no detalhe do produto) e via `curl http://localhost:5120/api/sitemap.xml`
+  - [x] 29.6 `README.md` (RF42) e `spec/requirements.md`/`spec/design.md` (Requisito 29) atualizados
+
+- [x] 30. Estrutura de analytics (Requisito 30 / RF43, design em `spec/design.md`)
+  - [x] 30.1 `AnalyticsService` (`core/services/analytics.service.ts`) — carrega GA4/Meta Pixel só com IDs configurados em `environment.analytics`; sem IDs, no-op completo (mesmo padrão de "degrada graciosamente" já usado no gateway de pagamento)
+  - [x] 30.2 `AnalyticsService.init()` chamado do `App.ngOnInit`; dispara `page_view`/`PageView` a cada `NavigationEnd`
+  - [x] 30.3 `ng build` sem erros; IDs em branco por padrão — ativação real depende do ateliê criar as contas e fornecer os IDs
+  - [x] 30.4 `README.md` (RF43) e `spec/requirements.md`/`spec/design.md` (Requisito 30) atualizados
+
+- [x] 31. Busca de produtos na loja (Requisito 31 / RF44, design em `spec/design.md`)
+  - [x] 31.1 `search` adicionado à cadeia `IProductRepository`/`IProductService`/`GET /api/products` (parâmetro opcional no fim da lista, sem quebrar chamadas existentes); `EF.Functions.Like` no repositório
+  - [x] 31.2 `shop.ts`/`.html`: campo de busca com debounce (400ms), refletido em `?busca=`, combinável com `?categoria=`, reiniciando a paginação
+  - [x] 31.3 `dotnet test`/`ng test` completos (102+20 backend, 31 frontend); verificado no navegador: busca por "Golfinho" filtrou corretamente
+  - [x] 31.4 `README.md` (RF44) e `spec/requirements.md`/`spec/design.md` (Requisito 31) atualizados
+
+- [x] 32. Avaliações de produtos (Requisito 32 / RF45, design em `spec/design.md`)
+  - Backend
+    - [x] 32.1 `ProductReview` (Domain, `IAggregateRoot` próprio); migration `AddProductReviews` com índice único `(ProductId, CustomerId)`; testes de domínio (`ProductReviewTests`, 8 casos)
+    - [x] 32.2 `IOrderRepository.CustomerHasPurchasedProductAsync`; `IProductReviewRepository`/`ProductReviewRepository`, registrados em `IUnitOfWork`/`UnitOfWork`
+    - [x] 32.3 `Application/Reviews/` (`IReviewService`/`ReviewService`); `ReviewEndpoints` (`GET`/`POST /api/products/{id}/reviews`, `GET .../eligibility` — as duas últimas `CustomerOnly`)
+  - Frontend
+    - [x] 32.4 `review.model.ts`/`review.service.ts`
+    - [x] 32.5 `product-detail.ts`/`.html`: nota média + contagem ao lado do nome, formulário de avaliação (só quando elegível), lista de avaliações, mensagens para já-avaliado/não-elegível
+  - Verificação e documentação
+    - [x] 32.6 `dotnet test`/`ng test` completos (102+20 backend, 31 frontend); verificado no navegador de ponta a ponta: cadastro de cliente teste → compra do produto → avaliação de 4 estrelas com comentário → nota média "4,0 (1 avaliação)" exibida corretamente → tentativa de reavaliar bloqueada
+    - [x] 32.7 `README.md` (RF45) e `spec/requirements.md`/`spec/design.md` (Requisito 32) atualizados

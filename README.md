@@ -275,6 +275,10 @@ npm test        # testes unitários (Vitest)
 | RF39 | O sistema deve permitir que o administrador adicione e remova fotos da galeria pública (`/galeria`) pelo painel administrativo (`/admin/galeria`), sem precisar de deploy de código | Administrador |
 | RF40 | O sistema deve oferecer PIX e cartão de crédito como meios de pagamento no checkout de loja, via Mercado Pago Checkout Pro: ao criar o pedido, se o gateway estiver configurado, o cliente é redirecionado a uma página de pagamento hospedada; o status do pagamento (`Orders.PaymentStatus`) é atualizado de forma assíncrona via webhook (`POST /api/payments/mercadopago/webhook`), sempre reconsultando a API do Mercado Pago pelo id do pagamento em vez de confiar no conteúdo da notificação; sem gateway configurado, o pedido é criado normalmente, sem redirecionamento | Cliente / Sistema |
 | RF41 | O sistema deve permitir que o administrador filtre a listagem de encomendas (`/admin/encomendas`) por status de pagamento, veja esse status em cada linha e, no detalhe de uma encomenda ainda não paga, gere um novo link de pagamento (nova preferência do Mercado Pago) para copiar/reenviar ao cliente ou abrir diretamente | Administrador |
+| RF42 | O sistema deve expor metadados de SEO para as páginas públicas — título, descrição, Open Graph e Twitter Card por página (com imagem e tipo específicos no detalhe do produto), link canônico, `robots.txt` e um `sitemap.xml` gerado dinamicamente com as páginas estáticas e todos os produtos ativos e públicos | Visitante / Sistema |
+| RF43 | O sistema deve carregar Google Analytics (GA4) e/ou Meta Pixel quando um ID de rastreamento estiver configurado, registrando visualizações de página a cada navegação; sem nenhum ID configurado, nenhum script de terceiro é carregado | Sistema |
+| RF44 | O sistema deve permitir que o visitante busque produtos pelo nome na loja (`/loja?busca=`), combinável com o filtro de categoria já existente, reiniciando a paginação para a primeira página a cada nova busca | Visitante |
+| RF45 | O sistema deve permitir que um cliente que comprou um produto (qualquer status de pedido) deixe uma avaliação (nota de 1 a 5 estrelas e comentário opcional) na página do produto, publicada imediatamente e limitada a uma avaliação por cliente por produto; a média e o total de avaliações aparecem ao lado do nome do produto | Cliente |
 
 ### Requisitos não funcionais
 
@@ -298,6 +302,8 @@ npm test        # testes unitários (Vitest)
 - Não há controle de estoque: o ateliê fabrica cada peça sob encomenda, então todo produto está sempre disponível para compra, em qualquer quantidade — não existe reserva de estoque, alerta de estoque baixo, nem status "esgotado" na loja.
 - Um produto sem nenhum cliente associado é **público** (visível a todos, como hoje). Associar um ou mais clientes o torna **exclusivo**: some das listagens públicas (loja, categorias, destaque) e do detalhe (404) para quem não está na lista de acesso — inclusive administradores continuam vendo tudo nas telas administrativas, independentemente da regra de visibilidade pública.
 - Todo produto, exclusivo ou público, aceita personalização de bordado (texto + quantidade de peças) — é obrigatório informar o texto antes de adicionar ao carrinho, então a compra sempre passa pela página de detalhe do produto (não há mais botão de "adicionar rápido" na grade da loja).
+- A busca da loja (`?busca=`) filtra por nome do produto (case-insensitive, substring), combinável com o filtro de categoria; qualquer mudança em busca ou categoria reinicia a paginação para a página 1.
+- Um cliente só pode avaliar um produto que já constou como item em algum pedido seu (qualquer status — não precisa estar entregue), e só uma vez por produto; a avaliação (nota 1-5 + comentário opcional) aparece publicamente de imediato, sem moderação prévia do admin.
 
 ### Pedidos e ciclo de vida
 
@@ -367,3 +373,9 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 | `UnauthorizedAppException` | 401 |
 | `DomainException` | 400 |
 | Não tratada | 500 (mensagem genérica; detalhes vão para o log, nunca para a resposta) |
+
+### SEO e analytics
+
+- Cada página pública chama `SeoService.update(...)` (`core/services/seo.service.ts`) para definir `<title>`, meta description, Open Graph, Twitter Card e o link canônico — o detalhe do produto usa `og:type=product` e a própria foto do produto; as demais páginas usam `og:type=website` e a foto padrão do hero da home.
+- `GET /api/sitemap.xml` é gerado a cada requisição (não é um arquivo estático) a partir das páginas fixas mais todo produto ativo e público — reflete o catálogo atual sem precisar de rebuild. `robots.txt` (estático, em `client/public/`) aponta o `Sitemap:` para essa URL e bloqueia áreas administrativas/de conta.
+- `AnalyticsService` (`core/services/analytics.service.ts`) só carrega os scripts do Google Analytics (GA4) e/ou Meta Pixel quando `environment.analytics.googleAnalyticsId`/`metaPixelId` estão preenchidos — em branco (padrão, até o ateliê criar as contas), nenhum script de terceiro é sequer injetado no DOM.

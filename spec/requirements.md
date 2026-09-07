@@ -449,3 +449,59 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 4. SE o gateway de pagamento não estiver configurado, O SISTEMA DEVE rejeitar a geração do link com uma mensagem de erro clara, em vez de falhar silenciosamente ou gerar uma URL inválida.
 5. SE a encomenda já estiver com `PaymentStatus = Pago`, O SISTEMA NÃO DEVE oferecer a opção de gerar um novo link de pagamento — não faz sentido cobrar de novo por um pedido já pago.
 6. Gerar um novo link de pagamento NÃO DEVE alterar o `PaymentStatus` atual da encomenda nem seus dados persistidos — é só a criação de uma preferência adicional no Mercado Pago; a confirmação de pagamento continua acontecendo exclusivamente pelo webhook (Requisito 27).
+
+---
+
+## Requisito 29: SEO das páginas públicas
+
+**User Story:** Como ateliê, quero que as páginas do site tenham título, descrição e prévia de compartilhamento adequados, para aparecer melhor no Google e ter um link bonito quando compartilhado no WhatsApp/Instagram.
+
+**Rastreamento:** RF42.
+
+**Acceptance Criteria**
+1. QUANDO qualquer página pública carrega, O SISTEMA DEVE definir um `<title>` específico da página, uma meta description, tags Open Graph (`og:title`, `og:description`, `og:type`, `og:url`, `og:image`, `og:site_name`) e Twitter Card, além de um link `canonical` apontando para a URL absoluta da página.
+2. A página de detalhe do produto DEVE usar `og:type=product` e a foto do próprio produto (resolvida para uma URL absoluta) como `og:image`; as demais páginas usam `og:type=website` e uma imagem padrão do site.
+3. O SISTEMA DEVE expor `GET /api/sitemap.xml`, gerado a cada requisição a partir das páginas fixas (`/`, `/loja`, `/sobre`, `/galeria`, `/contato`) e de todo produto ativo e público (`/produto/:slug`), refletindo sempre o catálogo atual.
+4. O SISTEMA DEVE expor um `robots.txt` que aponta o diretivo `Sitemap:` para `/api/sitemap.xml` e bloqueia o rastreamento de áreas administrativas e de conta (`/admin`, `/checkout`, `/minha-conta`, `/entrar`, `/cadastro`, `/pedido/`, `/pagamento-simulado/`).
+
+---
+
+## Requisito 30: Estrutura de analytics (Google Analytics / Meta Pixel)
+
+**User Story:** Como ateliê, quero poder acompanhar de onde vêm minhas vendas quando eu criar as contas de Google Analytics e Meta Pixel, sem precisar de mais desenvolvimento depois.
+
+**Rastreamento:** RF43.
+
+**Acceptance Criteria**
+1. SE `environment.analytics.googleAnalyticsId` estiver preenchido, O SISTEMA DEVE carregar o script do Google Analytics (GA4) e registrar uma visualização de página a cada navegação de rota.
+2. SE `environment.analytics.metaPixelId` estiver preenchido, O SISTEMA DEVE carregar o script do Meta Pixel e registrar um evento `PageView` a cada navegação de rota.
+3. QUANDO nenhum dos dois IDs está preenchido (padrão, até o ateliê criar as contas), O SISTEMA NÃO DEVE carregar nenhum script de terceiro nem fazer nenhuma requisição de rastreamento.
+
+---
+
+## Requisito 31: Busca de produtos na loja
+
+**User Story:** Como cliente, quero buscar um produto pelo nome na loja, para encontrá-lo rapidamente sem precisar navegar pelas categorias.
+
+**Rastreamento:** RF44.
+
+**Acceptance Criteria**
+1. A página da loja (`/loja`) DEVE oferecer um campo de busca por texto; ao digitar, o SISTEMA DEVE filtrar os produtos cujo nome contém o texto digitado (sem diferenciar maiúsculas/minúsculas), com um debounce para não buscar a cada tecla digitada.
+2. O termo de busca DEVE ser refletido na URL (`?busca=`) e ser combinável com o filtro de categoria (`?categoria=`) já existente — os dois filtros se aplicam juntos.
+3. QUALQUER mudança no termo de busca DEVE reiniciar a paginação para a página 1, do mesmo jeito que mudar de categoria já faz.
+4. QUANDO nenhum produto corresponde à busca, O SISTEMA DEVE exibir uma mensagem indicando que nada foi encontrado para aquele termo.
+
+---
+
+## Requisito 32: Avaliações de produtos
+
+**User Story:** Como cliente que já comprou um produto, quero deixar uma avaliação com nota e comentário, para compartilhar minha experiência com outros compradores; como ateliê, quero que essas avaliações apareçam na página do produto para gerar confiança em novos clientes.
+
+**Rastreamento:** RF45.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE permitir que um cliente autenticado avalie um produto (nota de 1 a 5 estrelas, comentário opcional) SOMENTE SE ele tiver pelo menos um pedido (qualquer status) contendo aquele produto como item.
+2. QUANDO o cliente já avaliou aquele produto anteriormente, O SISTEMA DEVE recusar uma nova avaliação para o mesmo par cliente/produto, com uma mensagem clara.
+3. QUANDO uma avaliação é criada, O SISTEMA DEVE publicá-la imediatamente na página do produto, sem exigir aprovação prévia do administrador.
+4. A página do produto DEVE exibir a nota média e o total de avaliações ao lado do nome do produto, e a lista completa de avaliações (nome do cliente, nota, comentário, data) mais abaixo.
+5. QUANDO o visitante não está autenticado, ou está autenticado mas nunca comprou aquele produto, O SISTEMA NÃO DEVE oferecer o formulário de avaliação — a lista de avaliações existentes continua visível normalmente.

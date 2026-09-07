@@ -1,12 +1,15 @@
-import { CurrencyPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { SITE_NAME } from '../../../core/constants/site';
 import { Product } from '../../../core/models/product.model';
+import { ProductReview, ReviewEligibility } from '../../../core/models/review.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
+import { ReviewService } from '../../../core/services/review.service';
+import { SeoService } from '../../../core/services/seo.service';
+import { resolveAssetUrl } from '../../../core/utils/asset-url';
 import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
 const MAX_EMBROIDERY_LENGTH = 30;
@@ -14,7 +17,7 @@ const MAX_EMBROIDERY_LENGTH = 30;
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CurrencyPipe, FormsModule, RouterLink, AssetUrlPipe],
+  imports: [CurrencyPipe, DatePipe, DecimalPipe, FormsModule, RouterLink, AssetUrlPipe],
   templateUrl: './product-detail.html',
 })
 export class ProductDetail implements OnInit {
@@ -28,8 +31,21 @@ export class ProductDetail implements OnInit {
   readonly embroideryTouched = signal(false);
   readonly addedFeedback = signal(false);
 
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  readonly reviews = signal<ProductReview[]>([]);
+  readonly eligibility = signal<ReviewEligibility | null>(null);
+  readonly reviewRating = signal(5);
+  readonly reviewComment = signal('');
+  readonly submittingReview = signal(false);
+  readonly reviewError = signal<string | null>(null);
+
+  readonly averageRating = computed(() => {
+    const list = this.reviews();
+    return list.length ? list.reduce((sum, r) => sum + r.rating, 0) / list.length : 0;
+  });
+
+  private readonly seo = inject(SeoService);
+  private readonly auth = inject(AuthService);
+  private readonly reviewService = inject(ReviewService);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -43,14 +59,52 @@ export class ProductDetail implements OnInit {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
-        this.title.setTitle(`${product.name} — ${SITE_NAME}`);
-        if (product.description) {
-          this.meta.updateTag({ name: 'description', content: product.description });
+        this.seo.update({
+          title: product.name,
+          description: product.description || `${product.name} — peça bordada do Ateliê Layette Baby, feita sob medida com carinho.`,
+          path: `/produto/${product.slug}`,
+          image: product.imageUrl ? resolveAssetUrl(product.imageUrl) : undefined,
+          type: 'product',
+        });
+
+        this.reviewService.listByProduct(product.id).subscribe((reviews) => this.reviews.set(reviews));
+
+        if (this.auth.currentUser()) {
+          this.reviewService.getEligibility(product.id).subscribe({
+            next: (eligibility) => this.eligibility.set(eligibility),
+            error: () => {},
+          });
         }
       },
       error: () => {
         this.notFound.set(true);
         this.loading.set(false);
+      },
+    });
+  }
+
+  setReviewRating(rating: number): void {
+    this.reviewRating.set(rating);
+  }
+
+  submitReview(): void {
+    const product = this.product();
+    if (!product) return;
+
+    this.submittingReview.set(true);
+    this.reviewError.set(null);
+
+    this.reviewService.create(product.id, { rating: this.reviewRating(), comment: this.reviewComment().trim() || null }).subscribe({
+      next: (review) => {
+        this.reviews.update((list) => [review, ...list]);
+        this.eligibility.update((current) => (current ? { ...current, alreadyReviewed: true } : current));
+        this.reviewComment.set('');
+        this.reviewRating.set(5);
+        this.submittingReview.set(false);
+      },
+      error: (err) => {
+        this.submittingReview.set(false);
+        this.reviewError.set(err?.error?.detail ?? 'Não foi possível enviar sua avaliação.');
       },
     });
   }

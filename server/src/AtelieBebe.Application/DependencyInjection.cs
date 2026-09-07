@@ -4,6 +4,7 @@ using AtelieBebe.Application.Customers;
 using AtelieBebe.Application.Gallery;
 using AtelieBebe.Application.Orders;
 using AtelieBebe.Application.Products;
+using AtelieBebe.Application.Reviews;
 using AtelieBebe.Application.SiteImages;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerAdminService, CustomerAdminService>();
         services.AddScoped<ISiteImageService, SiteImageService>();
         services.AddScoped<IGalleryImageService, GalleryImageService>();
+        services.AddScoped<IReviewService, ReviewService>();
         return services;
     }
 }

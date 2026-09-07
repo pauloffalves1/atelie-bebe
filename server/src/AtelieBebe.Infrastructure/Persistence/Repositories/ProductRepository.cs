@@ -22,7 +22,7 @@ public sealed class ProductRepository : IProductRepository
     public Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default) =>
         _dbContext.Products.AnyAsync(p => p.Slug == slug, ct);
 
-    public async Task<(IReadOnlyList<Product> Items, int TotalItems)> ListAsync(string? category, bool onlyActive, int page, int pageSize, Guid? customerId = null, CancellationToken ct = default)
+    public async Task<(IReadOnlyList<Product> Items, int TotalItems)> ListAsync(string? category, bool onlyActive, int page, int pageSize, Guid? customerId = null, string? search = null, CancellationToken ct = default)
     {
         var query = ProductsWithAccess;
 
@@ -31,6 +31,9 @@ public sealed class ProductRepository : IProductRepository
 
         if (!string.IsNullOrWhiteSpace(category))
             query = query.Where(p => p.Category == category);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(p => EF.Functions.Like(p.Name, $"%{search}%"));
 
         // Admin listings (onlyActive: false) show every product regardless of exclusivity;
         // only the customer-facing catalog (onlyActive: true) is restricted by access grants.

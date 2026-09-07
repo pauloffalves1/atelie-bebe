@@ -2,6 +2,7 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
+import { SeoService } from '../../../core/services/seo.service';
 import { SiteImageService } from '../../../core/services/site-image.service';
 import { resolveAssetUrl } from '../../../core/utils/asset-url';
 import { Product } from '../../../core/models/product.model';
@@ -21,9 +22,16 @@ export class Home implements OnInit {
   constructor(
     private readonly productService: ProductService,
     private readonly siteImageService: SiteImageService,
+    private readonly seo: SeoService,
   ) {}
 
   ngOnInit(): void {
+    this.seo.update({
+      title: 'Fraldas de ombro e boca bordadas',
+      description: 'Fraldas de ombro e boca bordadas à mão para o enxoval do bebê — kits e encomendas personalizadas, feitas com carinho pelo Ateliê Layette Baby.',
+      path: '/',
+    });
+
     this.productService.listFeatured().subscribe({
       next: (products) => {
         this.featured.set(products);

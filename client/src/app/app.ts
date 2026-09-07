@@ -1,5 +1,6 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AnalyticsService } from './core/services/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -9,6 +10,8 @@ import { RouterOutlet } from '@angular/router';
 })
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('client');
+
+  private readonly analytics = inject(AnalyticsService);
 
   @ViewChild('cursorGlow', { static: true })
   private readonly cursorGlowRef!: ElementRef<HTMLDivElement>;
@@ -21,6 +24,7 @@ export class App implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     window.addEventListener('mousemove', this.onMouseMove);
+    this.analytics.init();
   }
 
   ngOnDestroy(): void {

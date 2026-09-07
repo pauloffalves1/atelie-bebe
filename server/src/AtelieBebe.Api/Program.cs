@@ -82,6 +82,8 @@ app.MapCustomerEndpoints();
 app.MapSiteImageEndpoints();
 app.MapGalleryEndpoints();
 app.MapPaymentEndpoints();
+app.MapSitemapEndpoints();
+app.MapReviewEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapFakePaymentEndpoints();

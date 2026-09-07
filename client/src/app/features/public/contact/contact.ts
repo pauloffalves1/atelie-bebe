@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { SeoService } from '../../../core/services/seo.service';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
 /** Atelier's WhatsApp number in E.164 (no symbols), used to build the wa.me deep link. */
@@ -15,6 +16,7 @@ const WHATSAPP_NUMBER = '5511913130481';
 export class Contact implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly seo = inject(SeoService);
 
   readonly pieceTypes = ['Fralda de Ombro', 'Fralda de Boca', 'Kit Ombro e Boca', 'Outro'];
   readonly sizes = ['Padrão', 'Grande', 'Sob medida'];
@@ -33,6 +35,12 @@ export class Contact implements OnInit {
   });
 
   ngOnInit(): void {
+    this.seo.update({
+      title: 'Contato e Encomendas',
+      description: 'Fale com o Ateliê Layette Baby pelo WhatsApp para dúvidas ou para encomendar uma peça personalizada, com tecido, cor e bordado à sua escolha.',
+      path: '/contato',
+    });
+
     const user = this.auth.currentUser();
     if (user) {
       this.form.patchValue({ customerName: user.name, customerEmail: user.email });

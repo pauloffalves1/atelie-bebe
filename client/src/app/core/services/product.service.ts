@@ -12,9 +12,10 @@ export class ProductService {
 
   constructor(private readonly http: HttpClient) {}
 
-  list(category?: string, page = 1, pageSize = 12): Observable<PagedResult<Product>> {
+  list(category?: string, page = 1, pageSize = 12, search?: string): Observable<PagedResult<Product>> {
     const params: Record<string, string | number> = { page, pageSize };
     if (category) params['category'] = category;
+    if (search) params['search'] = search;
     return this.http.get<PagedResult<Product>>(this.baseUrl, { params });
   }
 

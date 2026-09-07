@@ -5,6 +5,18 @@
       <p class="text-secondary mt-3">Peças prontas, feitas com muito carinho para o seu bebê.</p>
     </div>
 
+    <div class="mx-auto mb-4" style="max-width: 24rem;">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input
+          type="search"
+          class="form-control border-start-0"
+          placeholder="Buscar produto pelo nome..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchInput($event)">
+      </div>
+    </div>
+
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
       <button class="btn btn-sm rounded-pill" [class.btn-primary]="activeCategory() === null" [class.btn-outline-secondary]="activeCategory() !== null" (click)="selectCategory(null)">
         Todas
@@ -21,7 +33,11 @@
     } @else if (products().length === 0) {
       <div class="text-center py-5 text-secondary">
         <i class="bi bi-emoji-frown fs-1 d-block mb-3"></i>
-        Nenhum produto encontrado nessa categoria.
+        @if (searchTerm()) {
+          Nenhum produto encontrado para "{{ searchTerm() }}".
+        } @else {
+          Nenhum produto encontrado nessa categoria.
+        }
       </div>
     } @else {
       <div class="row g-4">

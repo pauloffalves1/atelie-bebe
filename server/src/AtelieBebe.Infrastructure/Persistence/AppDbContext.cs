@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
     public DbSet<SiteImage> SiteImages => Set<SiteImage>();
     public DbSet<GalleryImage> GalleryImages => Set<GalleryImage>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

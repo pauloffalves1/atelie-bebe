@@ -38,5 +38,11 @@ public sealed class OrderRepository : IOrderRepository
             .Where(o => o.CustomerId == customerId)
             .ToListAsync(ct);
 
+    public Task<bool> CustomerHasPurchasedProductAsync(Guid customerId, Guid productId, CancellationToken ct = default) =>
+        _dbContext.Orders
+            .Where(o => o.CustomerId == customerId)
+            .SelectMany(o => o.Items)
+            .AnyAsync(i => i.ProductId == productId, ct);
+
     public void Add(Order order) => _dbContext.Orders.Add(order);
 }

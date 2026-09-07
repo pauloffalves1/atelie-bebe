@@ -12,8 +12,8 @@ public static class ProductEndpoints
 
         // Anonymous-friendly: no RequireAuthorization, but an authenticated customer's token
         // (when present) is used to also surface exclusive products they were granted access to.
-        group.MapGet("/", async (string? category, HttpContext http, IProductService service, CancellationToken ct, int page = 1, int pageSize = 12) =>
-            Results.Ok(await service.ListAsync(category, onlyActive: true, page, pageSize, http.User.GetUserIdOrNull(), ct)));
+        group.MapGet("/", async (string? category, string? search, HttpContext http, IProductService service, CancellationToken ct, int page = 1, int pageSize = 12) =>
+            Results.Ok(await service.ListAsync(category, onlyActive: true, page, pageSize, http.User.GetUserIdOrNull(), search, ct)));
 
         group.MapGet("/featured", async (HttpContext http, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.ListFeaturedAsync(http.User.GetUserIdOrNull(), ct)));

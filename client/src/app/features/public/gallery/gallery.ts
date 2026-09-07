@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { GalleryImageService } from '../../../core/services/gallery-image.service';
+import { SeoService } from '../../../core/services/seo.service';
 import { resolveAssetUrl } from '../../../core/utils/asset-url';
 
 const FALLBACK_IMAGES = Array.from(
@@ -16,9 +17,18 @@ export class Gallery implements OnInit {
   readonly images = signal<string[]>(FALLBACK_IMAGES);
   readonly selectedIndex = signal<number | null>(null);
 
-  constructor(private readonly galleryImageService: GalleryImageService) {}
+  constructor(
+    private readonly galleryImageService: GalleryImageService,
+    private readonly seo: SeoService,
+  ) {}
 
   ngOnInit(): void {
+    this.seo.update({
+      title: 'Galeria',
+      description: 'Veja fotos de fraldas de ombro e boca bordadas já entregues pelo Ateliê Layette Baby — inspire-se para a sua encomenda personalizada.',
+      path: '/galeria',
+    });
+
     this.galleryImageService.list().subscribe({
       next: (images) => {
         if (images.length > 0) this.images.set(images.map((i) => resolveAssetUrl(i.url)));

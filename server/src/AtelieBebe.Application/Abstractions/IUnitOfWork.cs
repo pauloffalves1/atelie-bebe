@@ -15,6 +15,7 @@ public interface IUnitOfWork
     IContactMessageRepository ContactMessages { get; }
     ISiteImageRepository SiteImages { get; }
     IGalleryImageRepository GalleryImages { get; }
+    IProductReviewRepository ProductReviews { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
