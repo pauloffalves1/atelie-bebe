@@ -4,6 +4,17 @@ import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 import { SITE_NAME } from '../constants/site';
 
+export interface ProductStructuredData {
+  name: string;
+  description: string | null;
+  image: string;
+  url: string;
+  price: number;
+  inStock: boolean;
+  ratingValue?: number;
+  reviewCount?: number;
+}
+
 export interface SeoData {
   /** Page title, without the site name suffix — added automatically. */
   title: string;
@@ -50,6 +61,48 @@ export class SeoService {
     this.setTag({ name: 'twitter:image' }, image);
 
     this.setCanonical(url);
+
+    // Cleared on every navigation so a product's rich-snippet data never lingers on the next,
+    // unrelated page visited in this same SPA session — product-detail re-adds it right after.
+    this.clearStructuredData();
+  }
+
+  /** Schema.org Product markup — lets Google show price/availability/rating directly in search results. */
+  setProductStructuredData(product: ProductStructuredData): void {
+    const data: Record<string, unknown> = {
+      '@context': 'https://schema.org/',
+      '@type': 'Product',
+      name: product.name,
+      image: [this.toAbsolute(product.image)],
+      description: product.description ?? product.name,
+      offers: {
+        '@type': 'Offer',
+        url: `${environment.siteUrl}${product.url}`,
+        priceCurrency: 'BRL',
+        price: product.price.toFixed(2),
+        availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      },
+    };
+
+    if (product.ratingValue && product.reviewCount) {
+      data['aggregateRating'] = {
+        '@type': 'AggregateRating',
+        ratingValue: product.ratingValue.toFixed(1),
+        reviewCount: product.reviewCount,
+      };
+    }
+
+    let script = this.document.querySelector<HTMLScriptElement>('script[type="application/ld+json"]');
+    if (!script) {
+      script = this.document.createElement('script');
+      script.setAttribute('type', 'application/ld+json');
+      this.document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
+  }
+
+  private clearStructuredData(): void {
+    this.document.querySelector('script[type="application/ld+json"]')?.remove();
   }
 
   private toAbsolute(url: string): string {

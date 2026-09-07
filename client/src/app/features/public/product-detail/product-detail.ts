@@ -88,15 +88,38 @@ export class ProductDetail implements OnInit {
         this.product.set(product);
         this.loading.set(false);
         this.activeImageIndex.set(0);
+        const description = product.description || `${product.name} — peça bordada do Ateliê Layette Baby, feita sob medida com carinho.`;
         this.seo.update({
           title: product.name,
-          description: product.description || `${product.name} — peça bordada do Ateliê Layette Baby, feita sob medida com carinho.`,
+          description,
           path: `/produto/${product.slug}`,
           image: product.imageUrl ? resolveAssetUrl(product.imageUrl) : undefined,
           type: 'product',
         });
+        this.seo.setProductStructuredData({
+          name: product.name,
+          description,
+          image: product.imageUrl ? resolveAssetUrl(product.imageUrl) : '/images/hero-fraldas.jpg',
+          url: `/produto/${product.slug}`,
+          price: product.effectivePrice,
+          inStock: product.active,
+        });
 
-        this.reviewService.listByProduct(product.id).subscribe((reviews) => this.reviews.set(reviews));
+        this.reviewService.listByProduct(product.id).subscribe((reviews) => {
+          this.reviews.set(reviews);
+          if (reviews.length > 0) {
+            this.seo.setProductStructuredData({
+              name: product.name,
+              description,
+              image: product.imageUrl ? resolveAssetUrl(product.imageUrl) : '/images/hero-fraldas.jpg',
+              url: `/produto/${product.slug}`,
+              price: product.effectivePrice,
+              inStock: product.active,
+              ratingValue: reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length,
+              reviewCount: reviews.length,
+            });
+          }
+        });
 
         if (this.auth.currentUser()) {
           this.reviewService.getEligibility(product.id).subscribe({
