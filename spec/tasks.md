@@ -509,3 +509,10 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 54.9 `dotnet build`/`dotnet test` (159 Domain + 20 Application, sem falhas); `dotnet ef migrations add AddEmailVerification`; `npm run build`/`npx ng test` (31 testes) sem erros
     - [x] 54.10 Verificado via curl fim a fim contra a API local: cadastro dispara o evento de verificação (token extraído da mensagem da outbox), `POST /api/auth/verify-email` marca a conta verificada, reuso do mesmo token é rejeitado (401), `POST /api/auth/resend-verification` é no-op (204) numa conta já verificada. Verificado no navegador: `/verificar-email?token=...` mostra sucesso/erro corretamente; `/minha-conta` mostra o aviso de e-mail não confirmado, o botão de reenvio funciona, e o aviso desaparece assim que o e-mail é confirmado
     - [x] 54.11 `README.md` (RF65) e `spec/requirements.md`/`spec/design.md` (Requisito 53) atualizados
+
+- [x] 55. Otimização automática de imagens enviadas (Requisito 54 / RF66, design em `spec/design.md`)
+  - [x] 55.1 Pacote `SixLabors.ImageSharp` 2.1.13 (Apache 2.0, série anterior à exigência de licença comercial da 3.x/4.x) adicionado a `AtelieBebe.Infrastructure`
+  - [x] 55.2 `LocalFileStorageService.SaveAsync` decodifica via `Image.LoadAsync`, redimensiona para no máximo 1600px no maior lado (`ResizeMode.Max`, sem upscale) e recomprime (JPEG/WEBP qualidade 82, PNG compressão máxima) antes de gravar
+  - [x] 55.3 `dotnet build`/`dotnet test` sem falhas (159 Domain + 20 Application)
+  - [x] 55.4 Verificado manualmente via curl contra a API local: upload de JPEG 3000×2000 (~109KB) → 1600×1067 (~37KB); upload de PNG 2500×1800 (~31KB) → 1600×1152 (~10KB)
+  - [x] 55.5 `README.md` (RF66) e `spec/requirements.md`/`spec/design.md` (Requisito 54) atualizados

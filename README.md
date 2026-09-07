@@ -343,6 +343,7 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 | RF63 | O sistema deve disponibilizar páginas públicas de Termos de Uso (`/termos-de-uso`) e Política de Privacidade (`/politica-de-privacidade`), acessíveis pelo rodapé de todas as páginas públicas | Visitante |
 | RF64 | O sistema deve incluir dados estruturados (JSON-LD, schema.org `Product`) na página de detalhe de cada produto, incluindo nota média e total de avaliações quando existirem | Sistema |
 | RF65 | O sistema deve exigir que o cliente confirme seu e-mail (link enviado no cadastro, válido por 24 horas) e permitir reenviar esse e-mail a qualquer momento pela própria conta | Cliente |
+| RF66 | O sistema deve redimensionar e comprimir automaticamente qualquer imagem enviada pelo administrador (produtos, galeria, fotos do site), sem exigir nenhuma ação manual de otimização antes do upload | Administrador |
 
 ### Requisitos não funcionais
 
@@ -465,3 +466,8 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 - Cada página pública chama `SeoService.update(...)` (`core/services/seo.service.ts`) para definir `<title>`, meta description, Open Graph, Twitter Card e o link canônico — o detalhe do produto usa `og:type=product` e a própria foto do produto; as demais páginas usam `og:type=website` e a foto padrão do hero da home.
 - `GET /api/sitemap.xml` é gerado a cada requisição (não é um arquivo estático) a partir das páginas fixas mais todo produto ativo e público — reflete o catálogo atual sem precisar de rebuild. `robots.txt` (estático, em `client/public/`) aponta o `Sitemap:` para essa URL e bloqueia áreas administrativas/de conta.
 - `AnalyticsService` (`core/services/analytics.service.ts`) só carrega os scripts do Google Analytics (GA4) e/ou Meta Pixel quando `environment.analytics.googleAnalyticsId`/`metaPixelId` estão preenchidos — em branco (padrão, até o ateliê criar as contas), nenhum script de terceiro é sequer injetado no DOM.
+
+### Upload e otimização de imagens (RF66)
+
+- `LocalFileStorageService` (único ponto de gravação de arquivo, usado por fotos de produto, galeria e imagens do site) decodifica toda imagem recebida via ImageSharp, redimensiona para no máximo 1600px no maior lado (mantendo proporção, sem upscale de imagens menores) e recomprime antes de salvar — JPEG e WEBP em qualidade 82, PNG com compressão máxima sem perda. O admin não precisa otimizar a foto antes de enviar.
+- Usa `SixLabors.ImageSharp` na série 2.x (licença Apache 2.0) de propósito, não a 3.x/4.x mais recente — a partir da 3.x o projeto passou a exigir registro de licença comercial (gratuita até certo faturamento, mas ainda assim uma conta em sixlabors.com), o que não faz sentido para uma operação de redimensionar/comprimir tão simples.

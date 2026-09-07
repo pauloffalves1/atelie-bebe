@@ -799,3 +799,17 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 4. O cliente autenticado DEVE poder solicitar o reenvio do e-mail de confirmação a qualquer momento pela própria conta; a solicitação NÃO DEVE falhar de forma visível se a conta já estiver verificada.
 5. QUANDO um cliente altera o e-mail da própria conta, O SISTEMA DEVE marcar o e-mail como não verificado novamente.
 6. A anonimização de conta (Requisito 41) DEVE limpar também o estado de verificação de e-mail.
+
+---
+
+## Requisito 54: Otimização automática de imagens enviadas
+
+**User Story:** Como ateliê, quero que as fotos que eu envio sejam otimizadas automaticamente, para o site carregar rápido sem eu precisar editar cada imagem antes de enviar.
+
+**Rastreamento:** RF66.
+
+**Acceptance Criteria**
+1. QUANDO uma imagem é enviada (produto, galeria ou foto do site) com largura ou altura maior que 1600px, O SISTEMA DEVE redimensioná-la para no máximo 1600px no maior lado, preservando a proporção original.
+2. QUANDO uma imagem enviada já é menor que 1600px nos dois lados, O SISTEMA NÃO DEVE aumentá-la (sem upscale).
+3. O SISTEMA DEVE recomprimir toda imagem salva (JPEG/WEBP com perda controlada, PNG sem perda) para reduzir o tamanho do arquivo final.
+4. O formato do arquivo (extensão) DEVE permanecer o mesmo enviado pelo administrador.
