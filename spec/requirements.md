@@ -519,6 +519,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. O backup DEVE ser salvo fora da pasta de publicação, para sobreviver a um `dotnet publish` de deploy.
 3. O SISTEMA DEVE manter apenas os 10 backups mais recentes, removendo automaticamente os mais antigos, para não esgotar o espaço em disco indefinidamente.
 4. A instalação (agendamento via cron) É um passo manual único documentado no `README.md`, não algo que a aplicação faz sozinha.
+5. O SISTEMA DEVE ter um script (`server/ops/sync-offsite.sh`) que sincroniza os backups locais para um remoto fora do servidor (Google Drive via `rclone`), para sobreviver à perda do VPS inteiro (não só do arquivo do banco).
 
 ---
 

@@ -237,7 +237,29 @@ sudo chmod +x /usr/local/bin/atelie-bebe-backup.sh
 
 Isso roda o backup a cada 30 minutos, salvando em `/var/backups/atelie-bebe/` (fora da pasta de publicação, então sobrevive a deploys), sempre mantendo só as 10 cópias mais recentes (`KEEP_COUNT` no script) — com esse intervalo, cobre as últimas 5 horas. Confira o caminho do banco no início do script (`DB_PATH`) — o padrão assume `ConnectionStrings:Default` sem alteração (`Data Source=atelie-bebe.db`, relativo ao diretório de trabalho do serviço, que é a pasta de publicação).
 
-**Isso cobre só backup local, no mesmo servidor** — não protege contra a perda do VPS inteiro (disco corrompido, conta suspensa, etc.). Para backup fora do servidor, uma opção simples é agendar `rclone` copiando `/var/backups/atelie-bebe/` para um Google Drive/S3 depois do backup local rodar.
+**Isso cobre só backup local, no mesmo servidor** — não protege contra a perda do VPS inteiro (disco corrompido, conta suspensa, etc.). `server/ops/sync-offsite.sh` complementa isso sincronizando `/var/backups/atelie-bebe/` para o Google Drive via `rclone`, encadeado depois do backup local no mesmo cron.
+
+**Instalar o rclone e autorizar o Google Drive (rode uma vez, tem uma etapa manual que só você pode fazer — é um login OAuth na sua conta Google):**
+
+```bash
+# na VPS
+curl https://rclone.org/install.sh | sudo bash
+sudo rclone config
+```
+
+No assistente do `rclone config`: `n` (novo remoto) → nome `gdrive` → escolha o número correspondente a "Google Drive" → deixe `client_id`/`client_secret` em branco (Enter) → scope `1` (acesso completo) → deixe `root_folder_id`/`service_account_file` em branco → `n` para configuração avançada → em **"Use auto config?"** responda `n` (a VPS não tem navegador). O rclone vai imprimir um comando parecido com `rclone authorize "drive"`.
+
+Copie esse comando e rode-o na sua própria máquina (Windows), com o rclone instalado localmente ([rclone.org/downloads](https://rclone.org/downloads/)) — isso abre o navegador, você loga na sua conta Google e autoriza o rclone. Ao final, o terminal local imprime um bloco de texto (começa com `{"access_token":...}`) — copie esse bloco inteiro e cole de volta no prompt `result>` que está esperando na VPS. Confirme com `y` para salvar o remoto e `q` para sair do assistente.
+
+Depois de configurado, instale a sincronização no cron (substitui a linha antiga do backup local, encadeando a sincronização logo depois):
+
+```bash
+sudo cp /var/www/atelie-bebe/server/ops/sync-offsite.sh /usr/local/bin/atelie-bebe-sync-offsite.sh
+sudo chmod +x /usr/local/bin/atelie-bebe-sync-offsite.sh
+( sudo crontab -l 2>/dev/null | grep -v atelie-bebe; echo "*/30 * * * * /usr/local/bin/atelie-bebe-backup.sh && /usr/local/bin/atelie-bebe-sync-offsite.sh >> /var/log/atelie-bebe-backup.log 2>&1" ) | sudo crontab -
+```
+
+Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma vez e conferindo se os arquivos aparecem na pasta "atelie-bebe-backups" do Google Drive. Como o script roda `rclone sync` (não `copy`), qualquer arquivo apagado localmente pela retenção dos 10 mais recentes também é removido do Drive — o Drive espelha exatamente o conteúdo de `/var/backups/atelie-bebe/`, nunca acumula além disso.
 
 ## Requisitos
 

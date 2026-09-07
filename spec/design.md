@@ -624,7 +624,8 @@ Os três requisitos compartilham a mesma infraestrutura de upload; documentados 
 
 - `server/ops/backup-db.sh`: usa `sqlite3 "$DB_PATH" ".backup '$DEST'"` — não `cp`, porque um `cp` pode capturar o arquivo no meio de uma escrita e gerar um backup corrompido; `.backup` do próprio SQLite garante um snapshot consistente mesmo com o processo da API escrevendo ao mesmo tempo. Compacta com `gzip`, salva em `/var/backups/atelie-bebe/` (fora da pasta de publicação) e a cada execução lista os backups por data (`ls -1t`) e apaga tudo além dos `KEEP_COUNT` (10) mais recentes — retenção por contagem, não por idade, porque o agendamento é frequente (a cada 30 min).
 - Instalação é manual (não faz parte do deploy automatizado): `cron` chamando o script a cada 30 minutos (`*/30 * * * *`), documentado no `README.md` com o comando exato de `crontab`.
-- Não cobre perda do VPS inteiro (só backup local) — o `README.md` sugere `rclone` para sincronizar com armazenamento externo como próximo passo, mas isso não foi implementado.
+- `server/ops/sync-offsite.sh`: roda `rclone sync /var/backups/atelie-bebe/ gdrive:atelie-bebe-backups`, encadeado no cron logo depois de `backup-db.sh` (`backup-db.sh && sync-offsite.sh`), para que só sincronize backups que já passaram pela retenção local. Usa `sync` (não `copy`) de propósito: o remoto sempre espelha o conteúdo atual de `/var/backups/atelie-bebe/`, então backups apagados localmente pela retenção dos 10 mais recentes também somem do Google Drive — o off-site nunca acumula mais que o local acumula.
+- A autorização do remoto `gdrive` no `rclone config` exige um login OAuth interativo na conta Google do ateliê — não pode ser automatizado por um agente, já que precisa de um navegador e da senha da conta; documentado no `README.md` como etapa manual única (rodar `rclone authorize "drive"` numa máquina com navegador e colar o resultado de volta no prompt da VPS).
 
 ## Requisito 34 — Edição de dados do cliente pelo admin
 

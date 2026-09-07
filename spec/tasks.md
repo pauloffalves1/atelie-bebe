@@ -337,8 +337,9 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
 
 - [x] 34. Backup automático do banco de dados (Requisito 33 / RNF09, design em `spec/design.md`)
   - [x] 34.1 `server/ops/backup-db.sh` — `sqlite3 .backup` (não `cp`), compacta com `gzip`, salva fora da pasta de publicação, mantém só os 10 backups mais recentes (retenção por contagem, agendado a cada 30 min)
-  - [x] 34.2 `README.md`: comandos de instalação do cron (`*/30 * * * *`, rodar uma vez na VPS); nota sobre backup off-site (`rclone`) como próximo passo, não implementado
-  - [ ] 34.3 Instalação real na VPS — depende do administrador rodar os comandos do README no servidor
+  - [x] 34.2 `README.md`: comandos de instalação do cron (`*/30 * * * *`, rodar uma vez na VPS)
+  - [x] 34.3 Instalação real na VPS — administrador rodou os comandos do README no servidor, backup confirmado funcionando (`atelie-bebe_2026-09-07_192107.db.gz` gerado com sucesso)
+  - [x] 34.4 `server/ops/sync-offsite.sh` — `rclone sync` dos backups locais para o Google Drive, encadeado no cron depois de `backup-db.sh`; `README.md` documenta o passo manual de autorização OAuth (`rclone authorize`)
 
 - [x] 35. Edição de dados do cliente pelo admin (Requisito 34 / RF46, design em `spec/design.md`)
   - Backend
