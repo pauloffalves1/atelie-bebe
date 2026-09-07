@@ -182,6 +182,15 @@ a {
 .card-product .card-img-top {
   aspect-ratio: 1 / 1;
   object-fit: cover;
+  border: 2px solid var(--atelie-blush);
+}
+
+// Soft framed-photo border, consistent across every photo on the public site: product cards
+// (above), the hero/about/product-detail feature image, the gallery grid, and cart thumbnails.
+.ratio.rounded-5,
+.gallery-thumb,
+img.rounded-4 {
+  border: 2px solid var(--atelie-blush);
 }
 
 .badge-soft {
