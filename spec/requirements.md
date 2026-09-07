@@ -517,7 +517,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 **Acceptance Criteria**
 1. O SISTEMA DEVE ter um script (`server/ops/backup-db.sh`) que gera um backup consistente do banco SQLite (via `sqlite3 .backup`, nunca uma cópia de arquivo crua) e o compacta.
 2. O backup DEVE ser salvo fora da pasta de publicação, para sobreviver a um `dotnet publish` de deploy.
-3. O SISTEMA DEVE remover automaticamente backups com mais de 30 dias, para não esgotar o espaço em disco indefinidamente.
+3. O SISTEMA DEVE manter apenas os 10 backups mais recentes, removendo automaticamente os mais antigos, para não esgotar o espaço em disco indefinidamente.
 4. A instalação (agendamento via cron) É um passo manual único documentado no `README.md`, não algo que a aplicação faz sozinha.
 
 ---

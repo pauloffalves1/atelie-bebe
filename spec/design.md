@@ -622,8 +622,8 @@ Os três requisitos compartilham a mesma infraestrutura de upload; documentados 
 
 ## Requisito 33 — Backup automático do banco de dados
 
-- `server/ops/backup-db.sh`: usa `sqlite3 "$DB_PATH" ".backup '$DEST'"` — não `cp`, porque um `cp` pode capturar o arquivo no meio de uma escrita e gerar um backup corrompido; `.backup` do próprio SQLite garante um snapshot consistente mesmo com o processo da API escrevendo ao mesmo tempo. Compacta com `gzip`, salva em `/var/backups/atelie-bebe/` (fora da pasta de publicação) e remove arquivos com `-mtime +30` a cada execução.
-- Instalação é manual (não faz parte do deploy automatizado): `cron` chamando o script todo dia às 3h, documentado no `README.md` com o comando exato de `crontab`.
+- `server/ops/backup-db.sh`: usa `sqlite3 "$DB_PATH" ".backup '$DEST'"` — não `cp`, porque um `cp` pode capturar o arquivo no meio de uma escrita e gerar um backup corrompido; `.backup` do próprio SQLite garante um snapshot consistente mesmo com o processo da API escrevendo ao mesmo tempo. Compacta com `gzip`, salva em `/var/backups/atelie-bebe/` (fora da pasta de publicação) e a cada execução lista os backups por data (`ls -1t`) e apaga tudo além dos `KEEP_COUNT` (10) mais recentes — retenção por contagem, não por idade, porque o agendamento é frequente (a cada 30 min).
+- Instalação é manual (não faz parte do deploy automatizado): `cron` chamando o script a cada 30 minutos (`*/30 * * * *`), documentado no `README.md` com o comando exato de `crontab`.
 - Não cobre perda do VPS inteiro (só backup local) — o `README.md` sugere `rclone` para sincronizar com armazenamento externo como próximo passo, mas isso não foi implementado.
 
 ## Requisito 34 — Edição de dados do cliente pelo admin

@@ -225,17 +225,17 @@ npm test        # testes unitários (Vitest)
 
 ### Backup do banco de dados (produção)
 
-O banco (SQLite, um único arquivo) não tem nenhuma rotina de backup por padrão — se o servidor tiver um problema, os pedidos e cadastros de clientes se perdem. `server/ops/backup-db.sh` faz um backup diário consistente (via `sqlite3 .backup`, não uma cópia de arquivo crua) e apaga backups com mais de 30 dias.
+O banco (SQLite, um único arquivo) não tem nenhuma rotina de backup por padrão — se o servidor tiver um problema, os pedidos e cadastros de clientes se perdem. `server/ops/backup-db.sh` faz um backup consistente (via `sqlite3 .backup`, não uma cópia de arquivo crua) e mantém só os 10 backups mais recentes, apagando os mais antigos.
 
 Para instalar na VPS (rode uma vez):
 
 ```bash
 sudo cp /var/www/atelie-bebe/server/ops/backup-db.sh /usr/local/bin/atelie-bebe-backup.sh
 sudo chmod +x /usr/local/bin/atelie-bebe-backup.sh
-( sudo crontab -l 2>/dev/null; echo "0 3 * * * /usr/local/bin/atelie-bebe-backup.sh >> /var/log/atelie-bebe-backup.log 2>&1" ) | sudo crontab -
+( sudo crontab -l 2>/dev/null; echo "*/30 * * * * /usr/local/bin/atelie-bebe-backup.sh >> /var/log/atelie-bebe-backup.log 2>&1" ) | sudo crontab -
 ```
 
-Isso roda o backup toda noite às 3h, salvando em `/var/backups/atelie-bebe/` (fora da pasta de publicação, então sobrevive a deploys). Confira o caminho do banco no início do script (`DB_PATH`) — o padrão assume `ConnectionStrings:Default` sem alteração (`Data Source=atelie-bebe.db`, relativo ao diretório de trabalho do serviço, que é a pasta de publicação).
+Isso roda o backup a cada 30 minutos, salvando em `/var/backups/atelie-bebe/` (fora da pasta de publicação, então sobrevive a deploys), sempre mantendo só as 10 cópias mais recentes (`KEEP_COUNT` no script) — com esse intervalo, cobre as últimas 5 horas. Confira o caminho do banco no início do script (`DB_PATH`) — o padrão assume `ConnectionStrings:Default` sem alteração (`Data Source=atelie-bebe.db`, relativo ao diretório de trabalho do serviço, que é a pasta de publicação).
 
 **Isso cobre só backup local, no mesmo servidor** — não protege contra a perda do VPS inteiro (disco corrompido, conta suspensa, etc.). Para backup fora do servidor, uma opção simples é agendar `rclone` copiando `/var/backups/atelie-bebe/` para um Google Drive/S3 depois do backup local rodar.
 

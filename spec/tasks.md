@@ -336,8 +336,8 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [ ] 33.8 **Bloqueado**: token de produção do PagBank retorna `403 allowlist_access_required` ao criar um checkout — API/payload confirmados corretos (erro chega depois da autenticação), falta o PagBank liberar o acesso à API de Checkout para a conta/aplicação (chamado aberto pelo administrador com o suporte do PagBank). A pedido do administrador, `PagBank:Token` **já está configurado em produção** mesmo assim (`/etc/atelie-bebe/api.env`) — cada tentativa de checkout hoje falha com 403 e cai de volta para "sem redirecionamento de pagamento" (mesmo resultado prático de antes, só que com log de erro a cada pedido); assim que o PagBank liberar o acesso, passa a funcionar sem nenhuma mudança de configuração adicional
 
 - [x] 34. Backup automático do banco de dados (Requisito 33 / RNF09, design em `spec/design.md`)
-  - [x] 34.1 `server/ops/backup-db.sh` — `sqlite3 .backup` (não `cp`), compacta com `gzip`, salva fora da pasta de publicação, remove backups com mais de 30 dias
-  - [x] 34.2 `README.md`: comandos de instalação do cron (rodar uma vez na VPS); nota sobre backup off-site (`rclone`) como próximo passo, não implementado
+  - [x] 34.1 `server/ops/backup-db.sh` — `sqlite3 .backup` (não `cp`), compacta com `gzip`, salva fora da pasta de publicação, mantém só os 10 backups mais recentes (retenção por contagem, agendado a cada 30 min)
+  - [x] 34.2 `README.md`: comandos de instalação do cron (`*/30 * * * *`, rodar uma vez na VPS); nota sobre backup off-site (`rclone`) como próximo passo, não implementado
   - [ ] 34.3 Instalação real na VPS — depende do administrador rodar os comandos do README no servidor
 
 - [x] 35. Edição de dados do cliente pelo admin (Requisito 34 / RF46, design em `spec/design.md`)
