@@ -57,6 +57,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/customers/admin-customer-list').then((m) => m.AdminCustomerList),
       },
       {
+        path: 'clientes/:id/editar',
+        title: `Editar cliente — ${SITE_NAME}`,
+        loadComponent: () => import('./features/admin/customers/admin-customer-form').then((m) => m.AdminCustomerForm),
+      },
+      {
         path: 'imagens',
         title: `Imagens do site — ${SITE_NAME}`,
         loadComponent: () => import('./features/admin/site-images/admin-site-images').then((m) => m.AdminSiteImages),

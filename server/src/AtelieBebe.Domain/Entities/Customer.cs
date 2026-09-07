@@ -50,4 +50,18 @@ public sealed class Customer : Entity, IAggregateRoot
 
         PasswordHash = newPasswordHash;
     }
+
+    /// <summary>Admin-only edit of a customer's own profile fields — uniqueness of email/CPF is checked by the caller before this is invoked, since that requires a repository lookup.</summary>
+    public void UpdateDetails(string name, Email email, Cpf cpf, string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DomainException("O nome é obrigatório.");
+        if (string.IsNullOrWhiteSpace(phone))
+            throw new DomainException("O telefone/WhatsApp é obrigatório.");
+
+        Name = name.Trim();
+        Email = email;
+        Cpf = cpf;
+        Phone = phone.Trim();
+    }
 }

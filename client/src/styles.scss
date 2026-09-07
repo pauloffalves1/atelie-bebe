@@ -188,9 +188,16 @@ a {
 // Soft framed-photo border, consistent across every photo on the public site: product cards
 // (above), the hero/about/product-detail feature image, the gallery grid, and cart thumbnails.
 .ratio.rounded-5,
+.ratio.rounded-4,
 .gallery-thumb,
 img.rounded-4 {
   border: 2px solid var(--atelie-blush);
+}
+
+// Product-detail thumbnail strip: the active photo gets a stronger border so it's clear which
+// one is enlarged above, while the others keep the same soft border as every other photo.
+.border-thumb-active {
+  border: 2px solid var(--atelie-blush-strong);
 }
 
 .badge-soft {

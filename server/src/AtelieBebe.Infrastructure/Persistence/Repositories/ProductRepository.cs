@@ -11,7 +11,8 @@ public sealed class ProductRepository : IProductRepository
     public ProductRepository(AppDbContext dbContext) => _dbContext = dbContext;
 
     /// <summary>Products with the customer-access grants eagerly loaded, so IsExclusive/AllowedCustomerIds/HasAccess read correctly in memory.</summary>
-    private IQueryable<Product> ProductsWithAccess => _dbContext.Products.Include("_allowedCustomerAccess");
+    private IQueryable<Product> ProductsWithAccess =>
+        _dbContext.Products.Include("_allowedCustomerAccess").Include("_images");
 
     public Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         ProductsWithAccess.FirstOrDefaultAsync(p => p.Id == id, ct);

@@ -30,5 +30,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .WithOne()
             .HasForeignKey("ProductId")
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany<ProductImage>("_images")
+            .WithOne()
+            .HasForeignKey("ProductId")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -30,6 +30,13 @@ export class ProductDetail implements OnInit {
   readonly embroideryText = signal('');
   readonly embroideryTouched = signal(false);
   readonly addedFeedback = signal(false);
+  readonly activeImageIndex = signal(0);
+
+  readonly galleryUrls = computed(() => {
+    const p = this.product();
+    if (!p) return [];
+    return [...(p.imageUrl ? [p.imageUrl] : []), ...p.imageUrls];
+  });
 
   readonly reviews = signal<ProductReview[]>([]);
   readonly eligibility = signal<ReviewEligibility | null>(null);
@@ -59,6 +66,7 @@ export class ProductDetail implements OnInit {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
+        this.activeImageIndex.set(0);
         this.seo.update({
           title: product.name,
           description: product.description || `${product.name} — peça bordada do Ateliê Layette Baby, feita sob medida com carinho.`,
@@ -81,6 +89,10 @@ export class ProductDetail implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  selectImage(index: number): void {
+    this.activeImageIndex.set(index);
   }
 
   setReviewRating(rating: number): void {

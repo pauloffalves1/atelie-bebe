@@ -20,6 +20,12 @@ public sealed class CustomerRepository : ICustomerRepository
         return _dbContext.Customers.FirstOrDefaultAsync(c => c.Email == normalized, ct);
     }
 
+    public Task<Customer?> GetByCpfAsync(string cpf, CancellationToken ct = default)
+    {
+        var normalized = Cpf.Create(cpf);
+        return _dbContext.Customers.FirstOrDefaultAsync(c => c.Cpf == normalized, ct);
+    }
+
     public Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
     {
         var normalized = Email.Create(email);

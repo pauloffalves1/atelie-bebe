@@ -45,6 +45,13 @@ export class OrderService {
     return this.http.post<{ paymentUrl: string }>(`${this.adminUrl}/${orderId}/payment-link`, {});
   }
 
+  exportCsv(status?: string, paymentStatus?: string): Observable<Blob> {
+    const params: Record<string, string> = {};
+    if (status) params['status'] = status;
+    if (paymentStatus) params['paymentStatus'] = paymentStatus;
+    return this.http.get(`${this.adminUrl}/export`, { params, responseType: 'blob' });
+  }
+
   // ---- fake payment (dev-only, see FakePaymentGateway) ----
 
   simulatePayment(orderId: string, approved: boolean): Observable<Order> {

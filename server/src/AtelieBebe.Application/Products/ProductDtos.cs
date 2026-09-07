@@ -10,7 +10,8 @@ public sealed record ProductDto(
     string? ImageUrl,
     bool Active,
     bool Featured,
-    bool IsExclusive);
+    bool IsExclusive,
+    IReadOnlyList<string> ImageUrls);
 
 public sealed record AdminProductDto(
     Guid Id,
@@ -23,9 +24,12 @@ public sealed record AdminProductDto(
     bool Active,
     bool Featured,
     bool IsExclusive,
-    IReadOnlyCollection<Guid> AllowedCustomerIds);
+    IReadOnlyCollection<Guid> AllowedCustomerIds,
+    IReadOnlyList<string> ImageUrls);
 
 public sealed record SetAllowedCustomersRequest(IReadOnlyCollection<Guid> CustomerIds);
+
+public sealed record SetProductImagesRequest(IReadOnlyList<string> ImageUrls);
 
 public sealed record CreateProductRequest(
     string Name,

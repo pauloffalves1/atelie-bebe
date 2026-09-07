@@ -6,3 +6,10 @@ export interface CustomerSummary {
   cpf: string | null;
   createdAt: string;
 }
+
+export interface UpdateCustomerRequest {
+  name: string;
+  email: string;
+  cpf: string;
+  phone: string | null;
+}

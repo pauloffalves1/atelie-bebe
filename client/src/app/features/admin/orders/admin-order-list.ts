@@ -28,6 +28,7 @@ export class AdminOrderList implements OnInit {
   readonly paymentStatusLabels = PAYMENT_STATUS_LABELS;
   readonly statuses: OrderStatus[] = ['Recebido', 'EmProducao', 'Pronto', 'Enviado', 'Entregue', 'Cancelado'];
   readonly paymentStatuses: PaymentStatus[] = ['Pendente', 'Pago', 'Recusado'];
+  readonly exporting = signal(false);
 
   constructor(private readonly orderService: OrderService) {}
 
@@ -50,6 +51,22 @@ export class AdminOrderList implements OnInit {
   goToPage(page: number): void {
     this.page.set(page);
     this.load();
+  }
+
+  exportCsv(): void {
+    this.exporting.set(true);
+    this.orderService.exportCsv(this.activeStatus() ?? undefined, this.activePaymentStatus() ?? undefined).subscribe({
+      next: (blob) => {
+        this.exporting.set(false);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `encomendas-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.exporting.set(false),
+    });
   }
 
   private load(): void {

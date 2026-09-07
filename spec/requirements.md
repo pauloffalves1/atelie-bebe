@@ -505,3 +505,70 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. QUANDO uma avaliação é criada, O SISTEMA DEVE publicá-la imediatamente na página do produto, sem exigir aprovação prévia do administrador.
 4. A página do produto DEVE exibir a nota média e o total de avaliações ao lado do nome do produto, e a lista completa de avaliações (nome do cliente, nota, comentário, data) mais abaixo.
 5. QUANDO o visitante não está autenticado, ou está autenticado mas nunca comprou aquele produto, O SISTEMA NÃO DEVE oferecer o formulário de avaliação — a lista de avaliações existentes continua visível normalmente.
+
+---
+
+## Requisito 33: Backup automático do banco de dados
+
+**User Story:** Como ateliê, quero que o banco de dados de produção tenha backup automático, para não perder pedidos e cadastros de clientes se o servidor tiver um problema.
+
+**Rastreamento:** RNF09.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE ter um script (`server/ops/backup-db.sh`) que gera um backup consistente do banco SQLite (via `sqlite3 .backup`, nunca uma cópia de arquivo crua) e o compacta.
+2. O backup DEVE ser salvo fora da pasta de publicação, para sobreviver a um `dotnet publish` de deploy.
+3. O SISTEMA DEVE remover automaticamente backups com mais de 30 dias, para não esgotar o espaço em disco indefinidamente.
+4. A instalação (agendamento via cron) É um passo manual único documentado no `README.md`, não algo que a aplicação faz sozinha.
+
+---
+
+## Requisito 34: Edição de dados do cliente pelo admin
+
+**User Story:** Como administrador, quero poder corrigir o nome, e-mail, CPF ou telefone de um cliente cadastrado, para consertar erros de digitação ou atualizar dados desatualizados sem depender do próprio cliente.
+
+**Rastreamento:** RF46.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE oferecer uma tela (`/admin/clientes/:id/editar`) com os campos nome, e-mail, CPF e telefone pré-preenchidos com os dados atuais do cliente.
+2. QUANDO o administrador salva com um e-mail já usado por **outra** conta, O SISTEMA DEVE rejeitar com um erro de conflito; o mesmo vale para CPF.
+3. QUANDO o administrador salva sem alterar e-mail/CPF (mesmo valor da própria conta), O SISTEMA NÃO DEVE rejeitar por conflito consigo mesma.
+4. A senha do cliente NÃO É um campo editável nesta tela.
+
+---
+
+## Requisito 35: Notificações por e-mail
+
+**User Story:** Como ateliê, quero que os clientes recebam e-mail de confirmação de pedido e mudança de status, para ter um canal de comunicação que não dependa da aprovação do WhatsApp Business pela Meta.
+
+**Rastreamento:** RF47.
+
+**Acceptance Criteria**
+1. QUANDO um pedido é criado, o status de um pedido muda, um cliente se cadastra, ou uma mensagem de contato é recebida, O SISTEMA DEVE tentar enviar um e-mail correspondente via Resend, além da notificação por WhatsApp já existente.
+2. SE o envio de e-mail falhar ou `Resend:ApiKey` não estiver configurado, O SISTEMA NÃO DEVE deixar de tentar enviar a notificação por WhatsApp (e vice-versa) — os dois canais são independentes.
+3. SE `Resend:ApiKey` não estiver configurado, O SISTEMA NÃO DEVE expor esse erro ao cliente que originou o evento — a falha fica só no log do servidor.
+
+---
+
+## Requisito 36: Exportação de encomendas em CSV
+
+**User Story:** Como ateliê, quero exportar a lista de encomendas em CSV, para levar os dados de vendas para a contabilidade ou uma planilha própria.
+
+**Rastreamento:** RF48.
+
+**Acceptance Criteria**
+1. A tela `/admin/encomendas` DEVE oferecer um botão "Exportar CSV" que baixa um arquivo CSV com todas as encomendas que correspondem aos filtros de status/pagamento ativos no momento (não só a página atual visível).
+2. O arquivo CSV DEVE abrir corretamente no Excel em português (separador `;`, acentuação preservada).
+
+---
+
+## Requisito 37: Galeria de fotos por produto
+
+**User Story:** Como ateliê, quero adicionar mais de uma foto a um produto, para mostrar detalhes do bordado e ângulos diferentes da peça.
+
+**Rastreamento:** RF49.
+
+**Acceptance Criteria**
+1. O formulário de produto do admin (em modo edição) DEVE oferecer uma seção de galeria onde o administrador pode enviar novas fotos, ver as já cadastradas e remover qualquer uma antes de salvar.
+2. QUANDO o administrador salva a galeria, O SISTEMA DEVE substituir o conjunto anterior pelo conjunto atual, na ordem em que aparecem na tela.
+3. A página pública do produto DEVE exibir a foto de capa mais as fotos da galeria como miniaturas clicáveis, trocando a foto em destaque ao clicar em uma miniatura.
+4. QUANDO o produto não tem nenhuma foto de galeria, a página do produto DEVE continuar mostrando só a foto de capa, sem miniaturas.

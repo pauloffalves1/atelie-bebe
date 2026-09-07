@@ -106,9 +106,19 @@ public sealed class ProductService : IProductService
         return ToAdminDto(product);
     }
 
+    public async Task<AdminProductDto> SetImagesAsync(Guid id, SetProductImagesRequest request, CancellationToken ct = default)
+    {
+        var product = await _unitOfWork.Products.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException("Produto", id);
+
+        product.SetImages(request.ImageUrls);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return ToAdminDto(product);
+    }
+
     private static ProductDto ToDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.ImageUrls);
 
     private static AdminProductDto ToAdminDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds, p.ImageUrls);
 }

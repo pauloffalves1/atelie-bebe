@@ -14,6 +14,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     active: true,
     featured: false,
     isExclusive: false,
+    imageUrls: [],
     ...overrides,
   };
 }

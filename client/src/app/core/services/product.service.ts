@@ -45,6 +45,10 @@ export class ProductService {
     return this.http.put<AdminProduct>(`${this.adminUrl}/${id}/customers`, { customerIds });
   }
 
+  setImages(id: string, imageUrls: string[]): Observable<AdminProduct> {
+    return this.http.put<AdminProduct>(`${this.adminUrl}/${id}/images`, { imageUrls });
+  }
+
   create(request: CreateProductRequest): Observable<Product> {
     return this.http.post<Product>(this.adminUrl, request);
   }

@@ -27,6 +27,12 @@ export class AdminProductForm implements OnInit {
   readonly uploadingImage = signal(false);
   readonly imageUploadError = signal<string | null>(null);
 
+  readonly galleryImages = signal<string[]>([]);
+  readonly uploadingGalleryImage = signal(false);
+  readonly galleryError = signal<string | null>(null);
+  readonly savingGallery = signal(false);
+  readonly gallerySaved = signal(false);
+
   private productId: string | null = null;
 
   readonly form = this.fb.nonNullable.group({
@@ -66,6 +72,7 @@ export class AdminProductForm implements OnInit {
           featured: product.featured,
         });
         this.selectedCustomerIds.set(product.allowedCustomerIds);
+        this.galleryImages.set(product.imageUrls);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -103,6 +110,51 @@ export class AdminProductForm implements OnInit {
     this.selectedCustomerIds.set(
       checked ? [...current, customerId] : current.filter((id) => id !== customerId),
     );
+  }
+
+  onGalleryImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.uploadingGalleryImage.set(true);
+    this.galleryError.set(null);
+
+    this.productService.uploadImage(file).subscribe({
+      next: ({ url }) => {
+        this.galleryImages.update((urls) => [...urls, url]);
+        this.uploadingGalleryImage.set(false);
+      },
+      error: (err) => {
+        this.uploadingGalleryImage.set(false);
+        this.galleryError.set(err?.error?.detail ?? 'Não foi possível enviar a imagem.');
+      },
+    });
+
+    input.value = '';
+  }
+
+  removeGalleryImage(index: number): void {
+    this.galleryImages.update((urls) => urls.filter((_, i) => i !== index));
+  }
+
+  saveGallery(): void {
+    if (!this.productId) return;
+
+    this.savingGallery.set(true);
+    this.gallerySaved.set(false);
+    this.productService.setImages(this.productId, this.galleryImages()).subscribe({
+      next: () => {
+        this.savingGallery.set(false);
+        this.gallerySaved.set(true);
+        setTimeout(() => this.gallerySaved.set(false), 2500);
+      },
+      error: () => this.savingGallery.set(false),
+    });
+  }
+
+  resolveGalleryUrl(url: string): string {
+    return resolveAssetUrl(url);
   }
 
   saveCustomerAccess(): void {

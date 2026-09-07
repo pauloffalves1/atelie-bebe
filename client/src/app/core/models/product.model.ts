@@ -9,6 +9,7 @@ export interface Product {
   active: boolean;
   featured: boolean;
   isExclusive: boolean;
+  imageUrls: string[];
 }
 
 export interface AdminProduct extends Product {

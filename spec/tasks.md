@@ -333,4 +333,43 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 33.5 Webhook (`POST /api/payments/pagbank/webhook`) simplificado: só lê o campo `id` do corpo (PagBank sempre manda o objeto completo, mas continuamos só usando o id — nunca confiando no status do payload); um id de *checkout* (em vez de *order*) 404 na consulta e no-opa naturalmente, sem precisar checar o tipo antes
   - [x] 33.6 Textos/comentários atualizados em toda a base (código + `README.md` + `spec/`) trocando "Mercado Pago"/"Checkout Pro" por "PagBank"
   - [x] 33.7 `dotnet build`/`dotnet test` (102+20) e `ng build`/`ng test` (31) sem erros após a troca
-  - [ ] 33.8 **Bloqueado**: token de produção do PagBank retorna `403 allowlist_access_required` ao criar um checkout — API/payload confirmados corretos (erro chega depois da autenticação), falta o PagBank liberar o acesso à API de Checkout para a conta/aplicação (chamado aberto pelo administrador com o suporte do PagBank). Até lá, `PagBank:Token` **não é configurado em produção** — o checkout continua funcionando normalmente sem redirecionamento de pagamento, mesmo comportamento de antes desta troca
+  - [ ] 33.8 **Bloqueado**: token de produção do PagBank retorna `403 allowlist_access_required` ao criar um checkout — API/payload confirmados corretos (erro chega depois da autenticação), falta o PagBank liberar o acesso à API de Checkout para a conta/aplicação (chamado aberto pelo administrador com o suporte do PagBank). A pedido do administrador, `PagBank:Token` **já está configurado em produção** mesmo assim (`/etc/atelie-bebe/api.env`) — cada tentativa de checkout hoje falha com 403 e cai de volta para "sem redirecionamento de pagamento" (mesmo resultado prático de antes, só que com log de erro a cada pedido); assim que o PagBank liberar o acesso, passa a funcionar sem nenhuma mudança de configuração adicional
+
+- [x] 34. Backup automático do banco de dados (Requisito 33 / RNF09, design em `spec/design.md`)
+  - [x] 34.1 `server/ops/backup-db.sh` — `sqlite3 .backup` (não `cp`), compacta com `gzip`, salva fora da pasta de publicação, remove backups com mais de 30 dias
+  - [x] 34.2 `README.md`: comandos de instalação do cron (rodar uma vez na VPS); nota sobre backup off-site (`rclone`) como próximo passo, não implementado
+  - [ ] 34.3 Instalação real na VPS — depende do administrador rodar os comandos do README no servidor
+
+- [x] 35. Edição de dados do cliente pelo admin (Requisito 34 / RF46, design em `spec/design.md`)
+  - Backend
+    - [x] 35.1 `Customer.UpdateDetails` (Domain); testes de domínio (4 casos novos)
+    - [x] 35.2 `ICustomerRepository.GetByCpfAsync`; `CustomerAdminService.UpdateAsync` (checa conflito de e-mail/CPF excluindo a própria conta)
+    - [x] 35.3 `GET`/`PUT /api/admin/customers/{id}` (`CustomerEndpoints`)
+  - Frontend
+    - [x] 35.4 Nova tela `/admin/clientes/:id/editar` (`admin-customer-form.ts`/`.html`); link "Editar" na listagem
+  - Verificação e documentação
+    - [x] 35.5 `dotnet test`/`ng test` completos (109+20 backend, 31 frontend); `dotnet build`/`ng build` sem erros
+    - [x] 35.6 `README.md` (RF46) e `spec/requirements.md`/`spec/design.md` (Requisito 34) atualizados
+
+- [x] 36. Notificações por e-mail via Resend (Requisito 35 / RF47, design em `spec/design.md`)
+  - [x] 36.1 `IEmailSender` (Application/Abstractions); `ResendOptions`/`ResendEmailSender` (Infrastructure/Notifications — não um namespace `Infrastructure.Email` próprio, que colidiria com o value object `Email`)
+  - [x] 36.2 `OutboxProcessor.DispatchAsync` despacha e-mail e WhatsApp como canais independentes (`TrySendEmailAsync` nunca deixa uma exceção de e-mail impedir o envio de WhatsApp, e vice-versa)
+  - [x] 36.3 `dotnet build`/`dotnet test` sem erros; `Resend:ApiKey` em branco por padrão — ativação real depende do administrador criar a conta Resend, verificar o domínio de envio e fornecer a chave
+  - [x] 36.4 `README.md` (RF47) e `spec/requirements.md`/`spec/design.md` (Requisito 35) atualizados
+
+- [x] 37. Exportação de encomendas em CSV (Requisito 36 / RF48, design em `spec/design.md`)
+  - [x] 37.1 `IOrderRepository.ListAllAsync` (não paginado, só para exportação); `OrderService.ExportAsync`
+  - [x] 37.2 `GET /api/admin/orders/export` (`;` como separador, BOM UTF-8 para abrir certo no Excel em português)
+  - [x] 37.3 Botão "Exportar CSV" em `admin-order-list.ts`/`.html` (download via blob + `authInterceptor`, já que um `<a href>` cru não anexaria o token)
+  - [x] 37.4 `dotnet test`/`ng test` completos; `README.md` (RF48) e `spec/requirements.md`/`spec/design.md` (Requisito 36) atualizados
+
+- [x] 38. Galeria de fotos por produto (Requisito 37 / RF49, design em `spec/design.md`)
+  - Backend
+    - [x] 38.1 `ProductImage` (Domain, owned por `Product`, mesmo padrão de `ProductCustomerAccessEntry`); migration `AddProductImages`; `Product.SetImages`/`ImageUrls`; testes de domínio (4 casos novos). Correção pós-verificação: `ProductImage` não deve gerar seu próprio `Id` no construtor (causava `DbUpdateConcurrencyException` — o EF tratava a entidade nova como já existente e emitia `UPDATE` em vez de `INSERT`, já que a chave não-default fazia o EF assumir que ela já estava persistida); `ProductRepository.ProductsWithAccess` precisa incluir `"_images"` (não só `"_allowedCustomerAccess"`), senão `ImageUrls` sempre voltava vazio em qualquer leitura
+    - [x] 38.2 `ProductDto`/`AdminProductDto` ganham `ImageUrls`; `PUT /api/admin/products/{id}/images` (`ProductEndpoints`)
+  - Frontend
+    - [x] 38.3 `admin-product-form.ts`/`.html`: seção "Galeria de fotos" (upload múltiplo, remoção, salvar tudo de uma vez)
+    - [x] 38.4 `product-detail.ts`/`.html`: `galleryUrls` (capa + galeria) com miniaturas clicáveis; sem galeria adicional, comportamento idêntico a antes
+  - Verificação e documentação
+    - [x] 38.5 `dotnet test`/`ng test` completos (109+20 backend, 31 frontend); `dotnet build`/`ng build` sem erros; verificado de ponta a ponta local: upload via `curl` → `PUT .../images` → `GET` admin e público confirmam `imageUrls` persistido → miniatura aparece em `/produto/:slug` e troca a imagem principal ao clicar (confirmado no navegador)
+    - [x] 38.6 `README.md` (RF49) e `spec/requirements.md`/`spec/design.md` (Requisito 37) atualizados

@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CustomerSummary } from '../../../core/models/customer.model';
 import { CustomerAdminService } from '../../../core/services/customer-admin.service';
 import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
@@ -7,7 +8,7 @@ import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
 @Component({
   selector: 'app-admin-customer-list',
   standalone: true,
-  imports: [DatePipe, CpfMaskPipe],
+  imports: [DatePipe, CpfMaskPipe, RouterLink],
   templateUrl: './admin-customer-list.html',
 })
 export class AdminCustomerList implements OnInit {

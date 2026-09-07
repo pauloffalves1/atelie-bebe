@@ -99,4 +99,46 @@ public class ProductTests
         Assert.False(product.HasAccess(first));
         Assert.True(product.HasAccess(second));
     }
+
+    [Fact]
+    public void SetImages_Valid_KeepsGivenOrder()
+    {
+        var product = CreateProduct();
+
+        product.SetImages(["/api/uploads/products/a.jpg", "/api/uploads/products/b.jpg"]);
+
+        Assert.Equal(["/api/uploads/products/a.jpg", "/api/uploads/products/b.jpg"], product.ImageUrls);
+    }
+
+    [Fact]
+    public void SetImages_ReplacesThePreviousSetEntirely()
+    {
+        var product = CreateProduct();
+        product.SetImages(["/api/uploads/products/a.jpg"]);
+
+        product.SetImages(["/api/uploads/products/b.jpg"]);
+
+        Assert.Equal(["/api/uploads/products/b.jpg"], product.ImageUrls);
+    }
+
+    [Fact]
+    public void SetImages_WithEmptyList_ClearsGallery()
+    {
+        var product = CreateProduct();
+        product.SetImages(["/api/uploads/products/a.jpg"]);
+
+        product.SetImages([]);
+
+        Assert.Empty(product.ImageUrls);
+    }
+
+    [Fact]
+    public void SetImages_SkipsBlankEntries()
+    {
+        var product = CreateProduct();
+
+        product.SetImages(["/api/uploads/products/a.jpg", " ", "", "/api/uploads/products/b.jpg"]);
+
+        Assert.Equal(["/api/uploads/products/a.jpg", "/api/uploads/products/b.jpg"], product.ImageUrls);
+    }
 }

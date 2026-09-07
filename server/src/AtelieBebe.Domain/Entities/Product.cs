@@ -18,9 +18,13 @@ public sealed class Product : Entity, IAggregateRoot
     public DateTime UpdatedAt { get; private set; }
 
     private readonly List<ProductCustomerAccessEntry> _allowedCustomerAccess = new();
+    private readonly List<ProductImage> _images = new();
 
     /// <summary>Customers this product is restricted to. Empty means the product is public.</summary>
     public IReadOnlyCollection<Guid> AllowedCustomerIds => _allowedCustomerAccess.Select(e => e.CustomerId).ToList().AsReadOnly();
+
+    /// <summary>Additional gallery photos, beyond the cover photo (<see cref="ImageUrl"/>), in display order.</summary>
+    public IReadOnlyList<string> ImageUrls => _images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList();
 
     /// <summary>A product with at least one allowed customer is exclusive — invisible to everyone else.</summary>
     public bool IsExclusive => _allowedCustomerAccess.Count > 0;
@@ -88,4 +92,18 @@ public sealed class Product : Entity, IAggregateRoot
     /// <summary>Public products are visible to everyone; exclusive products only to their allowed customers.</summary>
     public bool HasAccess(Guid? customerId) =>
         !IsExclusive || (customerId is { } id && _allowedCustomerAccess.Any(e => e.CustomerId == id));
+
+    /// <summary>Replaces the full gallery (order is taken from the given sequence). An empty list clears it.</summary>
+    public void SetImages(IEnumerable<string> urls)
+    {
+        _images.Clear();
+        var order = 0;
+        foreach (var url in urls)
+        {
+            if (string.IsNullOrWhiteSpace(url)) continue;
+            _images.Add(new ProductImage(url.Trim(), order++));
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

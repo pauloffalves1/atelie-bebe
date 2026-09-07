@@ -10,5 +10,11 @@ public static class CustomerEndpoints
 
         adminGroup.MapGet("/", async (ICustomerAdminService service, CancellationToken ct) =>
             Results.Ok(await service.ListAsync(ct)));
+
+        adminGroup.MapGet("/{id:guid}", async (Guid id, ICustomerAdminService service, CancellationToken ct) =>
+            Results.Ok(await service.GetByIdAsync(id, ct)));
+
+        adminGroup.MapPut("/{id:guid}", async (Guid id, UpdateCustomerRequest request, ICustomerAdminService service, CancellationToken ct) =>
+            Results.Ok(await service.UpdateAsync(id, request, ct)));
     }
 }

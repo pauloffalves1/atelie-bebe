@@ -62,6 +62,7 @@ public sealed class OutboxProcessor : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var sender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
+        var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
         var pending = await dbContext.OutboxMessages
             .Where(m => m.ProcessedOn == null && m.Attempts < MaxAttempts)
@@ -75,7 +76,7 @@ public sealed class OutboxProcessor : BackgroundService
         {
             try
             {
-                await DispatchAsync(message, sender, ct);
+                await DispatchAsync(message, sender, emailSender, _logger, ct);
                 message.ProcessedOn = DateTime.UtcNow;
                 message.Error = null;
             }
@@ -90,7 +91,7 @@ public sealed class OutboxProcessor : BackgroundService
         await dbContext.SaveChangesAsync(ct);
     }
 
-    private static async Task DispatchAsync(OutboxMessage message, INotificationSender sender, CancellationToken ct)
+    private static async Task DispatchAsync(OutboxMessage message, INotificationSender sender, IEmailSender emailSender, ILogger logger, CancellationToken ct)
     {
         var eventType = Type.GetType(message.Type)
             ?? throw new InvalidOperationException($"Tipo de evento desconhecido: {message.Type}");
@@ -98,22 +99,42 @@ public sealed class OutboxProcessor : BackgroundService
         var domainEvent = JsonSerializer.Deserialize(message.Content, eventType)
             ?? throw new InvalidOperationException($"Não foi possível desserializar o evento {message.Type}.");
 
+        // E-mail is dispatched first and never lets an exception escape — a WhatsApp failure/
+        // misconfiguration must not block e-mail, and vice versa; the two channels are fully
+        // independent. WhatsApp keeps throwing on failure (unchanged), which is what drives this
+        // message's own retry/attempt bookkeeping below.
         switch (domainEvent)
         {
             case OrderCreatedDomainEvent e:
+                await TrySendEmailAsync(() => emailSender.SendOrderCreatedAsync(e.OrderId, e.CustomerName, e.CustomerEmail, e.TotalAmount, ct), logger);
                 await sender.SendOrderCreatedAsync(e.OrderId, e.CustomerName, e.CustomerPhone, e.TotalAmount, ct);
                 break;
             case OrderStatusChangedDomainEvent e:
+                await TrySendEmailAsync(() => emailSender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerName, e.CustomerEmail, e.OldStatus.ToString(), e.NewStatus.ToString(), ct), logger);
                 await sender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerName, e.CustomerPhone, e.OldStatus.ToString(), e.NewStatus.ToString(), ct);
                 break;
             case CustomerRegisteredDomainEvent e:
+                await TrySendEmailAsync(() => emailSender.SendWelcomeMessageAsync(e.CustomerId, e.Name, e.Email, ct), logger);
                 await sender.SendWelcomeMessageAsync(e.CustomerId, e.Name, e.Phone, ct);
                 break;
             case ContactMessageReceivedDomainEvent e:
+                await TrySendEmailAsync(() => emailSender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Email, ct), logger);
                 await sender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Phone, ct);
                 break;
             default:
                 throw new InvalidOperationException($"Nenhum handler registrado para o evento {domainEvent.GetType().Name}.");
+        }
+    }
+
+    private static async Task TrySendEmailAsync(Func<Task> send, ILogger logger)
+    {
+        try
+        {
+            await send();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao enviar e-mail de notificação (canal independente do WhatsApp, não bloqueia o restante).");
         }
     }
 }

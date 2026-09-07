@@ -91,21 +91,18 @@ public sealed class OrderService : IOrderService
 
     public async Task<PagedResult<OrderDto>> ListAsync(string? status, string? paymentStatus, int page, int pageSize, CancellationToken ct = default)
     {
-        OrderStatus? parsedStatus = null;
-        if (!string.IsNullOrWhiteSpace(status))
-            parsedStatus = ParseStatus(status);
-
-        PaymentStatus? parsedPaymentStatus = null;
-        if (!string.IsNullOrWhiteSpace(paymentStatus))
-        {
-            if (!Enum.TryParse<PaymentStatus>(paymentStatus, true, out var parsed))
-                throw new ConflictException($"Status de pagamento inválido: '{paymentStatus}'.");
-            parsedPaymentStatus = parsed;
-        }
+        var (parsedStatus, parsedPaymentStatus) = ParseFilters(status, paymentStatus);
 
         var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
         var (orders, totalItems) = await _unitOfWork.Orders.ListAsync(parsedStatus, parsedPaymentStatus, normalizedPage, normalizedPageSize, ct);
         return new PagedResult<OrderDto>(orders.Select(ToDto).ToList(), normalizedPage, normalizedPageSize, totalItems);
+    }
+
+    public async Task<IReadOnlyList<OrderDto>> ExportAsync(string? status, string? paymentStatus, CancellationToken ct = default)
+    {
+        var (parsedStatus, parsedPaymentStatus) = ParseFilters(status, paymentStatus);
+        var orders = await _unitOfWork.Orders.ListAllAsync(parsedStatus, parsedPaymentStatus, ct);
+        return orders.Select(ToDto).ToList();
     }
 
     public async Task<IReadOnlyList<OrderDto>> ListMineAsync(Guid customerId, CancellationToken ct = default)
@@ -201,6 +198,23 @@ public sealed class OrderService : IOrderService
         if (!Enum.TryParse<OrderStatus>(status, true, out var parsed))
             throw new ConflictException($"Status de pedido inválido: '{status}'.");
         return parsed;
+    }
+
+    private static (OrderStatus? Status, PaymentStatus? PaymentStatus) ParseFilters(string? status, string? paymentStatus)
+    {
+        OrderStatus? parsedStatus = null;
+        if (!string.IsNullOrWhiteSpace(status))
+            parsedStatus = ParseStatus(status);
+
+        PaymentStatus? parsedPaymentStatus = null;
+        if (!string.IsNullOrWhiteSpace(paymentStatus))
+        {
+            if (!Enum.TryParse<PaymentStatus>(paymentStatus, true, out var parsed))
+                throw new ConflictException($"Status de pagamento inválido: '{paymentStatus}'.");
+            parsedPaymentStatus = parsed;
+        }
+
+        return (parsedStatus, parsedPaymentStatus);
     }
 
     private static OrderDto ToDto(Order o) => new(

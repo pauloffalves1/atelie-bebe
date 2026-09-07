@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using AtelieBebe.Api.Common;
 using AtelieBebe.Application.Orders;
 
@@ -42,5 +44,45 @@ public static class OrderEndpoints
         // original Checkout Pro page, or the order was created before the gateway was configured.
         adminGroup.MapPost("/{id:guid}/payment-link", async (Guid id, IOrderService service, CancellationToken ct) =>
             Results.Ok(new { paymentUrl = await service.GeneratePaymentLinkAsync(id, ct) }));
+
+        adminGroup.MapGet("/export", async (string? status, string? paymentStatus, IOrderService service, CancellationToken ct) =>
+        {
+            var orders = await service.ExportAsync(status, paymentStatus, ct);
+            var csv = BuildCsv(orders);
+            var fileName = $"encomendas-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+            return Results.File(new UTF8Encoding(true).GetBytes(csv), "text/csv", fileName);
+        });
     }
+
+    private static string BuildCsv(IReadOnlyList<OrderDto> orders)
+    {
+        var culture = CultureInfo.GetCultureInfo("pt-BR");
+        var sb = new StringBuilder();
+        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Subtotal;Frete;Total");
+
+        foreach (var o in orders)
+        {
+            sb.AppendLine(string.Join(';', new[]
+            {
+                o.Id.ToString()[..8],
+                o.CreatedAt.ToString("dd/MM/yyyy HH:mm", culture),
+                Escape(o.CustomerName),
+                Escape(o.CustomerEmail),
+                Escape(o.CustomerPhone ?? ""),
+                o.Type,
+                o.Status,
+                o.PaymentStatus,
+                o.ItemsTotal.ToString("0.00", culture),
+                o.ShippingCost.ToString("0.00", culture),
+                o.Total.ToString("0.00", culture),
+            }));
+        }
+
+        return sb.ToString();
+    }
+
+    private static string Escape(string value) =>
+        value.Contains(';') || value.Contains('"') || value.Contains('\n')
+            ? $"\"{value.Replace("\"", "\"\"")}\""
+            : value;
 }

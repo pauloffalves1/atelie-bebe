@@ -89,6 +89,55 @@
         </div>
 
         @if (isEditMode()) {
+          <div class="stat-card mb-4">
+            <h6 class="mb-1">Galeria de fotos</h6>
+            <p class="small text-secondary mb-3">
+              Fotos adicionais mostradas na página do produto, além da foto principal acima.
+            </p>
+
+            @if (galleryError()) {
+              <div class="alert alert-danger small rounded-4">{{ galleryError() }}</div>
+            }
+
+            @if (galleryImages().length > 0) {
+              <div class="row g-2 mb-3">
+                @for (url of galleryImages(); track url; let i = $index) {
+                  <div class="col-4">
+                    <div class="ratio ratio-1x1 rounded-4 overflow-hidden position-relative bg-light">
+                      <img [src]="resolveGalleryUrl(url)" alt="Foto da galeria" class="w-100 h-100 object-fit-cover">
+                      <button type="button" class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 m-1" style="width: 1.75rem; height: 1.75rem; padding: 0"
+                        (click)="removeGalleryImage(i)" title="Remover">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <label class="btn btn-outline-secondary btn-sm w-100 mb-3" [class.disabled]="uploadingGalleryImage()">
+              @if (uploadingGalleryImage()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              } @else {
+                <i class="bi bi-upload me-1"></i>
+              }
+              Adicionar foto
+              <input type="file" accept="image/jpeg,image/png,image/webp" class="d-none"
+                [disabled]="uploadingGalleryImage()" (change)="onGalleryImageSelected($event)">
+            </label>
+
+            <button type="button" class="btn btn-outline-primary btn-sm w-100 rounded-pill" [disabled]="savingGallery()" (click)="saveGallery()">
+              @if (savingGallery()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Salvar galeria
+            </button>
+
+            @if (gallerySaved()) {
+              <div class="small text-success mt-2"><i class="bi bi-check-circle me-1"></i>Galeria atualizada!</div>
+            }
+          </div>
+
           <div class="stat-card">
             <h6 class="mb-1">Acesso exclusivo</h6>
             <p class="small text-secondary mb-3">

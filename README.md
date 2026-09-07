@@ -129,7 +129,7 @@ Entidade levanta evento  →  SaveChanges interceptor grava na tabela Outbox (me
 
 Quando uma entidade de domínio muda de forma relevante (pedido criado, status alterado, cliente cadastrado, mensagem de contato recebida), ela registra um evento de domínio. O `DomainEventsToOutboxInterceptor` — um interceptor de `SaveChanges` do EF Core — serializa esse evento como uma linha na tabela `OutboxMessages`, **na mesma transação** da mudança de estado que o originou, garantindo que o evento nunca seja perdido mesmo que o processo caia logo em seguida.
 
-Um `BackgroundService` (`OutboxProcessor`) faz *polling* a cada 5 segundos, lê lotes de até 20 mensagens pendentes, desserializa cada evento pelo seu tipo CLR e despacha para `INotificationSender`. A entrega é *at-least-once*: falhas incrementam um contador de tentativas (até 5) e o erro é registrado na própria linha, sem derrubar o processador. Hoje a única implementação de `INotificationSender` é `LoggingNotificationSender`, que apenas registra em log — não há envio real de e-mail/SMS.
+Um `BackgroundService` (`OutboxProcessor`) faz *polling* a cada 5 segundos, lê lotes de até 20 mensagens pendentes, desserializa cada evento pelo seu tipo CLR e despacha para **dois canais independentes**: `INotificationSender` (WhatsApp, via `WhatsAppNotificationSender`) e `IEmailSender` (e-mail, via `ResendEmailSender`, RF47). O e-mail é tentado primeiro e suas exceções são sempre capturadas e logadas ali mesmo — uma falha ou ausência de configuração num canal nunca impede o outro. A entrega é *at-least-once*, mas só em relação ao WhatsApp: falhas ali incrementam o contador de tentativas da mensagem (até 5, então o registro é abandonado); e-mail, por ser tentado a cada passagem sem afetar esse contador, tem sua própria tentativa em toda vez que a mensagem ainda não foi processada.
 
 Exemplo de ponta a ponta — criação de um pedido de loja:
 
@@ -194,6 +194,8 @@ dotnet run --project src/AtelieBebe.Api        # http://localhost:5120
 
 `PagBank:Token` (RF40) segue o mesmo padrão — vazio em `appsettings.json`, configurado localmente via `dotnet user-secrets set "PagBank:Token" "<token>" --project src/AtelieBebe.Api` e, em produção, pela variável de ambiente `PagBank__Token` (mais `PagBank__Sandbox=true` se o token for de uma conta de teste, em vez da conta real). Sem token configurado **em produção**, o checkout de loja funciona normalmente, só sem oferecer pagamento online (`IPaymentGateway.IsConfigured` retorna `false`, e `CreatePreferenceAsync` não é chamado). Em **desenvolvimento** (`dotnet run`), sem token configurado, entra em ação um `FakePaymentGateway` que simula a página de pagamento hospedada pela própria SPA (`/pagamento-simulado/:orderId`) — deixa pré-visualizar o fluxo completo de pagamento antes das credenciais reais existirem, sem chamar nenhuma API externa.
 
+`Resend:ApiKey` (RF47) segue o mesmo padrão de segredo em branco — `dotnet user-secrets set "Resend:ApiKey" "<chave>" --project src/AtelieBebe.Api` localmente, `Resend__ApiKey` em produção. `Resend:FromEmail` precisa ser um endereço de um domínio verificado no painel do Resend (mesmo processo de DNS já usado para o e-mail do domínio) — sem isso o envio falha mesmo com a chave certa.
+
 Ao subir, a API aplica automaticamente as migrations pendentes e semeia um administrador padrão (`admin@ateliebebe.com.br` / `admin123`, salvo configuração em contrário) e um catálogo de produtos de exemplo. O banco SQLite fica em `src/AtelieBebe.Api/atelie-bebe.db`.
 
 Para gerar/aplicar migrations:
@@ -220,6 +222,22 @@ npm test        # testes unitários (Vitest)
 ```
 
 `client/src/environments/environment.ts` aponta `apiUrl` para `http://localhost:5120/api`. Se o backend rodar em outra porta, ajuste esse arquivo e a lista `Cors:AllowedOrigins` em `appsettings.json`.
+
+### Backup do banco de dados (produção)
+
+O banco (SQLite, um único arquivo) não tem nenhuma rotina de backup por padrão — se o servidor tiver um problema, os pedidos e cadastros de clientes se perdem. `server/ops/backup-db.sh` faz um backup diário consistente (via `sqlite3 .backup`, não uma cópia de arquivo crua) e apaga backups com mais de 30 dias.
+
+Para instalar na VPS (rode uma vez):
+
+```bash
+sudo cp /var/www/atelie-bebe/server/ops/backup-db.sh /usr/local/bin/atelie-bebe-backup.sh
+sudo chmod +x /usr/local/bin/atelie-bebe-backup.sh
+( sudo crontab -l 2>/dev/null; echo "0 3 * * * /usr/local/bin/atelie-bebe-backup.sh >> /var/log/atelie-bebe-backup.log 2>&1" ) | sudo crontab -
+```
+
+Isso roda o backup toda noite às 3h, salvando em `/var/backups/atelie-bebe/` (fora da pasta de publicação, então sobrevive a deploys). Confira o caminho do banco no início do script (`DB_PATH`) — o padrão assume `ConnectionStrings:Default` sem alteração (`Data Source=atelie-bebe.db`, relativo ao diretório de trabalho do serviço, que é a pasta de publicação).
+
+**Isso cobre só backup local, no mesmo servidor** — não protege contra a perda do VPS inteiro (disco corrompido, conta suspensa, etc.). Para backup fora do servidor, uma opção simples é agendar `rclone` copiando `/var/backups/atelie-bebe/` para um Google Drive/S3 depois do backup local rodar.
 
 ## Requisitos
 
@@ -279,6 +297,10 @@ npm test        # testes unitários (Vitest)
 | RF43 | O sistema deve carregar Google Analytics (GA4) e/ou Meta Pixel quando um ID de rastreamento estiver configurado, registrando visualizações de página a cada navegação; sem nenhum ID configurado, nenhum script de terceiro é carregado | Sistema |
 | RF44 | O sistema deve permitir que o visitante busque produtos pelo nome na loja (`/loja?busca=`), combinável com o filtro de categoria já existente, reiniciando a paginação para a primeira página a cada nova busca | Visitante |
 | RF45 | O sistema deve permitir que um cliente que comprou um produto (qualquer status de pedido) deixe uma avaliação (nota de 1 a 5 estrelas e comentário opcional) na página do produto, publicada imediatamente e limitada a uma avaliação por cliente por produto; a média e o total de avaliações aparecem ao lado do nome do produto | Cliente |
+| RF46 | O sistema deve permitir que o administrador edite nome, e-mail, CPF e telefone de uma conta de cliente já cadastrada (`/admin/clientes/:id/editar`), rejeitando e-mail ou CPF já usados por outra conta | Administrador |
+| RF47 | O sistema deve enviar e-mails transacionais (pedido recebido, status atualizado, boas-vindas, confirmação de contato) via Resend, como canal independente do WhatsApp — a falha ou ausência de configuração de um canal nunca impede o outro; sem `Resend:ApiKey` configurado, nenhum e-mail é enviado, sem erro visível ao usuário | Sistema |
+| RF48 | O sistema deve permitir que o administrador exporte a listagem de encomendas (respeitando os filtros de status/pagamento ativos) como um arquivo CSV, pelo botão "Exportar CSV" em `/admin/encomendas` | Administrador |
+| RF49 | O sistema deve permitir que o administrador adicione, remova e substitua fotos adicionais de um produto (além da foto de capa), exibidas como galeria com miniaturas clicáveis na página pública do produto | Administrador / Visitante |
 
 ### Requisitos não funcionais
 
@@ -292,6 +314,7 @@ npm test        # testes unitários (Vitest)
 | RNF06 | O disparo de notificações não deve bloquear a resposta da requisição que originou o evento (processamento assíncrono via outbox) |
 | RNF07 | A persistência de um evento de domínio deve ser atômica em relação à alteração de dados que o originou (mesma transação) |
 | RNF08 | A interface deve ser responsiva e totalmente localizada em português brasileiro (pt-BR) |
+| RNF09 | O banco de dados de produção deve ter uma rotina de backup diário automatizada, armazenada fora da pasta de publicação (sobrevive a deploys) |
 
 ## Regras de negócio
 
@@ -304,6 +327,7 @@ npm test        # testes unitários (Vitest)
 - Todo produto, exclusivo ou público, aceita personalização de bordado (texto + quantidade de peças) — é obrigatório informar o texto antes de adicionar ao carrinho, então a compra sempre passa pela página de detalhe do produto (não há mais botão de "adicionar rápido" na grade da loja).
 - A busca da loja (`?busca=`) filtra por nome do produto (case-insensitive, substring), combinável com o filtro de categoria; qualquer mudança em busca ou categoria reinicia a paginação para a página 1.
 - Um cliente só pode avaliar um produto que já constou como item em algum pedido seu (qualquer status — não precisa estar entregue), e só uma vez por produto; a avaliação (nota 1-5 + comentário opcional) aparece publicamente de imediato, sem moderação prévia do admin.
+- Além da foto de capa (`ImageUrl`, usada em cards/listagens), um produto pode ter fotos adicionais numa galeria (`ProductImages`, ordem preservada) — só aparecem no detalhe do produto, como miniaturas clicáveis abaixo da foto principal. `Product.SetImages(...)` substitui a galeria inteira de uma vez (mesmo padrão de "substituir tudo" já usado em `SetAllowedCustomers`).
 
 ### Pedidos e ciclo de vida
 
@@ -342,6 +366,7 @@ npm test        # testes unitários (Vitest)
 - Login — tanto de cliente quanto de administrador — retorna sempre a mesma mensagem genérica (*"E-mail ou senha inválidos"*) para e-mail inexistente ou senha incorreta, evitando enumeração de contas por diferença de resposta.
 - Não existe rota pública de cadastro de administrador: o único admin é criado pela seed inicial do banco.
 - E-mails são normalizados (trim + minúsculas) e validados por formato antes de virarem um value object `Email` — inválidos são rejeitados na borda do domínio, não na camada de apresentação.
+- O administrador pode editar nome, e-mail, CPF e telefone de qualquer conta de cliente (`/admin/clientes/:id/editar`) — mas não a senha; a edição rejeita e-mail ou CPF já usados por **outra** conta (a própria conta pode manter os mesmos valores sem conflito).
 
 ### Contato
 

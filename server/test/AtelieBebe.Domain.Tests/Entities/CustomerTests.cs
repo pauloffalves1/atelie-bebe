@@ -62,4 +62,35 @@ public class CustomerTests
 
         Assert.Equal("new-hash", customer.PasswordHash);
     }
+
+    [Fact]
+    public void UpdateDetails_Valid_ReplacesFields()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+        var newEmail = Email.Create("maria.nova@ateliebebe.com.br");
+        var newCpf = Cpf.Create("111.444.777-35");
+
+        customer.UpdateDetails("Maria Silva Souza", newEmail, newCpf, "11988887777");
+
+        Assert.Equal("Maria Silva Souza", customer.Name);
+        Assert.Equal(newEmail, customer.Email);
+        Assert.Equal(newCpf, customer.Cpf);
+        Assert.Equal("11988887777", customer.Phone);
+    }
+
+    [Fact]
+    public void UpdateDetails_WithEmptyName_Throws()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        Assert.Throws<DomainException>(() => customer.UpdateDetails(" ", CustomerEmail, CustomerCpf, "11999999999"));
+    }
+
+    [Fact]
+    public void UpdateDetails_WithEmptyPhone_Throws()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        Assert.Throws<DomainException>(() => customer.UpdateDetails("Maria Silva", CustomerEmail, CustomerCpf, null));
+    }
 }

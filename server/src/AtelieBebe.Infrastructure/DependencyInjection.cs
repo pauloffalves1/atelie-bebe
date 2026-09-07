@@ -29,6 +29,7 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<WhatsAppOptions>(configuration.GetSection(WhatsAppOptions.SectionName));
+        services.Configure<ResendOptions>(configuration.GetSection(ResendOptions.SectionName));
         services.Configure<PagBankOptions>(configuration.GetSection(PagBankOptions.SectionName));
         services.Configure<AppUrlOptions>(configuration.GetSection(AppUrlOptions.SectionName));
 
@@ -39,6 +40,8 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHttpClient<INotificationSender, WhatsAppNotificationSender>(client =>
             client.BaseAddress = new Uri("https://graph.facebook.com/"));
+        services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
+            client.BaseAddress = new Uri("https://api.resend.com/"));
         var pagBankToken = configuration[$"{PagBankOptions.SectionName}:Token"];
         if (isDevelopment && string.IsNullOrWhiteSpace(pagBankToken))
         {

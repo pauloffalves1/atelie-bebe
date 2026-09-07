@@ -16,6 +16,20 @@ public sealed class OrderRepository : IOrderRepository
 
     public async Task<(IReadOnlyList<Order> Items, int TotalItems)> ListAsync(OrderStatus? status, PaymentStatus? paymentStatus, int page, int pageSize, CancellationToken ct = default)
     {
+        var query = FilteredQuery(status, paymentStatus);
+
+        var totalItems = await query.CountAsync(ct);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+
+        return (items, totalItems);
+    }
+
+    /// <summary>Unpaginated — used only for CSV export, never for a UI listing.</summary>
+    public async Task<IReadOnlyList<Order>> ListAllAsync(OrderStatus? status, PaymentStatus? paymentStatus, CancellationToken ct = default) =>
+        await FilteredQuery(status, paymentStatus).ToListAsync(ct);
+
+    private IQueryable<Order> FilteredQuery(OrderStatus? status, PaymentStatus? paymentStatus)
+    {
         var query = _dbContext.Orders.Include(o => o.Items).AsQueryable();
 
         if (status is not null)
@@ -24,12 +38,7 @@ public sealed class OrderRepository : IOrderRepository
         if (paymentStatus is not null)
             query = query.Where(o => o.PaymentStatus == paymentStatus);
 
-        query = query.OrderByDescending(o => o.CreatedAt);
-
-        var totalItems = await query.CountAsync(ct);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
-
-        return (items, totalItems);
+        return query.OrderByDescending(o => o.CreatedAt);
     }
 
     public async Task<IReadOnlyList<Order>> ListByCustomerAsync(Guid customerId, CancellationToken ct = default) =>
