@@ -125,6 +125,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/public/contact/contact').then((m) => m.Contact),
       },
       {
+        path: 'termos-de-uso',
+        title: `Termos de Uso — ${SITE_NAME}`,
+        loadComponent: () => import('./features/public/legal/terms-page').then((m) => m.TermsPage),
+      },
+      {
+        path: 'politica-de-privacidade',
+        title: `Política de Privacidade — ${SITE_NAME}`,
+        loadComponent: () => import('./features/public/legal/privacy-page').then((m) => m.PrivacyPage),
+      },
+      {
         path: 'entrar',
         title: `Entrar — ${SITE_NAME}`,
         loadComponent: () => import('./features/public/auth/login-page').then((m) => m.LoginPage),
@@ -144,6 +154,11 @@ export const routes: Routes = [
         path: 'redefinir-senha',
         title: `Redefinir senha — ${SITE_NAME}`,
         loadComponent: () => import('./features/public/auth/reset-password-page').then((m) => m.ResetPasswordPage),
+      },
+      {
+        path: 'verificar-email',
+        title: `Verificação de e-mail — ${SITE_NAME}`,
+        loadComponent: () => import('./features/public/auth/verify-email-page').then((m) => m.VerifyEmailPage),
       },
       {
         path: 'minha-conta',
