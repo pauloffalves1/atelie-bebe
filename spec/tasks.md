@@ -473,8 +473,8 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 49.5 `README.md` (RF60) e `spec/requirements.md`/`spec/design.md` (Requisito 48) atualizados
 
 - [x] 50. Health check para monitoramento (Requisito 49 / RF61, design em `spec/design.md`)
-  - [x] 50.1 `DatabaseHealthCheck` (`Api/Health/`, `Database.CanConnectAsync()`, sem pacote NuGet extra); `GET /health`
-  - [x] 50.2 Verificado via curl: `GET /health` retorna `200 Healthy` com a API e o banco no ar
+  - [x] 50.1 `DatabaseHealthCheck` (`Api/Health/`, `Database.CanConnectAsync()`, sem pacote NuGet extra); `GET /api/health`
+  - [x] 50.2 Verificado via curl: `GET /api/health` retorna `200 Healthy` com a API e o banco no ar
   - [x] 50.3 `README.md` (RF61) e `spec/requirements.md`/`spec/design.md` (Requisito 49) atualizados
 
 - [x] 51. Métricas adicionais no painel administrativo (Requisito 50 / RF62, design em `spec/design.md`)

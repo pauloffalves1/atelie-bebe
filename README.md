@@ -338,7 +338,7 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 | RF58 | O sistema deve permitir que o cliente escolha a cor da linha de bordado (a partir de uma paleta fixa), junto do texto a bordar, ao adicionar qualquer produto ao carrinho | Cliente |
 | RF59 | O sistema deve permitir que o administrador crie cupons de desconto (código, percentual, validade e limite de usos opcionais) que o cliente digita no checkout, independentes das promoções automáticas por produto | Administrador / Cliente |
 | RF60 | O sistema deve limitar a 5 tentativas por minuto, por IP, nos endpoints onde um "chute" de senha/código é o ataque (login de cliente, login de admin, redefinição de senha, exclusão de conta, validação de cupom), respondendo `429` a partir da 6ª tentativa | Sistema |
-| RF61 | O sistema deve expor um endpoint `GET /health` que confirma tanto que o processo está no ar quanto que o banco de dados está acessível, para monitoramento externo de uptime | Sistema |
+| RF61 | O sistema deve expor um endpoint `GET /api/health` que confirma tanto que o processo está no ar quanto que o banco de dados está acessível, para monitoramento externo de uptime | Sistema |
 | RF62 | O painel administrativo deve exibir ticket médio, os 5 produtos mais vendidos e um gráfico de vendas dos últimos 30 dias, além dos indicadores já existentes | Administrador |
 
 ### Requisitos não funcionais
@@ -437,7 +437,7 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 ### Segurança e disponibilidade
 
 - **Limite de tentativas (RF60)**: `/api/auth/login`, `/api/admin/auth/login`, `/api/auth/reset-password`, `/api/auth/delete-account` e `/api/coupons/validate` aceitam no máximo 5 requisições por minuto por combinação de IP do cliente + rota (não um limite único compartilhado entre rotas) — a 6ª tentativa no mesmo minuto recebe `429 Too Many Requests` sem chegar a tocar o serviço de aplicação. Atrás do Nginx em produção, `ForwardedHeadersOptions` confia no `X-Forwarded-For` do proxy local para enxergar o IP real do visitante — sem isso, todo tráfego apareceria vindo do próprio Nginx, e o limite por IP na prática viraria um limite global.
-- **Health check (RF61)**: `GET /health` roda um `DatabaseHealthCheck` que tenta `Database.CanConnectAsync()` — retorna `200 Healthy` só quando a API está no ar **e** consegue falar com o banco, não apenas quando o processo está rodando. Pensado para um monitor de uptime externo (ex.: UptimeRobot) apontar para essa rota.
+- **Health check (RF61)**: `GET /api/health` roda um `DatabaseHealthCheck` que tenta `Database.CanConnectAsync()` — retorna `200 Healthy` só quando a API está no ar **e** consegue falar com o banco, não apenas quando o processo está rodando. Pensado para um monitor de uptime externo (ex.: UptimeRobot) apontar para essa rota.
 
 ### Tratamento de erros
 

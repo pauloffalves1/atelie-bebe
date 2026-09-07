@@ -734,7 +734,7 @@ Os três requisitos compartilham a mesma infraestrutura de upload; documentados 
 
 ## Requisito 49 — Health check para monitoramento
 
-- `builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database")` + `app.MapHealthChecks("/health")`. `DatabaseHealthCheck` (`Api/Health/`, não Infrastructure — é uma preocupação de hosting/monitoramento, mesmo referenciando `AppDbContext`) chama `Database.CanConnectAsync()`; qualquer exceção também vira `Unhealthy` (nunca deixa a exceção estourar e derrubar a resposta do health check com um 500 genérico).
+- `builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database")` + `app.MapHealthChecks("/api/health")` — sob `/api/` de propósito, para andar pela mesma regra de proxy do Nginx que já encaminha `/api/*` para o backend em produção (uma rota `/health` sem esse prefixo cairia no fallback de arquivo estático do Angular, nunca chegando ao Kestrel). `DatabaseHealthCheck` (`Api/Health/`, não Infrastructure — é uma preocupação de hosting/monitoramento, mesmo referenciando `AppDbContext`) chama `Database.CanConnectAsync()`; qualquer exceção também vira `Unhealthy` (nunca deixa a exceção estourar e derrubar a resposta do health check com um 500 genérico).
 - Não usa o pacote `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore` (que traria `AddDbContextCheck<T>()` pronto) para não adicionar uma dependência a mais só para uma checagem de uma linha (`CanConnectAsync`) que é trivial de escrever à mão.
 
 ## Requisito 50 — Métricas adicionais no painel administrativo

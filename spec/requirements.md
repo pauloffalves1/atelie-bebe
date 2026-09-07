@@ -740,7 +740,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 **Rastreamento:** RF61.
 
 **Acceptance Criteria**
-1. O SISTEMA DEVE expor uma rota pública (`GET /health`) que responde sucesso somente quando a API está no ar e consegue se conectar ao banco de dados.
+1. O SISTEMA DEVE expor uma rota pública (`GET /api/health`) que responde sucesso somente quando a API está no ar e consegue se conectar ao banco de dados.
 2. QUANDO o banco de dados está inacessível, a rota DEVE responder com um status de falha, mesmo que o processo da API continue rodando.
 
 ---

@@ -103,7 +103,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
-app.MapHealthChecks("/health");
+// Under /api/ so it rides the same Nginx proxy rule as everything else in production — a bare
+// /health would fall through to the Angular SPA's static-file fallback instead of reaching Kestrel.
+app.MapHealthChecks("/api/health");
 
 var uploadsPath = builder.Configuration["Uploads:Path"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
 Directory.CreateDirectory(uploadsPath);
