@@ -172,6 +172,7 @@ a {
   overflow: hidden;
   transition: transform .25s ease, box-shadow .25s ease;
   background: #fff;
+  border: 2px solid var(--atelie-blush);
 }
 
 .card-product:hover {
@@ -182,7 +183,6 @@ a {
 .card-product .card-img-top {
   aspect-ratio: 1 / 1;
   object-fit: cover;
-  border: 2px solid var(--atelie-blush);
 }
 
 // Soft framed-photo border, consistent across every photo on the public site: product cards
