@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using AtelieBebe.Api.Common;
 using AtelieBebe.Application.Orders;
 
@@ -57,15 +58,20 @@ public static class OrderEndpoints
         });
     }
 
+    /// <summary>
+    /// One row per item (not per order) so each embroidery job — with its own text/quantity/thread
+    /// color — is its own line; order-level columns (customer, totals, status) repeat on every row
+    /// of the same order. An order with no items still gets exactly one row, with blank item columns.
+    /// </summary>
     private static string BuildCsv(IReadOnlyList<OrderDto> orders)
     {
         var culture = CultureInfo.GetCultureInfo("pt-BR");
         var sb = new StringBuilder();
-        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Subtotal;Frete;Total;Código de rastreio");
+        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Produto;Quantidade;Bordado;Cor da linha;Subtotal;Frete;Total;Código de rastreio");
 
         foreach (var o in orders)
         {
-            sb.AppendLine(string.Join(';', new[]
+            var orderColumns = new[]
             {
                 o.Id.ToString()[..8],
                 o.CreatedAt.ToString("dd/MM/yyyy HH:mm", culture),
@@ -75,14 +81,49 @@ public static class OrderEndpoints
                 o.Type,
                 o.Status,
                 o.PaymentStatus,
+            };
+            var totalsColumns = new[]
+            {
                 o.ItemsTotal.ToString("0.00", culture),
                 o.ShippingCost.ToString("0.00", culture),
                 o.Total.ToString("0.00", culture),
                 Escape(o.TrackingCode ?? ""),
-            }));
+            };
+
+            var items = o.Items.Count > 0 ? o.Items : new[] { (OrderItemDto?)null }.Cast<OrderItemDto>();
+            foreach (var item in items)
+            {
+                var (embroideryText, threadColor) = ParseItemOptions(item?.OptionsJson);
+                var itemColumns = new[]
+                {
+                    Escape(item?.ProductName ?? ""),
+                    item is null ? "" : item.Quantity.ToString(culture),
+                    Escape(embroideryText ?? ""),
+                    Escape(threadColor ?? ""),
+                };
+
+                sb.AppendLine(string.Join(';', orderColumns.Concat(itemColumns).Concat(totalsColumns)));
+            }
         }
 
         return sb.ToString();
+    }
+
+    private static (string? EmbroideryText, string? ThreadColor) ParseItemOptions(string? optionsJson)
+    {
+        if (string.IsNullOrWhiteSpace(optionsJson)) return (null, null);
+
+        try
+        {
+            using var doc = JsonDocument.Parse(optionsJson);
+            var embroideryText = doc.RootElement.TryGetProperty("embroideryText", out var e) ? e.GetString() : null;
+            var threadColor = doc.RootElement.TryGetProperty("threadColor", out var c) ? c.GetString() : null;
+            return (embroideryText, threadColor);
+        }
+        catch (JsonException)
+        {
+            return (null, null);
+        }
     }
 
     private static string Escape(string value) =>

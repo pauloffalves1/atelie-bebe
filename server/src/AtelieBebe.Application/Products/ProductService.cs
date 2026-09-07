@@ -116,9 +116,32 @@ public sealed class ProductService : IProductService
         return ToAdminDto(product);
     }
 
+    public async Task<AdminProductDto> SetPromotionAsync(Guid id, SetPromotionRequest request, CancellationToken ct = default)
+    {
+        var product = await _unitOfWork.Products.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException("Produto", id);
+
+        product.SetPromotion(request.DiscountPercentage, request.StartsAt, request.EndsAt);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return ToAdminDto(product);
+    }
+
+    public async Task<IReadOnlyList<AdminProductDto>> ApplyPromotionToManyAsync(BulkApplyPromotionRequest request, CancellationToken ct = default)
+    {
+        var products = await _unitOfWork.Products.ListByIdsAsync(request.ProductIds, ct);
+
+        foreach (var product in products)
+            product.SetPromotion(request.DiscountPercentage, request.StartsAt, request.EndsAt);
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        return products.Select(ToAdminDto).ToList();
+    }
+
     private static ProductDto ToDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.ImageUrls);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.ImageUrls,
+        p.DiscountPercentage, p.PromotionStartsAt, p.PromotionEndsAt, p.IsOnPromotion, p.EffectivePrice.Amount);
 
     private static AdminProductDto ToAdminDto(Product p) => new(
-        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds, p.ImageUrls);
+        p.Id, p.Name, p.Slug, p.Description, p.Price.Amount, p.Category, p.ImageUrl, p.Active, p.Featured, p.IsExclusive, p.AllowedCustomerIds, p.ImageUrls,
+        p.DiscountPercentage, p.PromotionStartsAt, p.PromotionEndsAt, p.IsOnPromotion, p.EffectivePrice.Amount);
 }

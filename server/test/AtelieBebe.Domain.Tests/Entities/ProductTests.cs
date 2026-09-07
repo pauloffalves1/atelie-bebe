@@ -141,4 +141,71 @@ public class ProductTests
 
         Assert.Equal(["/api/uploads/products/a.jpg", "/api/uploads/products/b.jpg"], product.ImageUrls);
     }
+
+    [Fact]
+    public void SetPromotion_Valid_MakesProductOnPromotionWithinWindow()
+    {
+        var product = CreateProduct();
+        var start = DateTime.UtcNow.AddHours(-1);
+        var end = DateTime.UtcNow.AddHours(1);
+
+        product.SetPromotion(20m, start, end);
+
+        Assert.True(product.IsOnPromotion);
+        Assert.Equal(55.92m, product.EffectivePrice.Amount);
+    }
+
+    [Fact]
+    public void SetPromotion_OutsideWindow_IsNotOnPromotionAndEffectivePriceIsRegularPrice()
+    {
+        var product = CreateProduct();
+        var start = DateTime.UtcNow.AddDays(1);
+        var end = DateTime.UtcNow.AddDays(2);
+
+        product.SetPromotion(20m, start, end);
+
+        Assert.False(product.IsOnPromotion);
+        Assert.Equal(product.Price.Amount, product.EffectivePrice.Amount);
+    }
+
+    [Fact]
+    public void SetPromotion_AllNull_ClearsExistingPromotion()
+    {
+        var product = CreateProduct();
+        product.SetPromotion(20m, DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
+
+        product.SetPromotion(null, null, null);
+
+        Assert.False(product.IsOnPromotion);
+        Assert.Null(product.DiscountPercentage);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(100)]
+    [InlineData(-5)]
+    public void SetPromotion_DiscountOutOfRange_Throws(decimal discount)
+    {
+        var product = CreateProduct();
+
+        Assert.Throws<DomainException>(() =>
+            product.SetPromotion(discount, DateTime.UtcNow, DateTime.UtcNow.AddDays(1)));
+    }
+
+    [Fact]
+    public void SetPromotion_EndBeforeStart_Throws()
+    {
+        var product = CreateProduct();
+
+        Assert.Throws<DomainException>(() =>
+            product.SetPromotion(20m, DateTime.UtcNow, DateTime.UtcNow.AddHours(-1)));
+    }
+
+    [Fact]
+    public void SetPromotion_MissingDates_Throws()
+    {
+        var product = CreateProduct();
+
+        Assert.Throws<DomainException>(() => product.SetPromotion(20m, null, null));
+    }
 }

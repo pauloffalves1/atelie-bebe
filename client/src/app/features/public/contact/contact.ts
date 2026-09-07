@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { ContactService } from '../../../core/services/contact.service';
 import { SeoService } from '../../../core/services/seo.service';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
@@ -16,6 +17,7 @@ const WHATSAPP_NUMBER = '5511913130481';
 export class Contact implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly contactService = inject(ContactService);
   private readonly seo = inject(SeoService);
 
   readonly pieceTypes = ['Fralda de Ombro', 'Fralda de Boca', 'Kit Ombro e Boca', 'Outro'];
@@ -47,6 +49,8 @@ export class Contact implements OnInit {
     }
   }
 
+  readonly recordError = signal<string | null>(null);
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -54,25 +58,44 @@ export class Contact implements OnInit {
     }
 
     window.open(this.buildWhatsAppUrl(), '_blank', 'noopener');
+
+    // Best-effort: also records the message so it shows up in /admin/mensagens. A failure here
+    // (backend down, etc.) must never block the WhatsApp conversation, which already opened above.
+    const v = this.form.getRawValue();
+    this.contactService
+      .submit({
+        name: v.customerName,
+        email: v.customerEmail || `sem-email-${v.customerPhone.replace(/\D/g, '')}@contato.local`,
+        phone: v.customerPhone,
+        message: this.buildMessageBody(),
+      })
+      .subscribe({ error: () => this.recordError.set('não foi possível registrar a mensagem no painel, mas o WhatsApp já abriu normalmente') });
   }
 
-  private buildWhatsAppUrl(): string {
+  private buildMessageBody(): string {
     const v = this.form.getRawValue();
-    const lines = [`Olá! Meu nome é ${v.customerName}.`];
+    const lines: string[] = [];
 
     if (v.isCustomOrder) {
-      lines.push('', 'Gostaria de fazer uma encomenda personalizada:');
+      lines.push('Gostaria de fazer uma encomenda personalizada:');
       lines.push(`- Tipo de peça: ${v.tipoPeca}`);
       lines.push(`- Tamanho: ${v.tamanho}`);
       if (v.tecido) lines.push(`- Tecido desejado: ${v.tecido}`);
       if (v.cor) lines.push(`- Cor: ${v.cor}`);
       if (v.nomeBordado) lines.push(`- Nome para bordar: ${v.nomeBordado}`);
+      lines.push('');
     }
 
-    lines.push('', v.message);
+    lines.push(v.message);
+    return lines.join('\n');
+  }
+
+  private buildWhatsAppUrl(): string {
+    const v = this.form.getRawValue();
+    const lines = [`Olá! Meu nome é ${v.customerName}.`, '', this.buildMessageBody()];
 
     if (v.customerEmail) lines.push('', `E-mail: ${v.customerEmail}`);
-    if (v.customerPhone) lines.push(`Telefone: ${v.customerPhone}`);
+    lines.push(`Telefone: ${v.customerPhone}`);
 
     const text = encodeURIComponent(lines.join('\n'));
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;

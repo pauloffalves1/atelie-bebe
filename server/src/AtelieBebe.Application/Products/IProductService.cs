@@ -15,4 +15,8 @@ public interface IProductService
     Task<ProductDto> SetActiveAsync(Guid id, bool active, CancellationToken ct = default);
     Task<AdminProductDto> SetAllowedCustomersAsync(Guid id, SetAllowedCustomersRequest request, CancellationToken ct = default);
     Task<AdminProductDto> SetImagesAsync(Guid id, SetProductImagesRequest request, CancellationToken ct = default);
+    Task<AdminProductDto> SetPromotionAsync(Guid id, SetPromotionRequest request, CancellationToken ct = default);
+
+    /// <summary>Applies the same discount/window to every product in the list at once — bulk promotion setup.</summary>
+    Task<IReadOnlyList<AdminProductDto>> ApplyPromotionToManyAsync(BulkApplyPromotionRequest request, CancellationToken ct = default);
 }

@@ -41,7 +41,14 @@ public sealed class CustomerAuthService : ICustomerAuthService
             Email.Create(request.Email),
             cpf,
             _passwordHasher.Hash(request.Password),
-            request.Phone);
+            request.Phone,
+            request.AddressStreet,
+            request.AddressNumber,
+            request.AddressComplement,
+            request.AddressNeighborhood,
+            request.AddressCity,
+            request.AddressState,
+            request.AddressZipCode);
 
         _unitOfWork.Customers.Add(customer);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -65,7 +72,10 @@ public sealed class CustomerAuthService : ICustomerAuthService
         var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, ct)
             ?? throw new NotFoundException("Cliente", customerId);
 
-        return new CustomerProfileDto(customer.Id, customer.Name, customer.Email.Value, customer.Phone, customer.Cpf?.Value);
+        return new CustomerProfileDto(
+            customer.Id, customer.Name, customer.Email.Value, customer.Phone, customer.Cpf?.Value,
+            customer.AddressStreet, customer.AddressNumber, customer.AddressComplement,
+            customer.AddressNeighborhood, customer.AddressCity, customer.AddressState, customer.AddressZipCode);
     }
 
     public async Task RequestPasswordResetAsync(string email, CancellationToken ct = default)

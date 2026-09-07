@@ -151,9 +151,12 @@ export class Checkout implements OnInit {
         items: this.cart.items().map((item) => ({
           productId: item.product.id,
           productName: item.product.name,
-          unitPrice: item.product.price,
+          unitPrice: item.product.effectivePrice,
           quantity: item.quantity,
-          optionsJson: item.embroideryText ? JSON.stringify({ embroideryText: item.embroideryText }) : null,
+          optionsJson:
+            item.embroideryText || item.threadColor
+              ? JSON.stringify({ embroideryText: item.embroideryText ?? undefined, threadColor: item.threadColor ?? undefined })
+              : null,
         })),
       })
       .subscribe({

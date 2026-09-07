@@ -4,12 +4,16 @@ import { Product } from '../models/product.model';
 
 const STORAGE_KEY = 'atelie-bebe.cart';
 
-function normalize(embroideryText?: string | null): string | null {
-  return embroideryText ?? null;
+function normalize(value?: string | null): string | null {
+  return value ?? null;
 }
 
-function matches(item: CartItem, productId: string, embroideryText?: string | null): boolean {
-  return item.product.id === productId && normalize(item.embroideryText) === normalize(embroideryText);
+function matches(item: CartItem, productId: string, embroideryText?: string | null, threadColor?: string | null): boolean {
+  return (
+    item.product.id === productId &&
+    normalize(item.embroideryText) === normalize(embroideryText) &&
+    normalize(item.threadColor) === normalize(threadColor)
+  );
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,31 +23,31 @@ export class CartService {
   readonly items = this.itemsSignal.asReadonly();
   readonly totalItems = computed(() => this.itemsSignal().reduce((sum, item) => sum + item.quantity, 0));
   readonly totalPrice = computed(() =>
-    this.itemsSignal().reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    this.itemsSignal().reduce((sum, item) => sum + item.product.effectivePrice * item.quantity, 0),
   );
 
-  add(product: Product, quantity = 1, embroideryText?: string | null): void {
+  add(product: Product, quantity = 1, embroideryText?: string | null, threadColor?: string | null): void {
     const items = [...this.itemsSignal()];
-    const existing = items.find((i) => matches(i, product.id, embroideryText));
+    const existing = items.find((i) => matches(i, product.id, embroideryText, threadColor));
 
     if (existing) {
       existing.quantity += quantity;
     } else {
-      items.push({ product, quantity, embroideryText: normalize(embroideryText) });
+      items.push({ product, quantity, embroideryText: normalize(embroideryText), threadColor: normalize(threadColor) });
     }
 
     this.persist(items);
   }
 
-  updateQuantity(productId: string, quantity: number, embroideryText?: string | null): void {
+  updateQuantity(productId: string, quantity: number, embroideryText?: string | null, threadColor?: string | null): void {
     const items = this.itemsSignal()
-      .map((item) => (matches(item, productId, embroideryText) ? { ...item, quantity } : item))
+      .map((item) => (matches(item, productId, embroideryText, threadColor) ? { ...item, quantity } : item))
       .filter((item) => item.quantity > 0);
     this.persist(items);
   }
 
-  remove(productId: string, embroideryText?: string | null): void {
-    this.persist(this.itemsSignal().filter((item) => !matches(item, productId, embroideryText)));
+  remove(productId: string, embroideryText?: string | null, threadColor?: string | null): void {
+    this.persist(this.itemsSignal().filter((item) => !matches(item, productId, embroideryText, threadColor)));
   }
 
   clear(): void {

@@ -37,16 +37,13 @@ const BASE_RATE_BY_REGION: Record<string, number> = {
 
 const DEFAULT_RATE = 24.9;
 const EXTRA_ITEM_SURCHARGE = 2.5;
-/** Markup on top of the estimated Correios rate (embalagem, mão de obra de postagem, etc.). */
-const MARKUP_MULTIPLIER = 1.5;
 
 @Injectable({ providedIn: 'root' })
 export class ShippingService {
-  /** Estimated freight (with markup) for a destination state and total item count in the cart. */
+  /** Estimated freight for a destination state and total item count in the cart — the raw Correios-style rate, no markup. */
   estimate(state: string, totalItems: number): number {
     const baseRate = BASE_RATE_BY_REGION[state.toUpperCase()] ?? DEFAULT_RATE;
     const extraItems = Math.max(totalItems - 1, 0);
-    const estimatedRate = baseRate + extraItems * EXTRA_ITEM_SURCHARGE;
-    return Math.round(estimatedRate * MARKUP_MULTIPLIER * 100) / 100;
+    return Math.round((baseRate + extraItems * EXTRA_ITEM_SURCHARGE) * 100) / 100;
   }
 }

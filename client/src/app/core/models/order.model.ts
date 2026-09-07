@@ -66,6 +66,7 @@ export interface CustomOrderDetails {
 
 export interface OrderItemOptions {
   embroideryText?: string;
+  threadColor?: string;
 }
 
 export interface ShippingAddress {

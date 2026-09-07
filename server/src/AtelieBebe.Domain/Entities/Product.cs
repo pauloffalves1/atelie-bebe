@@ -17,6 +17,10 @@ public sealed class Product : Entity, IAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
+    public decimal? DiscountPercentage { get; private set; }
+    public DateTime? PromotionStartsAt { get; private set; }
+    public DateTime? PromotionEndsAt { get; private set; }
+
     private readonly List<ProductCustomerAccessEntry> _allowedCustomerAccess = new();
     private readonly List<ProductImage> _images = new();
 
@@ -28,6 +32,16 @@ public sealed class Product : Entity, IAggregateRoot
 
     /// <summary>A product with at least one allowed customer is exclusive — invisible to everyone else.</summary>
     public bool IsExclusive => _allowedCustomerAccess.Count > 0;
+
+    /// <summary>True only while "now" falls inside the configured promotion window — expires and (re)activates on its own, no background job needed.</summary>
+    public bool IsOnPromotion =>
+        DiscountPercentage is > 0 && PromotionStartsAt is { } start && PromotionEndsAt is { } end &&
+        DateTime.UtcNow >= start && DateTime.UtcNow <= end;
+
+    /// <summary>The price to charge/display right now — the promotional price while the window is active, the regular price otherwise.</summary>
+    public Money EffectivePrice => IsOnPromotion
+        ? Money.FromReais(Math.Round(Price.Amount * (1 - DiscountPercentage!.Value / 100m), 2))
+        : Price;
 
     private Product() { } // EF Core
 
@@ -92,6 +106,31 @@ public sealed class Product : Entity, IAggregateRoot
     /// <summary>Public products are visible to everyone; exclusive products only to their allowed customers.</summary>
     public bool HasAccess(Guid? customerId) =>
         !IsExclusive || (customerId is { } id && _allowedCustomerAccess.Any(e => e.CustomerId == id));
+
+    /// <summary>Sets or clears a time-boxed promotional discount. Pass all three as null to clear an existing promotion.</summary>
+    public void SetPromotion(decimal? discountPercentage, DateTime? startsAt, DateTime? endsAt)
+    {
+        if (discountPercentage is null && startsAt is null && endsAt is null)
+        {
+            DiscountPercentage = null;
+            PromotionStartsAt = null;
+            PromotionEndsAt = null;
+            UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
+        if (discountPercentage is null || discountPercentage <= 0 || discountPercentage >= 100)
+            throw new DomainException("O desconto deve ser um percentual entre 1 e 99.");
+        if (startsAt is null || endsAt is null)
+            throw new DomainException("Informe o início e o fim do período da promoção.");
+        if (endsAt <= startsAt)
+            throw new DomainException("O fim da promoção deve ser depois do início.");
+
+        DiscountPercentage = discountPercentage;
+        PromotionStartsAt = startsAt;
+        PromotionEndsAt = endsAt;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     /// <summary>Replaces the full gallery (order is taken from the given sequence). An empty list clears it.</summary>
     public void SetImages(IEnumerable<string> urls)

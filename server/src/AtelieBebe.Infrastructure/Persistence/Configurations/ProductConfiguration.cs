@@ -26,6 +26,8 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
+        builder.Property(p => p.DiscountPercentage).HasColumnType("decimal(5,2)");
+
         builder.HasMany<ProductCustomerAccessEntry>("_allowedCustomerAccess")
             .WithOne()
             .HasForeignKey("ProductId")

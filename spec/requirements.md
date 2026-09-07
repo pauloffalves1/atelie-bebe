@@ -354,7 +354,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 **Acceptance Criteria**
 1. QUANDO o cliente preenche ou tem preenchido automaticamente o estado (UF) de entrega no checkout, O SISTEMA DEVE calcular um frete estimado com base nesse estado e na quantidade total de itens no carrinho.
-2. O cálculo NÃO usa a API oficial dos Correios (exigiria contrato/credenciais que o ateliê não possui) — é uma estimativa por faixa de região (SP, Sul/Sudeste, Centro-Oeste/Nordeste, Norte) com acréscimo por item adicional, mais uma margem de 50% sobre a tarifa estimada dos Correios (cobre embalagem/postagem), calculada inteiramente no frontend.
+2. O cálculo NÃO usa a API oficial dos Correios (exigiria contrato/credenciais que o ateliê não possui) — é uma estimativa por faixa de região (SP, Sul/Sudeste, Centro-Oeste/Nordeste, Norte) com acréscimo por item adicional, calculada inteiramente no frontend, sem nenhuma margem adicional sobre a tarifa estimada.
 3. O SISTEMA DEVE exibir, no resumo do pedido durante o checkout, o subtotal dos produtos, o frete estimado e o total (soma dos dois) separadamente.
 4. QUANDO o pedido é confirmado, O SISTEMA DEVE persistir o valor do frete (`Orders.ShippingCostAmount`) e o total do pedido (`Order.Total`) passa a ser subtotal dos itens + frete, refletido em toda tela que exibe o total do pedido (confirmação, "Minhas encomendas", admin).
 5. Pedidos criados antes deste requisito, que não têm frete registrado, PERMANECEM válidos com frete zero (`Order.ShippingCost` não é retroativo).
@@ -629,3 +629,74 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 4. SE o cliente tiver ao menos uma encomenda registrada, O SISTEMA DEVE anonimizar os dados pessoais da conta (nome, e-mail, telefone, CPF) e invalidar o login, em vez de remover a conta — o histórico de encomendas (que guarda sua própria cópia dos dados no momento da compra) DEVE permanecer intacto e visível ao administrador.
 5. Uma conta anonimizada NUNCA DEVE conseguir autenticar novamente, mesmo com a senha antiga.
 6. Após a exclusão bem-sucedida (removida ou anonimizada), O SISTEMA DEVE encerrar a sessão do cliente no navegador.
+
+---
+
+## Requisito 42: Registro das mensagens de contato no painel administrativo
+
+**User Story:** Como ateliê, quero ver no painel administrativo as mensagens enviadas pelo formulário de contato, mesmo continuando a conversa pelo WhatsApp.
+
+**Rastreamento:** RF54.
+
+**Acceptance Criteria**
+1. QUANDO o formulário de contato/encomenda é enviado, O SISTEMA DEVE registrar a mensagem (via `POST /api/contact`) além de abrir a conversa no WhatsApp — as duas ações DEVEM acontecer para o mesmo envio.
+2. SE o registro da mensagem falhar por qualquer motivo, O SISTEMA NÃO DEVE impedir nem atrasar a abertura do WhatsApp.
+3. A mensagem registrada DEVE aparecer em `/admin/mensagens`.
+4. QUANDO o cliente não informa e-mail no formulário, O SISTEMA DEVE ainda assim conseguir registrar a mensagem, sem exigir esse campo do usuário.
+
+---
+
+## Requisito 43: Promoções por produto com período determinado
+
+**User Story:** Como ateliê, quero aplicar descontos por tempo limitado em um ou vários produtos, para fazer promoções sazonais sem precisar mexer no preço base.
+
+**Rastreamento:** RF55.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE permitir configurar, por produto, um desconto percentual (1 a 99%) com data/hora de início e fim.
+2. O preço promocional DEVE se aplicar automaticamente enquanto o instante atual estiver dentro da janela configurada, e deixar de se aplicar automaticamente fora dela — sem exigir nenhuma ação manual do administrador para ativar ou desativar.
+3. O SISTEMA DEVE permitir remover uma promoção configurada, voltando o produto ao preço normal imediatamente.
+4. O preço efetivamente cobrado ao criar um pedido de loja DEVE ser o preço promocional quando a promoção estiver ativa, ignorando qualquer preço enviado pelo cliente na requisição.
+5. O SISTEMA DEVE permitir aplicar a mesma promoção (desconto + período) a vários produtos selecionados de uma vez.
+6. A vitrine pública e a página do produto DEVEM exibir o preço original riscado, o preço promocional e o percentual de desconto quando a promoção estiver ativa.
+
+---
+
+## Requisito 44: Exportação de CSV com detalhes por item
+
+**User Story:** Como ateliê, quero que a exportação de encomendas mostre o bordado, a quantidade e a cor de cada item, para conseguir organizar a produção.
+
+**Rastreamento:** RF56.
+
+**Acceptance Criteria**
+1. O CSV exportado DEVE ter uma linha por item de pedido (não uma linha por pedido) — pedidos com vários itens geram várias linhas, repetindo os dados do pedido.
+2. Cada linha DEVE incluir o nome do produto, a quantidade, o texto bordado e a cor da linha de bordado daquele item específico, quando presentes.
+3. Um pedido sem nenhum item (caso não deva ocorrer na prática) DEVE ainda assim gerar exatamente uma linha, com as colunas de item em branco.
+
+---
+
+## Requisito 45: Endereço completo no cadastro do cliente
+
+**User Story:** Como cliente, quero informar meu endereço completo já no cadastro, para não precisar redigitar tudo no primeiro checkout.
+
+**Rastreamento:** RF57.
+
+**Acceptance Criteria**
+1. O formulário de cadastro DEVE coletar CEP, rua, número, complemento, bairro, cidade e estado.
+2. QUANDO o cliente digita um CEP válido, O SISTEMA DEVE preencher automaticamente rua, bairro, cidade e estado via ViaCEP, mantendo os campos editáveis.
+3. O endereço informado no cadastro DEVE ficar salvo na conta do cliente, consultável e editável posteriormente (inclusive pelo administrador).
+4. Contas criadas antes deste requisito DEVEM continuar válidas mesmo sem endereço preenchido.
+
+---
+
+## Requisito 46: Cor da linha de bordado
+
+**User Story:** Como cliente, quero escolher a cor da linha usada no bordado, além do texto, para personalizar completamente a peça.
+
+**Rastreamento:** RF58.
+
+**Acceptance Criteria**
+1. A página de detalhe do produto DEVE oferecer uma seleção de cor de linha de bordado, a partir de uma paleta fixa, junto do campo de texto para bordar.
+2. O SISTEMA DEVE exigir que uma cor seja escolhida antes de permitir adicionar o produto ao carrinho, da mesma forma que já exige o texto do bordado.
+3. Itens do carrinho com a mesma combinação de produto, texto e cor DEVEM ser tratados como a mesma linha (quantidades somadas); combinações diferentes DEVEM gerar linhas separadas.
+4. A cor escolhida DEVE ser exibida no carrinho, na confirmação do pedido e no detalhe administrativo da encomenda.

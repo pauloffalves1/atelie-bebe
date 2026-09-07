@@ -42,7 +42,7 @@ public sealed class OrderService : IOrderService
                 var product = await _unitOfWork.Products.GetByIdAsync(productId, ct)
                     ?? throw new NotFoundException("Produto", productId);
 
-                order.AddItem(product.Id, product.Name, product.Price, itemRequest.Quantity, itemRequest.OptionsJson);
+                order.AddItem(product.Id, product.Name, product.EffectivePrice, itemRequest.Quantity, itemRequest.OptionsJson);
             }
             else
             {

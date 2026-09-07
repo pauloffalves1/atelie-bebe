@@ -13,11 +13,11 @@ import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 export class CartPage {
   constructor(readonly cart: CartService) {}
 
-  increment(productId: string, current: number, embroideryText?: string | null): void {
-    this.cart.updateQuantity(productId, current + 1, embroideryText);
+  increment(productId: string, current: number, embroideryText?: string | null, threadColor?: string | null): void {
+    this.cart.updateQuantity(productId, current + 1, embroideryText, threadColor);
   }
 
-  decrement(productId: string, current: number, embroideryText?: string | null): void {
-    this.cart.updateQuantity(productId, current - 1, embroideryText);
+  decrement(productId: string, current: number, embroideryText?: string | null, threadColor?: string | null): void {
+    this.cart.updateQuantity(productId, current - 1, embroideryText, threadColor);
   }
 }

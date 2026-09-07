@@ -11,7 +11,12 @@ public sealed record ProductDto(
     bool Active,
     bool Featured,
     bool IsExclusive,
-    IReadOnlyList<string> ImageUrls);
+    IReadOnlyList<string> ImageUrls,
+    decimal? DiscountPercentage,
+    DateTime? PromotionStartsAt,
+    DateTime? PromotionEndsAt,
+    bool IsOnPromotion,
+    decimal EffectivePrice);
 
 public sealed record AdminProductDto(
     Guid Id,
@@ -25,7 +30,16 @@ public sealed record AdminProductDto(
     bool Featured,
     bool IsExclusive,
     IReadOnlyCollection<Guid> AllowedCustomerIds,
-    IReadOnlyList<string> ImageUrls);
+    IReadOnlyList<string> ImageUrls,
+    decimal? DiscountPercentage,
+    DateTime? PromotionStartsAt,
+    DateTime? PromotionEndsAt,
+    bool IsOnPromotion,
+    decimal EffectivePrice);
+
+public sealed record SetPromotionRequest(decimal? DiscountPercentage, DateTime? StartsAt, DateTime? EndsAt);
+
+public sealed record BulkApplyPromotionRequest(IReadOnlyCollection<Guid> ProductIds, decimal? DiscountPercentage, DateTime? StartsAt, DateTime? EndsAt);
 
 public sealed record SetAllowedCustomersRequest(IReadOnlyCollection<Guid> CustomerIds);
 

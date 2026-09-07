@@ -3,18 +3,24 @@ import { Product } from '../models/product.model';
 import { CartService } from './cart.service';
 
 function makeProduct(overrides: Partial<Product> = {}): Product {
+  const price = overrides.price ?? 69.9;
   return {
     id: 'p1',
     name: 'Body Manga Longa',
     slug: 'body-manga-longa',
     description: null,
-    price: 69.9,
+    price,
     category: 'Bodies',
     imageUrl: null,
     active: true,
     featured: false,
     isExclusive: false,
     imageUrls: [],
+    discountPercentage: null,
+    promotionStartsAt: null,
+    promotionEndsAt: null,
+    isOnPromotion: false,
+    effectivePrice: price,
     ...overrides,
   };
 }

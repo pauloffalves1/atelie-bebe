@@ -42,12 +42,17 @@ public sealed class CustomerAdminService : ICustomerAdminService
         if (existingByCpf is not null && existingByCpf.Id != id)
             throw new ConflictException("Já existe uma conta com este CPF.");
 
-        customer.UpdateDetails(request.Name, email, cpf, request.Phone);
+        customer.UpdateDetails(
+            request.Name, email, cpf, request.Phone,
+            request.AddressStreet, request.AddressNumber, request.AddressComplement,
+            request.AddressNeighborhood, request.AddressCity, request.AddressState, request.AddressZipCode);
         await _unitOfWork.SaveChangesAsync(ct);
 
         return ToDto(customer);
     }
 
     private static CustomerSummaryDto ToDto(Customer c) =>
-        new(c.Id, c.Name, c.Email.Value, c.Phone, c.Cpf?.Value, c.CreatedAt, c.IsAnonymized);
+        new(
+            c.Id, c.Name, c.Email.Value, c.Phone, c.Cpf?.Value, c.CreatedAt, c.IsAnonymized,
+            c.AddressStreet, c.AddressNumber, c.AddressComplement, c.AddressNeighborhood, c.AddressCity, c.AddressState, c.AddressZipCode);
 }

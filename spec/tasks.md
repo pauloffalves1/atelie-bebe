@@ -228,6 +228,47 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 22.7 `dotnet test`/`ng test` completos (74+20 backend, 27 frontend); verificado no navegador: checkout com UF=SP mostrou frete R$12,90, pedido confirmado persistiu e exibiu Subtotal/Frete/Total corretamente na confirmação; migration aplicada localmente sem quebrar pedidos existentes (coluna com default 0)
     - [x] 22.8 `README.md` (RF35) e `spec/requirements.md`/`spec/design.md` (Requisito 22) atualizados
+    - [x] 22.9 Ajuste a pedido do ateliê: removida a margem de 50% (`MARKUP_MULTIPLIER`) que era aplicada em cima da tarifa estimada — `ShippingService.estimate` agora devolve a tarifa-base + acréscimo por item, sem nenhuma margem adicional; `README.md`/`spec/requirements.md`/`spec/design.md` (Requisito 22) atualizados
+
+- [x] 43. Registro das mensagens de contato no painel administrativo (Requisito 42 / RF54, design em `spec/design.md`)
+  - [x] 43.1 Correção de regressão: `contact.ts` volta a chamar `POST /api/contact` (`ContactService.submit`) ao enviar, além de abrir o WhatsApp — nenhuma mudança de backend necessária, o endpoint/serviço/entidade já existiam e funcionavam, só não recebiam tráfego
+  - [x] 43.2 E-mail sintético (`sem-email-<telefone>@contato.local`) quando o campo de e-mail (opcional) fica em branco, para satisfazer `ContactMessage.Email`
+  - [x] 43.3 `ng test` (31 testes, incluindo o ajuste de redação em `contact.spec.ts` pra manter "encomenda personalizada" em minúsculas); verificado via curl: `POST /api/contact` seguido de `GET /api/admin/contact-messages` confirma a mensagem registrada
+  - [x] 43.4 `README.md` (RF54) e `spec/requirements.md`/`spec/design.md` (Requisito 42) atualizados
+
+- [x] 44. Promoções por produto com período determinado (Requisito 43 / RF55, design em `spec/design.md`)
+  - Backend
+    - [x] 44.1 `Product.DiscountPercentage`/`PromotionStartsAt`/`PromotionEndsAt`/`IsOnPromotion`/`EffectivePrice`/`SetPromotion`; migration `AddProductPromotion`; testes de domínio (6 casos novos)
+    - [x] 44.2 `OrderService.CreateStoreOrderAsync` usa `product.EffectivePrice` (não mais `product.Price`) — é isso que faz a promoção valer de verdade no checkout, ignorando o preço enviado pelo cliente
+    - [x] 44.3 `IProductRepository.ListByIdsAsync`; `PATCH /api/admin/products/{id}/promotion` (individual) e `POST /api/admin/products/promotions/bulk` (vários produtos de uma vez)
+  - Frontend
+    - [x] 44.4 `admin-product-form.html`: card "Promoção" (desconto %, início, fim); `admin-product-list.html`: seleção múltipla + barra de aplicação em massa
+    - [x] 44.5 `shop.html`/`product-detail.html`/`cart-page.html`: preço riscado + preço promocional + badge de desconto quando ativo; `CartService.totalPrice` e `checkout.ts` usam `effectivePrice`
+  - Verificação e documentação
+    - [x] 44.6 `dotnet test` (132+20); verificado via curl: promoção de 20% aplicada, `effectivePrice` correto, pedido de loja cobrou o preço promocional mesmo com `unitPrice` falso enviado na requisição; verificado no navegador: badge/preço riscado na vitrine e no detalhe, aplicação em massa a 2 produtos selecionados confirmada via `get_page_text`
+    - [x] 44.7 `README.md` (RF55) e `spec/requirements.md`/`spec/design.md` (Requisito 43) atualizados
+
+- [x] 45. Exportação de CSV com detalhes por item (Requisito 44 / RF56, design em `spec/design.md`)
+  - [x] 45.1 `OrderEndpoints.BuildCsv` reestruturado para uma linha por item (não por pedido), repetindo as colunas do pedido; `ParseItemOptions` extrai `embroideryText`/`threadColor` do JSON de opções, defensivo contra JSON ausente/inválido
+  - [x] 45.2 Verificado via curl: pedido com bordado "ANA" e cor "Rosa" aparece corretamente na linha do CSV exportado
+  - [x] 45.3 `README.md` (RF56) e `spec/requirements.md`/`spec/design.md` (Requisito 44) atualizados
+
+- [x] 46. Endereço completo no cadastro do cliente (Requisito 45 / RF57, design em `spec/design.md`)
+  - Backend
+    - [x] 46.1 `Customer` ganha 7 colunas de endereço (nullable); `Register`/`UpdateDetails` ganham os parâmetros; `Anonymize` também os limpa; migration `AddCustomerAddress`; testes de domínio (2 casos novos)
+    - [x] 46.2 `RegisterCustomerRequest`/`UpdateCustomerRequest`/`CustomerProfileDto`/`CustomerSummaryDto` ganham os mesmos campos
+  - Frontend
+    - [x] 46.3 `register-page.ts`/`.html` reaproveita o bloco de CEP/endereço do checkout (mesmo pipeline RxJS de busca por CEP); `admin-customer-form.ts`/`.html` ganha o mesmo bloco para edição pelo admin
+  - Verificação e documentação
+    - [x] 46.4 `dotnet test` (132+20); verificado via curl: cadastro com endereço completo, `GET /api/auth/me` confirma os campos persistidos; verificado no navegador: CEP `01310-100` preencheu Rua/Bairro/Cidade/Estado automaticamente no formulário de cadastro
+    - [x] 46.5 `README.md` (RF57) e `spec/requirements.md`/`spec/design.md` (Requisito 45) atualizados
+
+- [x] 47. Cor da linha de bordado (Requisito 46 / RF58, design em `spec/design.md`)
+  - [x] 47.1 `THREAD_COLORS` (paleta fixa de 14 cores) em `product-detail.ts`; seleção obrigatória junto do texto de bordado (`addToCart` bloqueia sem os dois)
+  - [x] 47.2 `CartItem.threadColor`; `CartService.matches`/`add`/`updateQuantity`/`remove` passam a considerar a cor na identidade da linha do carrinho (parâmetro opcional adicional, compatível com as chamadas existentes)
+  - [x] 47.3 `OrderItemOptions.threadColor` (client); exibição em `cart-page.html` e `admin-order-detail.html`; incluído no CSV (tarefa 45)
+  - [x] 47.4 `ng test` (31 testes, incluindo ajuste em `cart.service.spec.ts` para o novo campo); verificado no navegador: cor "Rosa" selecionada, adicionada ao carrinho junto do bordado "MARIA", exibida corretamente no carrinho com o preço promocional já aplicado
+  - [x] 47.5 `README.md` (RF58) e `spec/requirements.md`/`spec/design.md` (Requisito 46) atualizados
 
 - [x] 23. CPF mascarado nas telas administrativas (Requisito 23 / RF36, design em `spec/design.md`)
   - [x] 23.1 Novo `CpfMaskPipe` (`shared/pipes/cpf-mask.pipe.ts`); `cpf-mask.pipe.spec.ts` (CPF cru, formatado, nulo/vazio, inválido)

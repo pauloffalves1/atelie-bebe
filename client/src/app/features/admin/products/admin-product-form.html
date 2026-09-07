@@ -90,6 +90,57 @@
 
         @if (isEditMode()) {
           <div class="stat-card mb-4">
+            <h6 class="mb-1">Promoção</h6>
+            <p class="small text-secondary mb-3">
+              Desconto por tempo limitado — ativa e expira sozinha, conforme o período abaixo.
+              @if (isOnPromotion()) {
+                <span class="badge bg-success ms-1">Ativa agora</span>
+              }
+            </p>
+
+            @if (promotionError()) {
+              <div class="alert alert-danger small rounded-4">{{ promotionError() }}</div>
+            }
+
+            <div class="row g-2 mb-3">
+              <div class="col-5">
+                <label class="form-label small">Desconto (%)</label>
+                <input type="number" min="1" max="99" class="form-control form-control-sm"
+                  [value]="promotionDiscount()" (input)="promotionDiscount.set(+$any($event.target).value)">
+              </div>
+              <div class="col-7"></div>
+              <div class="col-6">
+                <label class="form-label small">Início</label>
+                <input type="datetime-local" class="form-control form-control-sm"
+                  [value]="promotionStartsAt()" (input)="promotionStartsAt.set($any($event.target).value)">
+              </div>
+              <div class="col-6">
+                <label class="form-label small">Fim</label>
+                <input type="datetime-local" class="form-control form-control-sm"
+                  [value]="promotionEndsAt()" (input)="promotionEndsAt.set($any($event.target).value)">
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-primary btn-sm rounded-pill flex-fill" [disabled]="savingPromotion()" (click)="savePromotion()">
+                @if (savingPromotion()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Salvar promoção
+              </button>
+              @if (promotionDiscount()) {
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" [disabled]="savingPromotion()" (click)="clearPromotion()">
+                  Remover
+                </button>
+              }
+            </div>
+
+            @if (promotionSaved()) {
+              <div class="small text-success mt-2"><i class="bi bi-check-circle me-1"></i>Promoção salva!</div>
+            }
+          </div>
+
+          <div class="stat-card mb-4">
             <h6 class="mb-1">Galeria de fotos</h6>
             <p class="small text-secondary mb-3">
               Fotos adicionais mostradas na página do produto, além da foto principal acima.

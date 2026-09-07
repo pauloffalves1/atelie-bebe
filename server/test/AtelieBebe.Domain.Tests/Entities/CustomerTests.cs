@@ -47,6 +47,39 @@ public class CustomerTests
     }
 
     [Fact]
+    public void Register_WithAddress_SetsAddressFields()
+    {
+        var customer = Customer.Register(
+            "Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999",
+            addressStreet: "Rua das Flores", addressNumber: "123", addressComplement: "Apto 4",
+            addressNeighborhood: "Centro", addressCity: "São Paulo", addressState: "SP", addressZipCode: "01000-000");
+
+        Assert.Equal("Rua das Flores", customer.AddressStreet);
+        Assert.Equal("123", customer.AddressNumber);
+        Assert.Equal("Apto 4", customer.AddressComplement);
+        Assert.Equal("Centro", customer.AddressNeighborhood);
+        Assert.Equal("São Paulo", customer.AddressCity);
+        Assert.Equal("SP", customer.AddressState);
+        Assert.Equal("01000-000", customer.AddressZipCode);
+    }
+
+    [Fact]
+    public void Anonymize_ClearsAddressFields()
+    {
+        var customer = Customer.Register(
+            "Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999",
+            addressStreet: "Rua das Flores", addressNumber: "123", addressCity: "São Paulo", addressState: "SP", addressZipCode: "01000-000");
+
+        customer.Anonymize("unusable-hash");
+
+        Assert.Null(customer.AddressStreet);
+        Assert.Null(customer.AddressNumber);
+        Assert.Null(customer.AddressCity);
+        Assert.Null(customer.AddressState);
+        Assert.Null(customer.AddressZipCode);
+    }
+
+    [Fact]
     public void UpdatePassword_WithEmptyHash_Throws()
     {
         var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hashed-password", "11999999999");

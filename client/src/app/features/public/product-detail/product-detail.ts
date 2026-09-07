@@ -14,6 +14,24 @@ import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
 const MAX_EMBROIDERY_LENGTH = 30;
 
+/** Standard embroidery thread color palette offered on every product. */
+export const THREAD_COLORS = [
+  'Branco',
+  'Preto',
+  'Rosa',
+  'Rosa Bebê',
+  'Azul',
+  'Azul Bebê',
+  'Amarelo',
+  'Verde',
+  'Vermelho',
+  'Lilás',
+  'Cinza',
+  'Marrom',
+  'Bege',
+  'Vinho',
+];
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
@@ -22,6 +40,7 @@ const MAX_EMBROIDERY_LENGTH = 30;
 })
 export class ProductDetail implements OnInit {
   readonly alphabet = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+  readonly threadColors = THREAD_COLORS;
 
   readonly product = signal<Product | null>(null);
   readonly loading = signal(true);
@@ -29,6 +48,8 @@ export class ProductDetail implements OnInit {
   readonly quantity = signal(1);
   readonly embroideryText = signal('');
   readonly embroideryTouched = signal(false);
+  readonly threadColor = signal('');
+  readonly threadColorTouched = signal(false);
   readonly addedFeedback = signal(false);
   readonly activeImageIndex = signal(0);
 
@@ -139,19 +160,31 @@ export class ProductDetail implements OnInit {
     this.embroideryText.set('');
   }
 
+  selectThreadColor(color: string): void {
+    this.threadColor.set(color);
+  }
+
   addToCart(): void {
     const product = this.product();
     if (!product) return;
 
+    let blocked = false;
     if (!this.embroideryText().trim()) {
       this.embroideryTouched.set(true);
-      return;
+      blocked = true;
     }
+    if (!this.threadColor()) {
+      this.threadColorTouched.set(true);
+      blocked = true;
+    }
+    if (blocked) return;
 
-    this.cart.add(product, this.quantity(), this.embroideryText().trim());
+    this.cart.add(product, this.quantity(), this.embroideryText().trim(), this.threadColor());
     this.addedFeedback.set(true);
     this.embroideryText.set('');
     this.embroideryTouched.set(false);
+    this.threadColor.set('');
+    this.threadColorTouched.set(false);
     setTimeout(() => this.addedFeedback.set(false), 2500);
   }
 }

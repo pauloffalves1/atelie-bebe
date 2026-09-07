@@ -17,6 +17,9 @@ public sealed class ProductRepository : IProductRepository
     public Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         ProductsWithAccess.FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    public async Task<IReadOnlyList<Product>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default) =>
+        await ProductsWithAccess.Where(p => ids.Contains(p.Id)).ToListAsync(ct);
+
     public Task<Product?> GetBySlugAsync(string slug, Guid? customerId = null, CancellationToken ct = default) =>
         ApplyVisibility(ProductsWithAccess.Where(p => p.Slug == slug), customerId).FirstOrDefaultAsync(ct);
 

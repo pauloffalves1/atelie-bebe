@@ -6,6 +6,14 @@ import { CustomerAdminService } from '../../../core/services/customer-admin.serv
 import { ProductService } from '../../../core/services/product.service';
 import { resolveAssetUrl } from '../../../core/utils/asset-url';
 
+/** ISO datetime -> `datetime-local` input value (local time, no seconds), or '' when absent. */
+function toDatetimeLocal(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 @Component({
   selector: 'app-admin-product-form',
   standalone: true,
@@ -32,6 +40,14 @@ export class AdminProductForm implements OnInit {
   readonly galleryError = signal<string | null>(null);
   readonly savingGallery = signal(false);
   readonly gallerySaved = signal(false);
+
+  readonly isOnPromotion = signal(false);
+  readonly promotionDiscount = signal<number | null>(null);
+  readonly promotionStartsAt = signal('');
+  readonly promotionEndsAt = signal('');
+  readonly savingPromotion = signal(false);
+  readonly promotionSaved = signal(false);
+  readonly promotionError = signal<string | null>(null);
 
   private productId: string | null = null;
 
@@ -73,6 +89,10 @@ export class AdminProductForm implements OnInit {
         });
         this.selectedCustomerIds.set(product.allowedCustomerIds);
         this.galleryImages.set(product.imageUrls);
+        this.isOnPromotion.set(product.isOnPromotion);
+        this.promotionDiscount.set(product.discountPercentage);
+        this.promotionStartsAt.set(toDatetimeLocal(product.promotionStartsAt));
+        this.promotionEndsAt.set(toDatetimeLocal(product.promotionEndsAt));
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -169,6 +189,58 @@ export class AdminProductForm implements OnInit {
         setTimeout(() => this.customersSaved.set(false), 2500);
       },
       error: () => this.savingCustomers.set(false),
+    });
+  }
+
+  savePromotion(): void {
+    if (!this.productId) return;
+
+    if (!this.promotionDiscount() || !this.promotionStartsAt() || !this.promotionEndsAt()) {
+      this.promotionError.set('Preencha o desconto e o período (início e fim) da promoção.');
+      return;
+    }
+
+    this.savingPromotion.set(true);
+    this.promotionError.set(null);
+
+    this.productService
+      .setPromotion(this.productId, {
+        discountPercentage: this.promotionDiscount(),
+        startsAt: new Date(this.promotionStartsAt()).toISOString(),
+        endsAt: new Date(this.promotionEndsAt()).toISOString(),
+      })
+      .subscribe({
+        next: (product) => {
+          this.savingPromotion.set(false);
+          this.isOnPromotion.set(product.isOnPromotion);
+          this.promotionSaved.set(true);
+          setTimeout(() => this.promotionSaved.set(false), 2500);
+        },
+        error: (err) => {
+          this.savingPromotion.set(false);
+          this.promotionError.set(err?.error?.detail ?? 'Não foi possível salvar a promoção.');
+        },
+      });
+  }
+
+  clearPromotion(): void {
+    if (!this.productId) return;
+
+    this.savingPromotion.set(true);
+    this.promotionError.set(null);
+
+    this.productService.setPromotion(this.productId, { discountPercentage: null, startsAt: null, endsAt: null }).subscribe({
+      next: () => {
+        this.savingPromotion.set(false);
+        this.isOnPromotion.set(false);
+        this.promotionDiscount.set(null);
+        this.promotionStartsAt.set('');
+        this.promotionEndsAt.set('');
+      },
+      error: (err) => {
+        this.savingPromotion.set(false);
+        this.promotionError.set(err?.error?.detail ?? 'Não foi possível remover a promoção.');
+      },
     });
   }
 

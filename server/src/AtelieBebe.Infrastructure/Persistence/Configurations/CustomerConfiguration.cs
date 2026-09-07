@@ -17,6 +17,14 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Phone).HasMaxLength(30);
         builder.Property(c => c.IsAnonymized).HasDefaultValue(false).IsRequired();
 
+        builder.Property(c => c.AddressStreet).HasMaxLength(200);
+        builder.Property(c => c.AddressNumber).HasMaxLength(20);
+        builder.Property(c => c.AddressComplement).HasMaxLength(200);
+        builder.Property(c => c.AddressNeighborhood).HasMaxLength(100);
+        builder.Property(c => c.AddressCity).HasMaxLength(100);
+        builder.Property(c => c.AddressState).HasMaxLength(2);
+        builder.Property(c => c.AddressZipCode).HasMaxLength(9);
+
         builder.Property(c => c.Email)
             .HasConversion(email => email.Value, value => Email.Create(value))
             .HasColumnName("Email")

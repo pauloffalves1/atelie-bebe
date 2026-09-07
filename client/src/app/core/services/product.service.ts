@@ -3,7 +3,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PagedResult } from '../models/pagination.model';
-import { AdminProduct, CreateProductRequest, Product, UpdateProductRequest } from '../models/product.model';
+import {
+  AdminProduct,
+  BulkApplyPromotionRequest,
+  CreateProductRequest,
+  Product,
+  SetPromotionRequest,
+  UpdateProductRequest,
+} from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -47,6 +54,14 @@ export class ProductService {
 
   setImages(id: string, imageUrls: string[]): Observable<AdminProduct> {
     return this.http.put<AdminProduct>(`${this.adminUrl}/${id}/images`, { imageUrls });
+  }
+
+  setPromotion(id: string, request: SetPromotionRequest): Observable<AdminProduct> {
+    return this.http.patch<AdminProduct>(`${this.adminUrl}/${id}/promotion`, request);
+  }
+
+  applyPromotionToMany(request: BulkApplyPromotionRequest): Observable<AdminProduct[]> {
+    return this.http.post<AdminProduct[]>(`${this.adminUrl}/promotions/bulk`, request);
   }
 
   create(request: CreateProductRequest): Observable<Product> {

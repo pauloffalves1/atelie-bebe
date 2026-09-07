@@ -50,6 +50,12 @@ public static class ProductEndpoints
         adminGroup.MapPut("/{id:guid}/images", async (Guid id, SetProductImagesRequest request, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.SetImagesAsync(id, request, ct)));
 
+        adminGroup.MapPatch("/{id:guid}/promotion", async (Guid id, SetPromotionRequest request, IProductService service, CancellationToken ct) =>
+            Results.Ok(await service.SetPromotionAsync(id, request, ct)));
+
+        adminGroup.MapPost("/promotions/bulk", async (BulkApplyPromotionRequest request, IProductService service, CancellationToken ct) =>
+            Results.Ok(await service.ApplyPromotionToManyAsync(request, ct)));
+
         adminGroup.MapPost("/uploads", async (IFormFile file, IFileStorageService fileStorage, CancellationToken ct) =>
         {
             var extension = ImageUploadValidator.ValidateAndGetExtension(file);

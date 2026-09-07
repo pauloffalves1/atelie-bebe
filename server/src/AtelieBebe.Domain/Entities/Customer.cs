@@ -15,6 +15,14 @@ public sealed class Customer : Entity, IAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public bool IsAnonymized { get; private set; }
 
+    public string? AddressStreet { get; private set; }
+    public string? AddressNumber { get; private set; }
+    public string? AddressComplement { get; private set; }
+    public string? AddressNeighborhood { get; private set; }
+    public string? AddressCity { get; private set; }
+    public string? AddressState { get; private set; }
+    public string? AddressZipCode { get; private set; }
+
     private Customer() { } // EF Core
 
     private Customer(Guid id, string name, Email email, Cpf cpf, string passwordHash, string? phone)
@@ -28,7 +36,10 @@ public sealed class Customer : Entity, IAggregateRoot
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static Customer Register(string name, Email email, Cpf cpf, string passwordHash, string? phone)
+    public static Customer Register(
+        string name, Email email, Cpf cpf, string passwordHash, string? phone,
+        string? addressStreet = null, string? addressNumber = null, string? addressComplement = null,
+        string? addressNeighborhood = null, string? addressCity = null, string? addressState = null, string? addressZipCode = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("O nome é obrigatório.");
@@ -39,7 +50,16 @@ public sealed class Customer : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(phone))
             throw new DomainException("O telefone/WhatsApp é obrigatório.");
 
-        var customer = new Customer(Guid.NewGuid(), name.Trim(), email, cpf, passwordHash, phone.Trim());
+        var customer = new Customer(Guid.NewGuid(), name.Trim(), email, cpf, passwordHash, phone.Trim())
+        {
+            AddressStreet = addressStreet?.Trim(),
+            AddressNumber = addressNumber?.Trim(),
+            AddressComplement = addressComplement?.Trim(),
+            AddressNeighborhood = addressNeighborhood?.Trim(),
+            AddressCity = addressCity?.Trim(),
+            AddressState = addressState?.Trim(),
+            AddressZipCode = addressZipCode?.Trim(),
+        };
         customer.AddDomainEvent(new CustomerRegisteredDomainEvent(customer.Id, customer.Name, customer.Email.Value, customer.Phone!));
         return customer;
     }
@@ -53,7 +73,10 @@ public sealed class Customer : Entity, IAggregateRoot
     }
 
     /// <summary>Admin-only edit of a customer's own profile fields — uniqueness of email/CPF is checked by the caller before this is invoked, since that requires a repository lookup.</summary>
-    public void UpdateDetails(string name, Email email, Cpf cpf, string? phone)
+    public void UpdateDetails(
+        string name, Email email, Cpf cpf, string? phone,
+        string? addressStreet = null, string? addressNumber = null, string? addressComplement = null,
+        string? addressNeighborhood = null, string? addressCity = null, string? addressState = null, string? addressZipCode = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("O nome é obrigatório.");
@@ -64,6 +87,13 @@ public sealed class Customer : Entity, IAggregateRoot
         Email = email;
         Cpf = cpf;
         Phone = phone.Trim();
+        AddressStreet = addressStreet?.Trim();
+        AddressNumber = addressNumber?.Trim();
+        AddressComplement = addressComplement?.Trim();
+        AddressNeighborhood = addressNeighborhood?.Trim();
+        AddressCity = addressCity?.Trim();
+        AddressState = addressState?.Trim();
+        AddressZipCode = addressZipCode?.Trim();
     }
 
     /// <summary>Raises the event that carries a one-time reset link to the customer's e-mail — the link/token itself is generated and persisted by the application layer, this only records the intent.</summary>
@@ -91,6 +121,13 @@ public sealed class Customer : Entity, IAggregateRoot
         Email = Email.Create($"cliente-removido-{Id}@removido.local");
         Cpf = null;
         Phone = null;
+        AddressStreet = null;
+        AddressNumber = null;
+        AddressComplement = null;
+        AddressNeighborhood = null;
+        AddressCity = null;
+        AddressState = null;
+        AddressZipCode = null;
         PasswordHash = unusablePasswordHash;
         IsAnonymized = true;
     }

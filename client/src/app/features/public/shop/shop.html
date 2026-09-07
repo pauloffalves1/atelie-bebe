@@ -53,11 +53,21 @@
                   @if (product.isExclusive) {
                     <span class="badge-soft align-self-start small"><i class="bi bi-stars me-1"></i>Exclusivo pra você</span>
                   }
+                  @if (product.isOnPromotion) {
+                    <span class="badge bg-success align-self-start small">-{{ product.discountPercentage }}%</span>
+                  }
                 </div>
                 <h6 class="mb-1">
                   <a [routerLink]="['/produto', product.slug]" class="text-dark">{{ product.name }}</a>
                 </h6>
-                <p class="fw-bold text-blush mb-3 mt-auto">{{ product.price | currency:'BRL' }}</p>
+                @if (product.isOnPromotion) {
+                  <p class="mb-3 mt-auto">
+                    <span class="text-decoration-line-through text-secondary small d-block">{{ product.price | currency:'BRL' }}</span>
+                    <span class="fw-bold text-blush">{{ product.effectivePrice | currency:'BRL' }}</span>
+                  </p>
+                } @else {
+                  <p class="fw-bold text-blush mb-3 mt-auto">{{ product.price | currency:'BRL' }}</p>
+                }
                 <a [routerLink]="['/produto', product.slug]" class="btn btn-sm btn-primary rounded-pill">
                   <i class="bi bi-scissors me-1"></i>Personalizar
                 </a>

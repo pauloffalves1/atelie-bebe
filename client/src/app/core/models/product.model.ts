@@ -10,10 +10,25 @@ export interface Product {
   featured: boolean;
   isExclusive: boolean;
   imageUrls: string[];
+  discountPercentage: number | null;
+  promotionStartsAt: string | null;
+  promotionEndsAt: string | null;
+  isOnPromotion: boolean;
+  effectivePrice: number;
 }
 
 export interface AdminProduct extends Product {
   allowedCustomerIds: string[];
+}
+
+export interface SetPromotionRequest {
+  discountPercentage: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+export interface BulkApplyPromotionRequest extends SetPromotionRequest {
+  productIds: string[];
 }
 
 export interface CreateProductRequest {
