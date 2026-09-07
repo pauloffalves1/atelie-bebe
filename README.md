@@ -340,6 +340,9 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 | RF60 | O sistema deve limitar a 5 tentativas por minuto, por IP, nos endpoints onde um "chute" de senha/código é o ataque (login de cliente, login de admin, redefinição de senha, exclusão de conta, validação de cupom), respondendo `429` a partir da 6ª tentativa | Sistema |
 | RF61 | O sistema deve expor um endpoint `GET /api/health` que confirma tanto que o processo está no ar quanto que o banco de dados está acessível, para monitoramento externo de uptime | Sistema |
 | RF62 | O painel administrativo deve exibir ticket médio, os 5 produtos mais vendidos e um gráfico de vendas dos últimos 30 dias, além dos indicadores já existentes | Administrador |
+| RF63 | O sistema deve disponibilizar páginas públicas de Termos de Uso (`/termos-de-uso`) e Política de Privacidade (`/politica-de-privacidade`), acessíveis pelo rodapé de todas as páginas públicas | Visitante |
+| RF64 | O sistema deve incluir dados estruturados (JSON-LD, schema.org `Product`) na página de detalhe de cada produto, incluindo nota média e total de avaliações quando existirem | Sistema |
+| RF65 | O sistema deve exigir que o cliente confirme seu e-mail (link enviado no cadastro, válido por 24 horas) e permitir reenviar esse e-mail a qualquer momento pela própria conta | Cliente |
 
 ### Requisitos não funcionais
 
@@ -438,6 +441,12 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 
 - **Limite de tentativas (RF60)**: `/api/auth/login`, `/api/admin/auth/login`, `/api/auth/reset-password`, `/api/auth/delete-account` e `/api/coupons/validate` aceitam no máximo 5 requisições por minuto por combinação de IP do cliente + rota (não um limite único compartilhado entre rotas) — a 6ª tentativa no mesmo minuto recebe `429 Too Many Requests` sem chegar a tocar o serviço de aplicação. Atrás do Nginx em produção, `ForwardedHeadersOptions` confia no `X-Forwarded-For` do proxy local para enxergar o IP real do visitante — sem isso, todo tráfego apareceria vindo do próprio Nginx, e o limite por IP na prática viraria um limite global.
 - **Health check (RF61)**: `GET /api/health` roda um `DatabaseHealthCheck` que tenta `Database.CanConnectAsync()` — retorna `200 Healthy` só quando a API está no ar **e** consegue falar com o banco, não apenas quando o processo está rodando. Pensado para um monitor de uptime externo (ex.: UptimeRobot) apontar para essa rota.
+- **Verificação de e-mail (RF65)**: `EmailVerificationToken` segue exatamente o mesmo padrão de `PasswordResetToken` — só o hash SHA-256 do token é persistido, validade de 24 horas, uso único (`MarkUsed`). `Customer.Register` já dispara `RequestEmailVerification` na criação da conta; trocar o e-mail (`UpdateDetails`) ou anonimizar a conta (exclusão com pedidos, RF53) zera `EmailVerified`. `POST /api/auth/verify-email` (público, rate-limitado) resgata o token; `POST /api/auth/resend-verification` (`CustomerOnly`, rate-limitado) é *no-op* silencioso se a conta já estiver verificada ou não existir mais — mesmo espírito de não vazar informação do reset de senha. `/minha-conta` mostra um aviso com botão de reenvio enquanto o e-mail não é confirmado.
+
+### Conteúdo institucional e SEO
+
+- **Termos de Uso e Política de Privacidade (RF63)**: páginas estáticas (`/termos-de-uso`, `/politica-de-privacidade`) linkadas no rodapé de todo o site público. A Política de Privacidade descreve, em linguagem alinhada à LGPD, o comportamento de anonimização/exclusão de conta já implementado (RF53) em vez de apenas prometê-lo.
+- **Dados estruturados (RF64)**: `SeoService.setProductStructuredData` injeta um `<script type="application/ld+json">` (schema.org `Product`, com `offers`/`AggregateRating` quando há avaliações) na página de detalhe do produto; o mesmo `SeoService.update()` que toda página pública já chama remove esse script ao navegar para qualquer outra rota, então o JSON-LD nunca vaza para uma página sem produto.
 
 ### Tratamento de erros
 

@@ -482,3 +482,30 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 51.2 `admin-dashboard.html`/`.ts`: card de ticket médio, lista de produtos mais vendidos, gráfico de barras em CSS puro para vendas dos últimos 30 dias (sem biblioteca de gráficos)
   - [x] 51.3 Verificado via curl (dados agregados corretos) e no navegador (as três seções renderizando com dados reais do dashboard)
   - [x] 51.4 `README.md` (RF62) e `spec/requirements.md`/`spec/design.md` (Requisito 50) atualizados
+
+- [x] 52. Páginas de Termos de Uso e Política de Privacidade (Requisito 51 / RF63, design em `spec/design.md`)
+  - [x] 52.1 `terms-page.ts`/`.html` e `privacy-page.ts`/`.html` (`features/public/legal/`), rotas `/termos-de-uso` e `/politica-de-privacidade`
+  - [x] 52.2 Links no rodapé de `public-layout.html`
+  - [x] 52.3 `npm run build` sem erros; verificado no navegador (RF64/RF65, abaixo, cobrem a verificação funcional completa deste lote)
+  - [x] 52.4 `README.md` (RF63) e `spec/requirements.md`/`spec/design.md` (Requisito 51) atualizados
+
+- [x] 53. Dados estruturados (JSON-LD) nos produtos (Requisito 52 / RF64, design em `spec/design.md`)
+  - [x] 53.1 `SeoService.setProductStructuredData`/`clearStructuredData`; chamado em `product-detail.ts` (dados básicos e, ao carregar avaliações, `aggregateRating`)
+  - [x] 53.2 `npm run build` sem erros
+  - [x] 53.3 `README.md` (RF64) e `spec/requirements.md`/`spec/design.md` (Requisito 52) atualizados
+
+- [x] 54. Verificação de e-mail no cadastro (Requisito 53 / RF65, design em `spec/design.md`)
+  - Backend
+    - [x] 54.1 `EmailVerificationToken` (Domain, espelha `PasswordResetToken`); `IEmailVerificationTokenRepository`/`EmailVerificationTokenRepository`; `EmailVerificationTokenConfiguration`; migration `AddEmailVerification`; testes de domínio (`EmailVerificationTokenTests`, 5 casos)
+    - [x] 54.2 `Customer.EmailVerified`; `RequestEmailVerification`/`VerifyEmail`; `UpdateDetails` zera `EmailVerified` ao trocar o e-mail; `Anonymize` zera `EmailVerified`; testes de domínio (`CustomerTests`, 6 casos novos)
+    - [x] 54.3 `CustomerAuthService`: `IssueEmailVerification` (compartilhado por `RegisterAsync` e `ResendEmailVerificationAsync`), `VerifyEmailAsync`; `CustomerProfileDto.EmailVerified`
+    - [x] 54.4 `IEmailSender.SendEmailVerificationAsync`/`ResendEmailSender`; `OutboxProcessor` ganha o `case EmailVerificationRequestedDomainEvent` (e-mail apenas, mesmo padrão do reset de senha)
+    - [x] 54.5 `POST /api/auth/verify-email` (público, rate-limitado) e `POST /api/auth/resend-verification` (`CustomerOnly`, rate-limitado)
+  - Frontend
+    - [x] 54.6 `CustomerProfile.emailVerified`; `AuthService.verifyEmail`/`resendVerification`
+    - [x] 54.7 `verify-email-page.ts`/`.html` (`/verificar-email`), dispara a verificação automaticamente a partir do token na query string
+    - [x] 54.8 `my-account.ts`/`.html`: carrega o perfil ao entrar, mostra aviso + botão de reenvio enquanto `emailVerified` é `false`
+  - Verificação e documentação
+    - [x] 54.9 `dotnet build`/`dotnet test` (159 Domain + 20 Application, sem falhas); `dotnet ef migrations add AddEmailVerification`; `npm run build`/`npx ng test` (31 testes) sem erros
+    - [x] 54.10 Verificado via curl fim a fim contra a API local: cadastro dispara o evento de verificação (token extraído da mensagem da outbox), `POST /api/auth/verify-email` marca a conta verificada, reuso do mesmo token é rejeitado (401), `POST /api/auth/resend-verification` é no-op (204) numa conta já verificada. Verificado no navegador: `/verificar-email?token=...` mostra sucesso/erro corretamente; `/minha-conta` mostra o aviso de e-mail não confirmado, o botão de reenvio funciona, e o aviso desaparece assim que o e-mail é confirmado
+    - [x] 54.11 `README.md` (RF65) e `spec/requirements.md`/`spec/design.md` (Requisito 53) atualizados

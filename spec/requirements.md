@@ -756,3 +756,46 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. O painel DEVE exibir os 5 produtos mais vendidos por quantidade, com a receita gerada por cada um.
 3. O painel DEVE exibir um gráfico com a receita diária dos últimos 30 dias.
 4. Essas métricas DEVEM ser calculadas a partir dos mesmos dados já usados para os indicadores existentes, sem exigir uma consulta adicional ao banco de dados.
+
+---
+
+## Requisito 51: Páginas de Termos de Uso e Política de Privacidade
+
+**User Story:** Como ateliê, quero páginas públicas de Termos de Uso e Política de Privacidade, para deixar claras as regras de compra/personalização e como os dados dos clientes são tratados.
+
+**Rastreamento:** RF63.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE disponibilizar uma página pública de Termos de Uso em `/termos-de-uso`.
+2. O SISTEMA DEVE disponibilizar uma página pública de Política de Privacidade em `/politica-de-privacidade`.
+3. O rodapé de toda página pública DEVE conter links para as duas páginas.
+4. A Política de Privacidade DEVE descrever o comportamento real de exclusão/anonimização de conta já implementado (Requisito 41), não apenas uma promessa genérica.
+
+---
+
+## Requisito 52: Dados estruturados (JSON-LD) nos produtos
+
+**User Story:** Como ateliê, quero que os produtos tenham dados estruturados no formato reconhecido por buscadores, para melhorar a chance de aparecer com rich snippets nos resultados de busca.
+
+**Rastreamento:** RF64.
+
+**Acceptance Criteria**
+1. A página de detalhe de cada produto DEVE incluir um bloco `<script type="application/ld+json">` no formato schema.org `Product`, com nome, descrição, imagem, preço e disponibilidade.
+2. QUANDO o produto tem avaliações, o JSON-LD DEVE incluir `aggregateRating` (nota média e total de avaliações).
+3. QUANDO o visitante navega para qualquer outra página, o bloco JSON-LD do produto anterior NÃO DEVE permanecer na página.
+
+---
+
+## Requisito 53: Verificação de e-mail no cadastro
+
+**User Story:** Como ateliê, quero confirmar que o e-mail informado no cadastro pertence de fato ao cliente, para reduzir cadastros com e-mail inválido/alheio e melhorar a entregabilidade das notificações.
+
+**Rastreamento:** RF65.
+
+**Acceptance Criteria**
+1. QUANDO um cliente se cadastra, O SISTEMA DEVE enviar um e-mail com um link de confirmação de uso único, válido por 24 horas.
+2. QUANDO o cliente acessa o link de confirmação com um token válido, O SISTEMA DEVE marcar o e-mail da conta como verificado.
+3. QUANDO o token é inválido, expirado ou já usado, O SISTEMA DEVE rejeitar a confirmação sem alterar o estado da conta.
+4. O cliente autenticado DEVE poder solicitar o reenvio do e-mail de confirmação a qualquer momento pela própria conta; a solicitação NÃO DEVE falhar de forma visível se a conta já estiver verificada.
+5. QUANDO um cliente altera o e-mail da própria conta, O SISTEMA DEVE marcar o e-mail como não verificado novamente.
+6. A anonimização de conta (Requisito 41) DEVE limpar também o estado de verificação de e-mail.
