@@ -2,6 +2,7 @@ using AtelieBebe.Application.Abstractions;
 using AtelieBebe.Application.Dashboard;
 using AtelieBebe.Infrastructure.Notifications;
 using AtelieBebe.Infrastructure.Outbox;
+using AtelieBebe.Infrastructure.Payments;
 using AtelieBebe.Infrastructure.Persistence;
 using AtelieBebe.Infrastructure.Persistence.Queries;
 using AtelieBebe.Infrastructure.Security;
@@ -27,6 +28,8 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<WhatsAppOptions>(configuration.GetSection(WhatsAppOptions.SectionName));
+        services.Configure<MercadoPagoOptions>(configuration.GetSection(MercadoPagoOptions.SectionName));
+        services.Configure<AppUrlOptions>(configuration.GetSection(AppUrlOptions.SectionName));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IDashboardService, DashboardService>();
@@ -35,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHttpClient<INotificationSender, WhatsAppNotificationSender>(client =>
             client.BaseAddress = new Uri("https://graph.facebook.com/"));
+        services.AddHttpClient<IPaymentGateway, MercadoPagoGateway>(client =>
+            client.BaseAddress = new Uri("https://api.mercadopago.com/"));
 
         services.AddHostedService<OutboxProcessor>();
 

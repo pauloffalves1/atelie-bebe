@@ -24,6 +24,13 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(o => o.Status);
         builder.HasIndex(o => o.CustomerId);
 
+        builder.Property(o => o.PaymentStatus)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .HasDefaultValue(PaymentStatus.Pendente)
+            .IsRequired();
+        builder.Property(o => o.ExternalPaymentId).HasMaxLength(100);
+
         builder.Property(o => o.CustomerEmail)
             .HasConversion(email => email.Value, value => Email.Create(value))
             .HasColumnName("CustomerEmail")

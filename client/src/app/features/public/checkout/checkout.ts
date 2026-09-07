@@ -159,6 +159,12 @@ export class Checkout implements OnInit {
       .subscribe({
         next: (order) => {
           this.cart.clear();
+
+          if (order.paymentUrl) {
+            window.location.href = order.paymentUrl;
+            return;
+          }
+
           this.router.navigate(['/pedido', order.id]);
         },
         error: (err) => {

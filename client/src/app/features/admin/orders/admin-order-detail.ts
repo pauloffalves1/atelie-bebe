@@ -1,7 +1,15 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CustomOrderDetails, Order, ORDER_STATUS_LABELS, OrderItemOptions, OrderStatus, ShippingAddress } from '../../../core/models/order.model';
+import {
+  CustomOrderDetails,
+  Order,
+  ORDER_STATUS_LABELS,
+  OrderItemOptions,
+  OrderStatus,
+  PAYMENT_STATUS_LABELS,
+  ShippingAddress,
+} from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
 import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
 
@@ -26,6 +34,7 @@ export class AdminOrderDetail implements OnInit {
   readonly updating = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly statusLabels = ORDER_STATUS_LABELS;
+  readonly paymentStatusLabels = PAYMENT_STATUS_LABELS;
 
   private orderId!: string;
 

@@ -175,6 +175,52 @@ public class OrderTests
         Assert.Equal("11999999999", raised.CustomerPhone);
     }
 
+    [Fact]
+    public void MarkPaymentApproved_SetsStatusAndExternalId()
+    {
+        var order = CreateStoreOrder();
+
+        order.MarkPaymentApproved("mp-123");
+
+        Assert.Equal(PaymentStatus.Pago, order.PaymentStatus);
+        Assert.Equal("mp-123", order.ExternalPaymentId);
+    }
+
+    [Fact]
+    public void MarkPaymentApproved_AfterAlreadyApproved_IsIdempotentAndKeepsFirstExternalId()
+    {
+        var order = CreateStoreOrder();
+        order.MarkPaymentApproved("mp-first");
+
+        order.MarkPaymentApproved("mp-second");
+
+        Assert.Equal(PaymentStatus.Pago, order.PaymentStatus);
+        Assert.Equal("mp-first", order.ExternalPaymentId);
+    }
+
+    [Fact]
+    public void MarkPaymentRejected_SetsStatusAndExternalId()
+    {
+        var order = CreateStoreOrder();
+
+        order.MarkPaymentRejected("mp-123");
+
+        Assert.Equal(PaymentStatus.Recusado, order.PaymentStatus);
+        Assert.Equal("mp-123", order.ExternalPaymentId);
+    }
+
+    [Fact]
+    public void MarkPaymentRejected_AfterAlreadyApproved_DoesNotDowngradeStatus()
+    {
+        var order = CreateStoreOrder();
+        order.MarkPaymentApproved("mp-approved");
+
+        order.MarkPaymentRejected("mp-later");
+
+        Assert.Equal(PaymentStatus.Pago, order.PaymentStatus);
+        Assert.Equal("mp-approved", order.ExternalPaymentId);
+    }
+
     /// <summary>Walks the order through the shortest valid path to reach an arbitrary status, for test setup.</summary>
     private static void SetStatus(Order order, OrderStatus target)
     {

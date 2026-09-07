@@ -10,8 +10,13 @@ namespace AtelieBebe.Application.Orders;
 public sealed class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPaymentGateway _paymentGateway;
 
-    public OrderService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public OrderService(IUnitOfWork unitOfWork, IPaymentGateway paymentGateway)
+    {
+        _unitOfWork = unitOfWork;
+        _paymentGateway = paymentGateway;
+    }
 
     public async Task<OrderDto> CreateStoreOrderAsync(CreateStoreOrderRequest request, Guid? customerId, CancellationToken ct = default)
     {
@@ -49,7 +54,18 @@ public sealed class OrderService : IOrderService
         _unitOfWork.Orders.Add(order);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        return await GetByIdAsync(order.Id, ct);
+        var dto = ToDto(order);
+
+        if (_paymentGateway.IsConfigured)
+        {
+            var preference = await _paymentGateway.CreatePreferenceAsync(
+                order.Id, "Pedido Ateliê Layette Baby", order.Total.Amount, order.CustomerEmail.Value, ct);
+
+            if (preference is not null)
+                dto = dto with { PaymentUrl = preference.CheckoutUrl };
+        }
+
+        return dto;
     }
 
     public async Task<OrderDto> CreateCustomOrderAsync(CreateCustomOrderRequest request, Guid? customerId, CancellationToken ct = default)
@@ -108,6 +124,35 @@ public sealed class OrderService : IOrderService
         return ToDto(order);
     }
 
+    public async Task HandlePaymentWebhookAsync(string paymentId, CancellationToken ct = default)
+    {
+        var details = await _paymentGateway.GetPaymentAsync(paymentId, ct);
+        if (details is null || string.IsNullOrWhiteSpace(details.ExternalReference))
+            return;
+
+        if (!Guid.TryParse(details.ExternalReference, out var orderId))
+            return;
+
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, ct);
+        if (order is null)
+            return;
+
+        switch (details.Status)
+        {
+            case "approved":
+                order.MarkPaymentApproved(paymentId);
+                break;
+            case "rejected":
+            case "cancelled":
+                order.MarkPaymentRejected(paymentId);
+                break;
+            default:
+                return;
+        }
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
     private static OrderStatus ParseStatus(string status)
     {
         if (!Enum.TryParse<OrderStatus>(status, true, out var parsed))
@@ -132,5 +177,7 @@ public sealed class OrderService : IOrderService
         o.ShippingAddressJson,
         o.CreatedAt,
         o.UpdatedAt,
-        o.Items.Select(i => new OrderItemDto(i.Id, i.ProductId, i.ProductName, i.UnitPrice.Amount, i.Quantity, i.Subtotal.Amount, i.OptionsJson)).ToList());
+        o.Items.Select(i => new OrderItemDto(i.Id, i.ProductId, i.ProductName, i.UnitPrice.Amount, i.Quantity, i.Subtotal.Amount, i.OptionsJson)).ToList(),
+        o.PaymentStatus.ToString(),
+        o.ExternalPaymentId);
 }

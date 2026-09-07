@@ -528,3 +528,31 @@ Os três requisitos compartilham a mesma infraestrutura de upload; documentados 
 - `GET /api/gallery-images` (público) / `POST /api/admin/gallery-images` (multipart, cria) / `DELETE /api/admin/gallery-images/{id}` (admin-only).
 - `gallery.ts` (público): busca a lista no `ngOnInit`; se vier vazia, mantém o array de 12 fotos placeholder (`picsum.photos`) que já existia — evita a página ficar vazia numa instalação nova, antes do primeiro upload. A navegação do lightbox (Requisito de galeria já existente) não muda, só a fonte dos dados.
 - Tela admin `/admin/galeria` (`admin-gallery.ts`/`.html`): grade de fotos com botão de exclusão em cada uma + botão "Adicionar foto" no topo.
+
+## Requisito 27 — Pagamento online no checkout (Mercado Pago)
+
+### Modelo de dados
+
+- Novo enum `PaymentStatus` (Domain/Enums): `Pendente` (default) | `Pago` | `Recusado`. `Order` ganha `PaymentStatus` e `ExternalPaymentId` (`string?`, o id do pagamento no Mercado Pago) — mapeados via `HasConversion<string>()` (mesmo padrão do enum-para-string já usado em `OrderStatus`/`OrderType`), migration `AddOrderPaymentStatus`. Independente de `Order.Status` (produção/entrega) — os dois eixos evoluem separadamente.
+- `Order.MarkPaymentApproved(externalPaymentId)`/`MarkPaymentRejected(externalPaymentId)`: métodos de domínio, não construtor/factory — chamados só pelo fluxo de webhook. `MarkPaymentApproved` é **idempotente por design**: se `PaymentStatus` já é `Pago`, o método retorna sem fazer nada — protege contra uma notificação duplicada ou fora de ordem rebaixar (ou reprocessar) um pagamento já confirmado; `MarkPaymentRejected` tem a mesma guarda (nunca rebaixa um `Pago`).
+
+### Abstração do gateway de pagamento
+
+- `IPaymentGateway` (Application/Abstractions), mesmo papel de fronteira que `INotificationSender` já cumpre para o WhatsApp: `IsConfigured` (bool), `CreatePreferenceAsync(orderId, description, amount, customerEmail)` → `PaymentPreference?` (URL do Checkout Pro + id da preferência), `GetPaymentAsync(paymentId)` → `PaymentDetails?` (status + `external_reference`). Retorna `null` em vez de lançar quando não configurado ou quando a chamada à API do Mercado Pago falha — nenhum desses casos deve derrubar a criação do pedido nem o processamento do webhook.
+- `MercadoPagoGateway` (Infrastructure/Payments) é a única implementação, via `HttpClient` nomeado apontando para `https://api.mercadopago.com/` (registrado em `AddInfrastructure`). `MercadoPagoOptions.AccessToken` (config `MercadoPago:AccessToken`, vazio em `appsettings.json`, setado via `dotnet user-secrets` local / `MercadoPago__AccessToken` em produção) determina `IsConfigured` — sem token, o pedido é criado normalmente e nenhuma preferência é criada, mesmo padrão de "degrada graciosamente" já usado por `WhatsAppNotificationSender`.
+- `AppUrlOptions` (Infrastructure) guarda os dois domínios públicos da aplicação (`App:PublicUrl` para o SPA, `App:ApiPublicUrl` para a API) — necessários porque o gateway precisa de URLs absolutas para `back_urls` (redirecionamento pós-pagamento, aponta para `{PublicUrl}/pedido/{orderId}`) e `notification_url` (webhook, aponta para `{ApiPublicUrl}/api/payments/mercadopago/webhook`); em produção os dois coincidem (mesma origem via proxy do Nginx), em dev local são `:4200`/`:5120`.
+
+### Fluxo de criação do pedido
+
+- `OrderService.CreateStoreOrderAsync`: depois de persistir o pedido, monta o `OrderDto` (`ToDto`) e, se `_paymentGateway.IsConfigured`, chama `CreatePreferenceAsync` com a descrição fixa "Pedido Ateliê Layette Baby", o valor de `order.Total` e o e-mail do cliente; se uma preferência foi criada, `dto = dto with { PaymentUrl = preference.CheckoutUrl }`. `OrderDto.PaymentUrl` é `string?` com default `null` — só é preenchido nessa resposta específica de criação, nunca persistido nem devolvido por `GetByIdAsync`/`ListAsync` (o pedido já foi criado; redirecionar de novo não faz sentido depois da primeira resposta).
+- `checkout.ts` (`submit()`): ao receber a resposta de `createStoreOrder`, se `order.paymentUrl` existe, faz `window.location.href = order.paymentUrl` (redirecionamento de página inteira, necessário por ser uma URL de terceiro — não uma rota Angular) em vez de `router.navigate(['/pedido', order.id])`; sem `paymentUrl` (gateway não configurado), o comportamento é o mesmo de antes deste requisito.
+
+### Webhook e confirmação de pagamento
+
+- `PaymentEndpoints.MapPaymentEndpoints` (`POST /api/payments/mercadopago/webhook`, sem autenticação — é chamado pelo Mercado Pago, não por um usuário logado): extrai o id do pagamento da query string (`data.id` ou, formato legado, `id`) ou, se ausente, do corpo JSON (`{ data: { id } }`); com um id em mãos, chama `IOrderService.HandlePaymentWebhookAsync(paymentId)`. Sempre devolve `200 OK`, mesmo sem id reconhecível — o Mercado Pago reenvia notificações que recebem erro, então uma notificação genuinamente não-processável deve ser silenciosamente confirmada, não retentada para sempre.
+- `OrderService.HandlePaymentWebhookAsync(paymentId)`: chama `IPaymentGateway.GetPaymentAsync(paymentId)` (nunca usa dados vindos direto do payload do webhook — só o id), resolve o pedido pelo `external_reference` (parseado como `Guid`) e aplica `MarkPaymentApproved`/`MarkPaymentRejected` conforme o `status` retornado pela API (`approved` → aprovado; `rejected`/`cancelled` → recusado; qualquer outro, incluindo `pending`/`in_process`, não altera nada). Todo caminho de saída antecipada (gateway não configurado, id não encontrado, `external_reference` malformado, pedido inexistente) apenas retorna, sem lançar — reforça a garantia de sempre-200 do endpoint.
+
+### Frontend — exibição do status de pagamento
+
+- `order.model.ts`: novo tipo `PaymentStatus` e `PAYMENT_STATUS_LABELS` (mesmo padrão de `ORDER_STATUS_LABELS`); `Order` ganha `paymentStatus`, `externalPaymentId`, `paymentUrl`.
+- `order-confirmation.html` e `admin-order-detail.html`: um selo de texto colorido (verde/`Pago`, vermelho/`Recusado`, cinza/`Pendente`) ao lado do selo de status do pedido já existente — mesma ideia visual, eixo diferente (pagamento vs. produção/entrega).

@@ -260,3 +260,18 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 26.4 Nova tela `/admin/galeria` (`admin-gallery.ts`/`.html`, grade com botão de excluir por foto + botão de adicionar) + link no menu lateral
   - [x] 26.5 `dotnet test`/`ng test` completos (107+4 novos testes de domínio, 31 frontend); verificado via API (`curl`: upload, list, delete com confirmação de que o arquivo físico some) e no navegador (upload/exclusão refletidos em `/admin/galeria` e `/galeria`, lightbox continua funcionando)
   - [x] 26.6 `README.md` (RF38, RF39) e `spec/requirements.md`/`spec/design.md` (Requisitos 25, 26) atualizados
+
+- [x] 27. Pagamento online no checkout via Mercado Pago (Requisito 27 / RF40, design em `spec/design.md`)
+  - Backend
+    - [x] 27.1 `PaymentStatus` (Domain/Enums); `Order.PaymentStatus`/`ExternalPaymentId` + `MarkPaymentApproved`/`MarkPaymentRejected` (idempotentes — nunca rebaixam um pagamento já `Pago`); migration `AddOrderPaymentStatus`
+    - [x] 27.2 `IPaymentGateway` (Application/Abstractions); `MercadoPagoGateway`/`MercadoPagoOptions`/`AppUrlOptions` (Infrastructure/Payments) — `HttpClient` para `https://api.mercadopago.com/`, degrada graciosamente (sem token configurado, `IsConfigured = false`, nenhuma preferência é criada), mesmo padrão do `INotificationSender`
+    - [x] 27.3 `OrderService.CreateStoreOrderAsync` cria a preferência de pagamento e anexa `PaymentUrl` ao `OrderDto` quando o gateway está configurado; `HandlePaymentWebhookAsync` reconsulta o pagamento na API do Mercado Pago (nunca confia no payload do webhook) e atualiza o pedido pelo `external_reference`
+    - [x] 27.4 `PaymentEndpoints` (`POST /api/payments/mercadopago/webhook`, sempre HTTP 200) registrado em `Program.cs`
+  - Frontend
+    - [x] 27.5 `order.model.ts`: `PaymentStatus`, `PAYMENT_STATUS_LABELS`, `Order.paymentStatus`/`externalPaymentId`/`paymentUrl`
+    - [x] 27.6 `checkout.ts`: redireciona (`window.location.href`) para `order.paymentUrl` quando presente, em vez de ir direto para a confirmação
+    - [x] 27.7 `order-confirmation.html`/`admin-order-detail.html`: selo de status de pagamento ao lado do selo de status do pedido
+  - Verificação e documentação
+    - [x] 27.8 `dotnet test`/`ng test` completos (111 backend, incluindo 4 novos testes de domínio para `MarkPaymentApproved`/`MarkPaymentRejected`; 31 frontend); `dotnet build`/`ng build` sem erros
+    - [ ] 27.9 Verificação end-to-end com credenciais reais do Mercado Pago — bloqueada até o ateliê criar a conta e fornecer o Access Token (o webhook só é alcançável publicamente após deploy, não é testável do dev local sem um túnel)
+    - [x] 27.10 `README.md` (RF40) e `spec/requirements.md`/`spec/design.md` (Requisito 27) atualizados

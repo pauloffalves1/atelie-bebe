@@ -192,6 +192,8 @@ dotnet run --project src/AtelieBebe.Api        # http://localhost:5120
 
 `appsettings.json` mantém `Jwt:Secret` vazio de propósito — o valor real fica apenas no cofre local do [`dotnet user-secrets`](https://learn.microsoft.com/aspnet/core/security/app-secrets), fora do controle de versão. Sem esse passo, a API sobe normalmente mas a geração de token falha em tempo de execução (chave curta demais para HMAC-SHA256).
 
+`MercadoPago:AccessToken` (RF40) segue o mesmo padrão — vazio em `appsettings.json`, configurado localmente via `dotnet user-secrets set "MercadoPago:AccessToken" "<token>" --project src/AtelieBebe.Api` e, em produção, pela variável de ambiente `MercadoPago__AccessToken`. Sem token configurado, o checkout de loja funciona normalmente, só sem oferecer pagamento online (`IPaymentGateway.IsConfigured` retorna `false`, e `CreatePreferenceAsync` não é chamado).
+
 Ao subir, a API aplica automaticamente as migrations pendentes e semeia um administrador padrão (`admin@ateliebebe.com.br` / `admin123`, salvo configuração em contrário) e um catálogo de produtos de exemplo. O banco SQLite fica em `src/AtelieBebe.Api/atelie-bebe.db`.
 
 Para gerar/aplicar migrations:
@@ -271,6 +273,7 @@ npm test        # testes unitários (Vitest)
 | RF37 | O sistema deve permitir que o administrador troque, pelo painel (`/admin/imagens`), a foto principal da página inicial e a foto da página "Sobre", enviando um arquivo diretamente, sem precisar de deploy de código | Administrador |
 | RF38 | O sistema deve permitir que o administrador envie a foto de um produto como arquivo (upload), além de continuar aceitando colar uma URL, no formulário de produto do admin | Administrador |
 | RF39 | O sistema deve permitir que o administrador adicione e remova fotos da galeria pública (`/galeria`) pelo painel administrativo (`/admin/galeria`), sem precisar de deploy de código | Administrador |
+| RF40 | O sistema deve oferecer PIX, boleto e cartão de crédito como meios de pagamento no checkout de loja, via Mercado Pago Checkout Pro: ao criar o pedido, se o gateway estiver configurado, o cliente é redirecionado a uma página de pagamento hospedada; o status do pagamento (`Orders.PaymentStatus`) é atualizado de forma assíncrona via webhook (`POST /api/payments/mercadopago/webhook`), sempre reconsultando a API do Mercado Pago pelo id do pagamento em vez de confiar no conteúdo da notificação; sem gateway configurado, o pedido é criado normalmente, sem redirecionamento | Cliente / Sistema |
 
 ### Requisitos não funcionais
 
@@ -324,6 +327,7 @@ npm test        # testes unitários (Vitest)
 
   `Entregue` e `Cancelado` são estados terminais: nenhuma transição é permitida a partir deles. Qualquer transição fora do mapa acima é rejeitada com erro de domínio.
 - Toda transição de status válida emite `OrderStatusChangedDomainEvent` (notificação ao cliente); a criação/confirmação de um pedido emite `OrderCreatedDomainEvent`.
+- O pagamento é rastreado separadamente do status de produção/entrega, em `Orders.PaymentStatus` (`Pendente` | `Pago` | `Recusado`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo. Ao criar um pedido de loja, se o gateway de pagamento (Mercado Pago) estiver configurado, uma preferência de Checkout Pro é criada e sua URL é devolvida na resposta (`PaymentUrl`) para redirecionar o cliente; sem configuração (`MercadoPago:AccessToken` em branco), o pedido é criado normalmente e nenhuma URL é retornada — igual ao padrão já usado para notificações via WhatsApp. O webhook (`POST /api/payments/mercadopago/webhook`) nunca confia no conteúdo da notificação recebida, apenas no id do pagamento: sempre reconsulta `GET /v1/payments/{id}` na API do Mercado Pago antes de atualizar o pedido correspondente (`external_reference`), e a marcação como `Pago` é idempotente — uma notificação duplicada ou fora de ordem nunca rebaixa um pagamento já aprovado.
 
 ### Contas de cliente e administrador
 

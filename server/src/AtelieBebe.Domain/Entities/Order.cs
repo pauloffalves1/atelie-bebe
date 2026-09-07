@@ -29,6 +29,8 @@ public sealed class Order : Entity, IAggregateRoot
     public string? CustomDetailsJson { get; private set; }
     public string? ShippingAddressJson { get; private set; }
     public Money ShippingCost { get; private set; } = Money.Zero();
+    public PaymentStatus PaymentStatus { get; private set; } = PaymentStatus.Pendente;
+    public string? ExternalPaymentId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -92,6 +94,25 @@ public sealed class Order : Entity, IAggregateRoot
             throw new DomainException("O pedido precisa ter pelo menos um item.");
 
         AddDomainEvent(new OrderCreatedDomainEvent(Id, CustomerName, CustomerEmail.Value, CustomerPhone!, Total.Amount));
+    }
+
+    /// <summary>Idempotent — a payment confirmed as paid is never downgraded by a later/duplicate notification.</summary>
+    public void MarkPaymentApproved(string externalPaymentId)
+    {
+        if (PaymentStatus == PaymentStatus.Pago) return;
+
+        PaymentStatus = PaymentStatus.Pago;
+        ExternalPaymentId = externalPaymentId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void MarkPaymentRejected(string? externalPaymentId)
+    {
+        if (PaymentStatus == PaymentStatus.Pago) return;
+
+        PaymentStatus = PaymentStatus.Recusado;
+        ExternalPaymentId = externalPaymentId;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void ChangeStatus(OrderStatus newStatus)

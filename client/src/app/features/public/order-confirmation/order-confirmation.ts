@@ -3,7 +3,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SITE_NAME } from '../../../core/constants/site';
-import { Order, ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from '../../../core/models/order.model';
+import {
+  Order,
+  ORDER_STATUS_FLOW,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+} from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
 
 @Component({
@@ -18,6 +23,7 @@ export class OrderConfirmation implements OnInit {
   readonly notFound = signal(false);
   readonly statusLabels = ORDER_STATUS_LABELS;
   readonly statusFlow = ORDER_STATUS_FLOW;
+  readonly paymentStatusLabels = PAYMENT_STATUS_LABELS;
 
   private readonly title = inject(Title);
 

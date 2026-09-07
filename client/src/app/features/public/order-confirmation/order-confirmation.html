@@ -23,7 +23,14 @@
                 <span class="small text-secondary d-block">Pedido</span>
                 <span class="fw-bold">#{{ o.id.slice(0, 8) }}</span>
               </div>
-              <span class="status-pill" [class]="'status-' + o.status">{{ statusLabels[o.status] }}</span>
+              <div class="d-flex flex-column align-items-end gap-1">
+                <span class="status-pill" [class]="'status-' + o.status">{{ statusLabels[o.status] }}</span>
+                <span class="small" [class.text-success]="o.paymentStatus === 'Pago'"
+                      [class.text-danger]="o.paymentStatus === 'Recusado'"
+                      [class.text-secondary]="o.paymentStatus === 'Pendente'">
+                  {{ paymentStatusLabels[o.paymentStatus] }}
+                </span>
+              </div>
             </div>
 
             @if (o.status !== 'Cancelado') {

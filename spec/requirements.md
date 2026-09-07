@@ -414,3 +414,21 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. QUANDO uma foto é removida, O SISTEMA DEVE apagar o registro E o arquivo salvo em disco, e ela deixa de aparecer em `/galeria` imediatamente.
 4. QUANDO não há nenhuma foto cadastrada ainda, a página pública `/galeria` exibe um conjunto de imagens de exemplo (placeholder), para a página não ficar vazia antes do primeiro upload.
 5. Mesmos limites de formato/tamanho do Requisito 24 (JPG/PNG/WEBP, até 8MB).
+
+---
+
+## Requisito 27: Pagamento online no checkout (Mercado Pago)
+
+**User Story:** Como ateliê, quero oferecer PIX, boleto e cartão de crédito como formas de pagamento no checkout, para que o cliente pague no ato da compra em vez de combinar o pagamento por fora.
+
+**Rastreamento:** RF40.
+
+**Acceptance Criteria**
+1. QUANDO um pedido de loja é criado (`POST /api/orders/store`) E o gateway de pagamento está configurado (`MercadoPago:AccessToken` presente), O SISTEMA DEVE criar uma preferência de pagamento no Mercado Pago (Checkout Pro) para o valor total do pedido e devolver a URL de pagamento na resposta (`PaymentUrl`).
+2. QUANDO o gateway de pagamento NÃO está configurado, O SISTEMA DEVE criar o pedido normalmente, sem `PaymentUrl` e sem erro — o comportamento é idêntico ao de antes deste requisito.
+3. O frontend, ao receber uma `PaymentUrl` na resposta do checkout, DEVE redirecionar o navegador do cliente para essa URL (a página de pagamento hospedada pelo Mercado Pago) em vez de ir direto para a confirmação do pedido.
+4. O SISTEMA DEVE expor um endpoint de webhook (`POST /api/payments/mercadopago/webhook`) que, ao ser chamado pelo Mercado Pago, reconsulta o status do pagamento diretamente na API do Mercado Pago (nunca confia no status vindo no corpo da notificação) e atualiza `Orders.PaymentStatus` do pedido correspondente (localizado pelo `external_reference`, que é o id do pedido).
+5. O SISTEMA DEVE tratar como aprovado (`PaymentStatus = Pago`) apenas o status `approved` do Mercado Pago, e como recusado (`PaymentStatus = Recusado`) os status `rejected` e `cancelled`; qualquer outro status (`pending`, `in_process`, etc.) NÃO altera o `PaymentStatus` atual do pedido, que permanece `Pendente`.
+6. UMA VEZ que um pedido está com `PaymentStatus = Pago`, o SISTEMA NÃO DEVE rebaixá-lo para `Recusado` ou `Pendente` em razão de uma notificação de webhook posterior, duplicada ou fora de ordem (idempotência).
+7. O endpoint de webhook DEVE sempre responder HTTP 200, mesmo quando a notificação vem malformada, sem id de pagamento reconhecível, ou referenciando um pedido inexistente — para que o Mercado Pago não fique retentando indefinidamente uma notificação que nunca vai ser processável.
+8. `PaymentStatus` (`Pendente` | `Pago` | `Recusado`) é independente do status de produção/entrega do pedido (`Order.Status`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo.

@@ -26,7 +26,10 @@ public sealed record OrderDto(
     string? ShippingAddressJson,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    IReadOnlyList<OrderItemDto> Items);
+    IReadOnlyList<OrderItemDto> Items,
+    string PaymentStatus,
+    string? ExternalPaymentId,
+    string? PaymentUrl = null);
 
 public sealed record CreateOrderItemRequest(Guid? ProductId, string ProductName, decimal UnitPrice, int Quantity, string? OptionsJson);
 

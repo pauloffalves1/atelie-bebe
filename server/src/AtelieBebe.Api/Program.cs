@@ -81,6 +81,7 @@ app.MapContactEndpoints();
 app.MapCustomerEndpoints();
 app.MapSiteImageEndpoints();
 app.MapGalleryEndpoints();
+app.MapPaymentEndpoints();
 
 await DbInitializer.InitializeAsync(app.Services);
 

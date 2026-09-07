@@ -1,5 +1,6 @@
 export type OrderStatus = 'Recebido' | 'EmProducao' | 'Pronto' | 'Enviado' | 'Entregue' | 'Cancelado';
 export type OrderType = 'Loja' | 'Personalizada';
+export type PaymentStatus = 'Pendente' | 'Pago' | 'Recusado';
 
 export interface OrderItem {
   id: string;
@@ -29,6 +30,9 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   items: OrderItem[];
+  paymentStatus: PaymentStatus;
+  externalPaymentId: string | null;
+  paymentUrl: string | null;
 }
 
 export interface CreateOrderItemRequest {
@@ -92,3 +96,9 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 export const ORDER_STATUS_FLOW: OrderStatus[] = ['Recebido', 'EmProducao', 'Pronto', 'Enviado', 'Entregue'];
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  Pendente: 'Pagamento pendente',
+  Pago: 'Pagamento aprovado',
+  Recusado: 'Pagamento recusado',
+};
