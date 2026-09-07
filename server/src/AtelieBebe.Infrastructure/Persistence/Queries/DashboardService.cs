@@ -38,14 +38,33 @@ public sealed class DashboardService : IDashboardService
             .Select(o => new RecentOrderSummaryDto(o.Id, o.CustomerName, o.Status.ToString(), o.Total.Amount, o.CreatedAt))
             .ToList();
 
+        var topProducts = orders
+            .SelectMany(o => o.Items)
+            .GroupBy(i => i.ProductName)
+            .Select(g => new TopProductDto(g.Key, g.Sum(i => i.Quantity), g.Sum(i => i.Subtotal.Amount)))
+            .OrderByDescending(p => p.QuantitySold)
+            .Take(5)
+            .ToList();
+
+        var salesWindowStart = DateTime.UtcNow.Date.AddDays(-29);
+        var salesLast30Days = orders
+            .Where(o => o.CreatedAt >= salesWindowStart)
+            .GroupBy(o => o.CreatedAt.Date)
+            .Select(g => new SalesByDayDto(g.Key, g.Sum(o => o.Total.Amount), g.Count()))
+            .OrderBy(s => s.Date)
+            .ToList();
+
         return new DashboardDto(
             TotalOrders: orders.Count,
             OpenOrders: orders.Count(o => o.Status is OrderStatus.Recebido or OrderStatus.EmProducao or OrderStatus.Pronto or OrderStatus.Enviado),
             RevenueTotal: orders.Sum(o => o.Total.Amount),
             RevenueThisMonth: orders.Where(o => o.CreatedAt >= startOfMonth).Sum(o => o.Total.Amount),
+            AverageOrderValue: orders.Count > 0 ? Math.Round(orders.Sum(o => o.Total.Amount) / orders.Count, 2) : 0,
             TotalProducts: totalProducts,
             TotalCustomers: totalCustomers,
             OrdersByStatus: ordersByStatus,
-            RecentOrders: recentOrders);
+            RecentOrders: recentOrders,
+            TopProducts: topProducts,
+            SalesLast30Days: salesLast30Days);
     }
 }

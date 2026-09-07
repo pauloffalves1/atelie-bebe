@@ -67,7 +67,7 @@ public static class OrderEndpoints
     {
         var culture = CultureInfo.GetCultureInfo("pt-BR");
         var sb = new StringBuilder();
-        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Produto;Quantidade;Bordado;Cor da linha;Subtotal;Frete;Total;Código de rastreio");
+        sb.AppendLine("Pedido;Data;Cliente;E-mail;Telefone;Tipo;Status;Pagamento;Produto;Quantidade;Bordado;Cor da linha;Subtotal;Frete;Cupom;Desconto do cupom;Total;Código de rastreio");
 
         foreach (var o in orders)
         {
@@ -86,6 +86,8 @@ public static class OrderEndpoints
             {
                 o.ItemsTotal.ToString("0.00", culture),
                 o.ShippingCost.ToString("0.00", culture),
+                Escape(o.CouponCode ?? ""),
+                o.CouponDiscountAmount.ToString("0.00", culture),
                 o.Total.ToString("0.00", culture),
                 Escape(o.TrackingCode ?? ""),
             };

@@ -33,6 +33,8 @@ export interface Order {
   paymentStatus: PaymentStatus;
   externalPaymentId: string | null;
   trackingCode: string | null;
+  couponCode: string | null;
+  couponDiscountAmount: number;
   paymentUrl: string | null;
 }
 
@@ -53,6 +55,7 @@ export interface CreateStoreOrderRequest {
   shippingAddressJson: string | null;
   shippingCost: number;
   items: CreateOrderItemRequest[];
+  couponCode?: string | null;
 }
 
 export interface CustomOrderDetails {

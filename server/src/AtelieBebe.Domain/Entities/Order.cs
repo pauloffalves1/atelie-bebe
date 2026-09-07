@@ -32,6 +32,8 @@ public sealed class Order : Entity, IAggregateRoot
     public PaymentStatus PaymentStatus { get; private set; } = PaymentStatus.Pendente;
     public string? ExternalPaymentId { get; private set; }
     public string? TrackingCode { get; private set; }
+    public string? CouponCode { get; private set; }
+    public Money CouponDiscountAmount { get; private set; } = Money.Zero();
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -39,7 +41,7 @@ public sealed class Order : Entity, IAggregateRoot
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
     public Money ItemsTotal => _items.Aggregate(Money.Zero(), (acc, item) => acc.Add(item.Subtotal));
-    public Money Total => ItemsTotal.Add(ShippingCost);
+    public Money Total => ItemsTotal.Add(ShippingCost).Subtract(CouponDiscountAmount);
 
     private Order() { } // EF Core
 
@@ -113,6 +115,17 @@ public sealed class Order : Entity, IAggregateRoot
 
         PaymentStatus = PaymentStatus.Recusado;
         ExternalPaymentId = externalPaymentId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Applies a coupon's discount to this order — the caller (Application layer) already validated the coupon and computed the discount amount from <see cref="ItemsTotal"/>.</summary>
+    public void ApplyCoupon(string code, Money discountAmount)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            throw new DomainException("O código do cupom é obrigatório.");
+
+        CouponCode = code.Trim().ToUpperInvariant();
+        CouponDiscountAmount = discountAmount;
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -268,4 +268,36 @@ public class OrderTests
 
         Assert.Null(order.TrackingCode);
     }
+
+    [Fact]
+    public void ApplyCoupon_Valid_ReducesTotal()
+    {
+        var order = CreateStoreOrder();
+        order.AddItem(Guid.NewGuid(), "Body Manga Longa", Money.FromReais(100m), 1);
+
+        order.ApplyCoupon("promo10", Money.FromReais(10m));
+
+        Assert.Equal("PROMO10", order.CouponCode);
+        Assert.Equal(10m, order.CouponDiscountAmount.Amount);
+        Assert.Equal(90m, order.Total.Amount);
+    }
+
+    [Fact]
+    public void ApplyCoupon_DiscountLargerThanTotal_ClampsAtZero()
+    {
+        var order = CreateStoreOrder();
+        order.AddItem(Guid.NewGuid(), "Item barato", Money.FromReais(5m), 1);
+
+        order.ApplyCoupon("BIGDISCOUNT", Money.FromReais(50m));
+
+        Assert.Equal(0m, order.Total.Amount);
+    }
+
+    [Fact]
+    public void ApplyCoupon_WithEmptyCode_Throws()
+    {
+        var order = CreateStoreOrder();
+
+        Assert.Throws<DomainException>(() => order.ApplyCoupon(" ", Money.FromReais(10m)));
+    }
 }

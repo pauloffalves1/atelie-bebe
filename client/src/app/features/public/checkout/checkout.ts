@@ -6,6 +6,7 @@ import { catchError, debounceTime, distinctUntilChanged, filter, map, of, switch
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { CepService } from '../../../core/services/cep.service';
+import { CouponService } from '../../../core/services/coupon.service';
 import { OrderService } from '../../../core/services/order.service';
 import { ShippingService } from '../../../core/services/shipping.service';
 import { ShippingAddress } from '../../../core/models/order.model';
@@ -21,6 +22,7 @@ export class Checkout implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cepService = inject(CepService);
   private readonly shippingService = inject(ShippingService);
+  private readonly couponService = inject(CouponService);
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -28,9 +30,17 @@ export class Checkout implements OnInit {
   readonly cepError = signal<string | null>(null);
   readonly destinationState = signal('');
 
+  readonly couponCode = signal('');
+  readonly couponApplying = signal(false);
+  readonly couponError = signal<string | null>(null);
+  readonly couponDiscountAmount = signal(0);
+  readonly appliedCouponCode = signal<string | null>(null);
+
   readonly shippingCost = computed(() =>
     this.shippingService.estimate(this.destinationState(), this.cart.totalItems()),
   );
+
+  readonly total = computed(() => Math.max(0, this.cart.totalPrice() + this.shippingCost() - this.couponDiscountAmount()));
 
   readonly form = this.fb.nonNullable.group({
     customerName: ['', Validators.required],
@@ -119,6 +129,39 @@ export class Checkout implements OnInit {
       });
   }
 
+  applyCoupon(): void {
+    const code = this.couponCode().trim();
+    if (!code) return;
+
+    this.couponApplying.set(true);
+    this.couponError.set(null);
+
+    this.couponService.validate(code, this.cart.totalPrice()).subscribe({
+      next: (result) => {
+        this.couponApplying.set(false);
+        if (!result.valid) {
+          this.couponError.set(result.error ?? 'Cupom inválido.');
+          this.couponDiscountAmount.set(0);
+          this.appliedCouponCode.set(null);
+          return;
+        }
+        this.couponDiscountAmount.set(result.discountAmount);
+        this.appliedCouponCode.set(code.toUpperCase());
+      },
+      error: (err) => {
+        this.couponApplying.set(false);
+        this.couponError.set(err?.error?.detail ?? 'Não foi possível validar o cupom.');
+      },
+    });
+  }
+
+  removeCoupon(): void {
+    this.couponCode.set('');
+    this.couponDiscountAmount.set(0);
+    this.appliedCouponCode.set(null);
+    this.couponError.set(null);
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -148,6 +191,7 @@ export class Checkout implements OnInit {
         notes: value.notes || null,
         shippingAddressJson: JSON.stringify(shippingAddress),
         shippingCost: this.shippingCost(),
+        couponCode: this.appliedCouponCode(),
         items: this.cart.items().map((item) => ({
           productId: item.product.id,
           productName: item.product.name,

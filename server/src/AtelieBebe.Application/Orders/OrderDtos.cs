@@ -30,6 +30,8 @@ public sealed record OrderDto(
     string PaymentStatus,
     string? ExternalPaymentId,
     string? TrackingCode,
+    string? CouponCode,
+    decimal CouponDiscountAmount,
     string? PaymentUrl = null);
 
 public sealed record CreateOrderItemRequest(Guid? ProductId, string ProductName, decimal UnitPrice, int Quantity, string? OptionsJson);
@@ -42,7 +44,8 @@ public sealed record CreateStoreOrderRequest(
     string? Notes,
     string? ShippingAddressJson,
     decimal ShippingCost,
-    IReadOnlyList<CreateOrderItemRequest> Items);
+    IReadOnlyList<CreateOrderItemRequest> Items,
+    string? CouponCode = null);
 
 public sealed record CreateCustomOrderRequest(
     string CustomerName,

@@ -28,6 +28,13 @@ public sealed class Money : ValueObject
         return new Money(Amount + other.Amount, Currency);
     }
 
+    /// <summary>Clamped at zero — a discount larger than the amount being discounted never produces a negative total.</summary>
+    public Money Subtract(Money other)
+    {
+        EnsureSameCurrency(other);
+        return new Money(Math.Max(0m, Math.Round(Amount - other.Amount, 2, MidpointRounding.AwayFromZero)), Currency);
+    }
+
     public Money Multiply(int factor)
     {
         if (factor < 0) throw new DomainException("O fator de multiplicação não pode ser negativo.");

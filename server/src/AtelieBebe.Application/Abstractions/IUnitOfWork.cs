@@ -17,6 +17,7 @@ public interface IUnitOfWork
     IGalleryImageRepository GalleryImages { get; }
     IProductReviewRepository ProductReviews { get; }
     IPasswordResetTokenRepository PasswordResetTokens { get; }
+    ICouponRepository Coupons { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

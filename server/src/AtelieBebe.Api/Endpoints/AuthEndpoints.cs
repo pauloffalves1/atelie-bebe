@@ -13,7 +13,8 @@ public static class AuthEndpoints
             Results.Ok(await service.RegisterAsync(request, ct)));
 
         customerGroup.MapPost("/login", async (LoginRequest request, ICustomerAuthService service, CancellationToken ct) =>
-            Results.Ok(await service.LoginAsync(request, ct)));
+            Results.Ok(await service.LoginAsync(request, ct)))
+            .RequireRateLimiting("auth");
 
         customerGroup.MapGet("/me", async (HttpContext http, ICustomerAuthService service, CancellationToken ct) =>
             Results.Ok(await service.GetProfileAsync(http.User.GetUserId(), ct)))
@@ -29,17 +30,18 @@ public static class AuthEndpoints
         {
             await service.ResetPasswordAsync(request.Token, request.NewPassword, ct);
             return Results.NoContent();
-        });
+        }).RequireRateLimiting("auth");
 
         customerGroup.MapPost("/delete-account", async (DeleteAccountRequest request, HttpContext http, ICustomerAuthService service, CancellationToken ct) =>
         {
             await service.DeleteAccountAsync(http.User.GetUserId(), request.Password, ct);
             return Results.NoContent();
-        }).RequireAuthorization("CustomerOnly");
+        }).RequireAuthorization("CustomerOnly").RequireRateLimiting("auth");
 
         var adminGroup = app.MapGroup("/api/admin/auth").WithTags("Autenticação (admin)");
 
         adminGroup.MapPost("/login", async (AdminLoginRequest request, IAdminAuthService service, CancellationToken ct) =>
-            Results.Ok(await service.LoginAsync(request, ct)));
+            Results.Ok(await service.LoginAsync(request, ct)))
+            .RequireRateLimiting("auth");
     }
 }

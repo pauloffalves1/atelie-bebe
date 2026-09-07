@@ -451,3 +451,34 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 42.6 Verificado via curl local os dois caminhos: cliente sem pedido → remoção total (some da lista admin); cliente com pedido → anonimização (`isAnonymized: true`, dados do pedido permanecem com nome/e-mail originais); senha errada rejeitada nos dois casos. Fluxo de remoção também confirmado no navegador (login → excluir conta → sessão encerrada → redirecionado à home)
     - [x] 42.7 `README.md` (RF53) e `spec/requirements.md`/`spec/design.md` (Requisito 41) atualizados
+
+- [x] 48. Cupons de desconto (Requisito 47 / RF59, design em `spec/design.md`)
+  - Backend
+    - [x] 48.1 `Money.Subtract` (clampado em zero); `Coupon` (Domain, `IsValid`/`RecordUse`); `ICouponRepository`/`CouponRepository`; migration `AddCouponsAndOrderCoupon`; testes de domínio (10 casos novos entre `CouponTests` e `Order.ApplyCoupon`)
+    - [x] 48.2 `Order.CouponCode`/`CouponDiscountAmount`/`ApplyCoupon`; `Total` passa a subtrair o desconto do cupom
+    - [x] 48.3 `CouponService` (`CreateAsync`/`ListAsync`/`SetActiveAsync`/`ValidateAsync`); `OrderService.CreateStoreOrderAsync` valida e aplica o cupom antes de `Submit()`, incrementa `UsesCount`
+    - [x] 48.4 `POST /api/coupons/validate` (público); `/api/admin/coupons` (criar/listar/ativar-desativar)
+  - Frontend
+    - [x] 48.5 `admin-coupon-list.ts`/`.html` (`/admin/cupons`, link na sidebar) — criação + tabela com toggle ativo/inativo
+    - [x] 48.6 `checkout.ts`/`.html`: campo de cupom, `applyCoupon()`/`removeCoupon()`, linha de desconto no resumo, `couponCode` enviado no pedido; exibição em `order-confirmation.html`/`admin-order-detail.html`; coluna no CSV
+  - Verificação e documentação
+    - [x] 48.7 `dotnet test` (147+20); verificado via curl: cupom criado, validado (`discountAmount` correto), pedido criado com o cupom aplicado (`couponDiscountAmount` refletido no `total`, `unitPrice` malicioso do cliente ignorado), `usesCount` incrementado; verificado no navegador: cupom aplicado no checkout mostra desconto e novo total corretos
+    - [x] 48.8 `README.md` (RF59) e `spec/requirements.md`/`spec/design.md` (Requisito 47) atualizados
+
+- [x] 49. Proteção contra força bruta (Requisito 48 / RF60, design em `spec/design.md`)
+  - [x] 49.1 `AddRateLimiter` com política `"auth"` (5/min, partição por IP + caminho da requisição); aplicada a login (cliente/admin), reset-password, delete-account e validação de cupom
+  - [x] 49.2 `ForwardedHeadersOptions`/`UseForwardedHeaders` para o rate limiter enxergar o IP real do visitante atrás do Nginx em produção
+  - [x] 49.3 Bug encontrado e corrigido na primeira verificação: a partição por IP sozinho fazia force-brute no login do admin bloquear também o login do cliente e a validação de cupom para o mesmo visitante — corrigido incluindo o caminho da requisição na chave de partição
+  - [x] 49.4 Verificado via curl: 5 tentativas de login do admin com senha errada retornam 401, a 6ª retorna 429; login de cliente e validação de cupom continuam respondendo normalmente no mesmo momento (endpoints independentes)
+  - [x] 49.5 `README.md` (RF60) e `spec/requirements.md`/`spec/design.md` (Requisito 48) atualizados
+
+- [x] 50. Health check para monitoramento (Requisito 49 / RF61, design em `spec/design.md`)
+  - [x] 50.1 `DatabaseHealthCheck` (`Api/Health/`, `Database.CanConnectAsync()`, sem pacote NuGet extra); `GET /health`
+  - [x] 50.2 Verificado via curl: `GET /health` retorna `200 Healthy` com a API e o banco no ar
+  - [x] 50.3 `README.md` (RF61) e `spec/requirements.md`/`spec/design.md` (Requisito 49) atualizados
+
+- [x] 51. Métricas adicionais no painel administrativo (Requisito 50 / RF62, design em `spec/design.md`)
+  - [x] 51.1 `DashboardDto` ganha `AverageOrderValue`/`TopProducts`/`SalesLast30Days`, calculados a partir da mesma lista de pedidos já materializada por `GetSummaryAsync` (sem consulta extra)
+  - [x] 51.2 `admin-dashboard.html`/`.ts`: card de ticket médio, lista de produtos mais vendidos, gráfico de barras em CSS puro para vendas dos últimos 30 dias (sem biblioteca de gráficos)
+  - [x] 51.3 Verificado via curl (dados agregados corretos) e no navegador (as três seções renderizando com dados reais do dashboard)
+  - [x] 51.4 `README.md` (RF62) e `spec/requirements.md`/`spec/design.md` (Requisito 50) atualizados

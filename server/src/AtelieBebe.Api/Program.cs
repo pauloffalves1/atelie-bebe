@@ -1,11 +1,16 @@
+using System.Net;
 using System.Text;
+using System.Threading.RateLimiting;
 using AtelieBebe.Api.Endpoints;
+using AtelieBebe.Api.Health;
 using AtelieBebe.Api.Middleware;
 using AtelieBebe.Application;
 using AtelieBebe.Infrastructure;
 using AtelieBebe.Infrastructure.Persistence;
 using AtelieBebe.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,9 +57,41 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod());
 });
 
+// Nginx (production) sits in front of Kestrel on the same host — without this, every request's
+// RemoteIpAddress would be Nginx's own loopback address, making the per-IP rate limiter below
+// useless (it would lump every real visitor into a single bucket instead of one per client).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownProxies.Add(IPAddress.Loopback);
+    options.KnownProxies.Add(IPAddress.IPv6Loopback);
+});
+
+// Brute-force protection on the handful of endpoints where a wrong secret guess is the attack
+// (password login, password-reset token, account-deletion password confirmation) — 5 attempts per
+// minute per client IP *per endpoint*, no queueing (the 6th attempt in the window is rejected
+// immediately with 429). The path is part of the partition key so, e.g., failed admin-login
+// attempts never also lock a customer out of their own unrelated login or coupon check.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Request.Path}",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
+});
+
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database");
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
@@ -64,6 +101,9 @@ if (app.Environment.IsDevelopment())
 app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
+
+app.MapHealthChecks("/health");
 
 var uploadsPath = builder.Configuration["Uploads:Path"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
 Directory.CreateDirectory(uploadsPath);
@@ -84,6 +124,7 @@ app.MapGalleryEndpoints();
 app.MapPaymentEndpoints();
 app.MapSitemapEndpoints();
 app.MapReviewEndpoints();
+app.MapCouponEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapFakePaymentEndpoints();

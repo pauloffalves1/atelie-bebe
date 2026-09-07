@@ -46,6 +46,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/orders/admin-order-detail').then((m) => m.AdminOrderDetail),
       },
       {
+        path: 'cupons',
+        title: `Cupons — ${SITE_NAME}`,
+        loadComponent: () => import('./features/admin/coupons/admin-coupon-list').then((m) => m.AdminCouponList),
+      },
+      {
         path: 'mensagens',
         title: `Mensagens de contato — ${SITE_NAME}`,
         loadComponent: () =>

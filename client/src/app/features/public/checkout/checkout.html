@@ -125,15 +125,46 @@
             @for (item of cart.items(); track item.product.id) {
               <li class="d-flex justify-content-between mb-2">
                 <span>{{ item.quantity }}x {{ item.product.name }}</span>
-                <span>{{ item.product.price * item.quantity | currency:'BRL' }}</span>
+                <span>{{ item.product.effectivePrice * item.quantity | currency:'BRL' }}</span>
               </li>
             }
           </ul>
           <hr>
+
+          <div class="mb-3">
+            @if (appliedCouponCode()) {
+              <div class="d-flex justify-content-between align-items-center small">
+                <span><i class="bi bi-ticket-perforated me-1"></i>Cupom <strong>{{ appliedCouponCode() }}</strong></span>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeCoupon()">Remover</button>
+              </div>
+            } @else {
+              <div class="input-group input-group-sm">
+                <input type="text" class="form-control text-uppercase" placeholder="Cupom de desconto"
+                  [value]="couponCode()" (input)="couponCode.set($any($event.target).value)">
+                <button type="button" class="btn btn-outline-primary" [disabled]="couponApplying()" (click)="applyCoupon()">
+                  @if (couponApplying()) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    Aplicar
+                  }
+                </button>
+              </div>
+              @if (couponError()) {
+                <div class="small text-danger mt-1">{{ couponError() }}</div>
+              }
+            }
+          </div>
+
           <div class="d-flex justify-content-between small mb-2">
             <span>Subtotal</span>
             <span>{{ cart.totalPrice() | currency:'BRL' }}</span>
           </div>
+          @if (couponDiscountAmount() > 0) {
+            <div class="d-flex justify-content-between small mb-2 text-success">
+              <span>Desconto do cupom</span>
+              <span>-{{ couponDiscountAmount() | currency:'BRL' }}</span>
+            </div>
+          }
           <div class="d-flex justify-content-between small mb-3">
             <span>Frete estimado</span>
             <span>{{ shippingCost() | currency:'BRL' }}</span>
@@ -141,7 +172,7 @@
           <hr>
           <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
             <span>Total</span>
-            <span class="text-blush">{{ cart.totalPrice() + shippingCost() | currency:'BRL' }}</span>
+            <span class="text-blush">{{ total() | currency:'BRL' }}</span>
           </div>
 
           @if (errorMessage()) {

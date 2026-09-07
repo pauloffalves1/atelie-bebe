@@ -700,3 +700,59 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. O SISTEMA DEVE exigir que uma cor seja escolhida antes de permitir adicionar o produto ao carrinho, da mesma forma que já exige o texto do bordado.
 3. Itens do carrinho com a mesma combinação de produto, texto e cor DEVEM ser tratados como a mesma linha (quantidades somadas); combinações diferentes DEVEM gerar linhas separadas.
 4. A cor escolhida DEVE ser exibida no carrinho, na confirmação do pedido e no detalhe administrativo da encomenda.
+
+---
+
+## Requisito 47: Cupons de desconto
+
+**User Story:** Como ateliê, quero criar cupons de desconto que o cliente digita no checkout, para campanhas de marketing pontuais (boas-vindas, datas comemorativas, etc.).
+
+**Rastreamento:** RF59.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE permitir que o administrador crie um cupom com código, percentual de desconto (1 a 99%), validade opcional e limite de usos opcional.
+2. QUANDO o cliente informa um código de cupom no checkout, O SISTEMA DEVE validar o cupom (existe, ativo, dentro da validade, dentro do limite de usos) antes de confirmar o pedido, mostrando o valor do desconto sem ainda contabilizar o uso.
+3. O desconto DEVE incidir apenas sobre o subtotal dos itens, nunca sobre o frete, e nunca DEVE deixar o total do pedido negativo.
+4. Um cupom que se torna inválido entre a validação e a confirmação do pedido (expirou, esgotou usos, foi desativado) DEVE ser rejeitado na confirmação, mesmo que a validação anterior tenha aprovado.
+5. QUANDO um pedido é confirmado com um cupom válido, O SISTEMA DEVE incrementar o contador de usos do cupom.
+6. O administrador DEVE poder desativar um cupom a qualquer momento, independente de validade ou limite de usos.
+
+---
+
+## Requisito 48: Proteção contra força bruta
+
+**User Story:** Como ateliê, quero que tentativas repetidas de adivinhar uma senha ou código sejam bloqueadas automaticamente, para reduzir o risco de invasão de contas.
+
+**Rastreamento:** RF60.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE limitar a 5 requisições por minuto, por combinação de IP do cliente e rota, os endpoints de login (cliente e admin), redefinição de senha, exclusão de conta e validação de cupom.
+2. A partir da 6ª requisição no mesmo minuto, o endpoint DEVE responder `429 Too Many Requests` sem processar a requisição.
+3. O limite de um endpoint NÃO DEVE afetar o limite de outro endpoint para o mesmo cliente — tentativas malsucedidas no login do admin, por exemplo, não podem bloquear o login de um cliente distinto.
+4. Em produção, atrás de um proxy reverso, o SISTEMA DEVE identificar o IP real do cliente (via cabeçalho encaminhado pelo proxy confiável), não o IP do próprio proxy.
+
+---
+
+## Requisito 49: Health check para monitoramento
+
+**User Story:** Como ateliê, quero um jeito automático de saber se o site caiu, para não depender de um cliente avisar que o site não abre.
+
+**Rastreamento:** RF61.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE expor uma rota pública (`GET /health`) que responde sucesso somente quando a API está no ar e consegue se conectar ao banco de dados.
+2. QUANDO o banco de dados está inacessível, a rota DEVE responder com um status de falha, mesmo que o processo da API continue rodando.
+
+---
+
+## Requisito 50: Métricas adicionais no painel administrativo
+
+**User Story:** Como ateliê, quero ver ticket médio, produtos mais vendidos e a evolução das vendas no painel, para entender o desempenho do negócio sem precisar exportar dados.
+
+**Rastreamento:** RF62.
+
+**Acceptance Criteria**
+1. O painel administrativo DEVE exibir o ticket médio dos pedidos (excluindo cancelados).
+2. O painel DEVE exibir os 5 produtos mais vendidos por quantidade, com a receita gerada por cada um.
+3. O painel DEVE exibir um gráfico com a receita diária dos últimos 30 dias.
+4. Essas métricas DEVEM ser calculadas a partir dos mesmos dados já usados para os indicadores existentes, sem exigir uma consulta adicional ao banco de dados.

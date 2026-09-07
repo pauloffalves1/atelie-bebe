@@ -336,6 +336,10 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 | RF56 | O sistema deve exportar a listagem de encomendas em CSV com uma linha por item do pedido (produto, quantidade, texto bordado e cor da linha), não uma linha por pedido | Administrador |
 | RF57 | O sistema deve coletar o endereço completo do cliente no cadastro (`/cadastro`), com preenchimento automático de rua/bairro/cidade/estado a partir do CEP via ViaCEP, no mesmo padrão já usado no checkout | Visitante |
 | RF58 | O sistema deve permitir que o cliente escolha a cor da linha de bordado (a partir de uma paleta fixa), junto do texto a bordar, ao adicionar qualquer produto ao carrinho | Cliente |
+| RF59 | O sistema deve permitir que o administrador crie cupons de desconto (código, percentual, validade e limite de usos opcionais) que o cliente digita no checkout, independentes das promoções automáticas por produto | Administrador / Cliente |
+| RF60 | O sistema deve limitar a 5 tentativas por minuto, por IP, nos endpoints onde um "chute" de senha/código é o ataque (login de cliente, login de admin, redefinição de senha, exclusão de conta, validação de cupom), respondendo `429` a partir da 6ª tentativa | Sistema |
+| RF61 | O sistema deve expor um endpoint `GET /health` que confirma tanto que o processo está no ar quanto que o banco de dados está acessível, para monitoramento externo de uptime | Sistema |
+| RF62 | O painel administrativo deve exibir ticket médio, os 5 produtos mais vendidos e um gráfico de vendas dos últimos 30 dias, além dos indicadores já existentes | Administrador |
 
 ### Requisitos não funcionais
 
@@ -396,6 +400,7 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 - Toda transição de status válida emite `OrderStatusChangedDomainEvent` (notificação ao cliente); a criação/confirmação de um pedido emite `OrderCreatedDomainEvent`, que também dispara o alerta de novo pedido para o ateliê (RF50).
 - O administrador pode anexar um código de rastreio livre (`Orders.TrackingCode`, RF52) a qualquer momento — não é uma etapa obrigatória do fluxo de status, mas a tela de edição só exibe o campo a partir do status `Enviado`. O código aparece para o cliente na página do pedido assim que salvo; string em branco limpa o código.
 - O pagamento é rastreado separadamente do status de produção/entrega, em `Orders.PaymentStatus` (`Pendente` | `Pago` | `Recusado`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo. Ao criar um pedido de loja, se o gateway de pagamento (PagBank) estiver configurado, um checkout hospedado é criado e sua URL é devolvida na resposta (`PaymentUrl`) para redirecionar o cliente; sem configuração (`PagBank:Token` em branco), o pedido é criado normalmente e nenhuma URL é retornada — igual ao padrão já usado para notificações via WhatsApp. O webhook (`POST /api/payments/pagbank/webhook`) nunca confia no conteúdo da notificação recebida, apenas no id do pedido do PagBank: sempre reconsulta `GET /orders/{id}` na API do PagBank antes de atualizar o pedido correspondente (pelo campo `reference_id`, que é o id do nosso pedido), e a marcação como `Pago` é idempotente — uma notificação duplicada ou fora de ordem nunca rebaixa um pagamento já aprovado.
+- **Cupons de desconto (RF59)**: código digitado pelo cliente no checkout, independente das promoções automáticas por produto (Requisito 43). `Coupon.IsValid` combina três condições — ativo, dentro da validade (se houver) e abaixo do limite de usos (se houver) — todas checadas de novo no momento da criação do pedido, não só na pré-visualização do checkout, então um cupom que expira ou esgota entre a validação e a confirmação do pedido é rejeitado com segurança. O desconto incide só sobre `ItemsTotal` (nunca sobre o frete) e é subtraído do total via `Money.Subtract`, que nunca deixa o resultado ficar negativo. `POST /api/coupons/validate` (público) deixa o checkout mostrar o desconto antes de confirmar o pedido, sem custo (não incrementa o contador de usos) — só `POST /api/orders/store` com um `couponCode` de fato incrementa `UsesCount`.
 
 ### Contas de cliente e administrador
 
@@ -427,6 +432,12 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 - O resumo do dashboard (`/api/admin/dashboard`) exclui pedidos **cancelados** de todas as métricas de receita e contagem de pedidos "em aberto".
 - "Pedidos em aberto" são os que estão em qualquer status anterior a `Entregue` (`Recebido`, `EmProducao`, `Pronto`, `Enviado`).
 - Receita do mês corrente é calculada a partir do início do mês em UTC, não do fuso horário local.
+- **Métricas adicionais (RF62)**: ticket médio (`RevenueTotal / TotalOrders`, zero quando não há pedidos), os 5 produtos mais vendidos por quantidade (agregados a partir dos itens de todos os pedidos não cancelados) e um gráfico de barras simples (CSS puro, sem biblioteca de gráficos) com a receita diária dos últimos 30 dias — todos calculados a partir do mesmo carregamento de pedidos já feito para o restante do resumo, sem consulta extra ao banco.
+
+### Segurança e disponibilidade
+
+- **Limite de tentativas (RF60)**: `/api/auth/login`, `/api/admin/auth/login`, `/api/auth/reset-password`, `/api/auth/delete-account` e `/api/coupons/validate` aceitam no máximo 5 requisições por minuto por combinação de IP do cliente + rota (não um limite único compartilhado entre rotas) — a 6ª tentativa no mesmo minuto recebe `429 Too Many Requests` sem chegar a tocar o serviço de aplicação. Atrás do Nginx em produção, `ForwardedHeadersOptions` confia no `X-Forwarded-For` do proxy local para enxergar o IP real do visitante — sem isso, todo tráfego apareceria vindo do próprio Nginx, e o limite por IP na prática viraria um limite global.
+- **Health check (RF61)**: `GET /health` roda um `DatabaseHealthCheck` que tenta `Database.CanConnectAsync()` — retorna `200 Healthy` só quando a API está no ar **e** consegue falar com o banco, não apenas quando o processo está rodando. Pensado para um monitor de uptime externo (ex.: UptimeRobot) apontar para essa rota.
 
 ### Tratamento de erros
 

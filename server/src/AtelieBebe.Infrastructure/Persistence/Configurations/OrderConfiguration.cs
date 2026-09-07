@@ -31,6 +31,14 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired();
         builder.Property(o => o.ExternalPaymentId).HasMaxLength(100);
         builder.Property(o => o.TrackingCode).HasMaxLength(60);
+        builder.Property(o => o.CouponCode).HasMaxLength(30);
+
+        builder.Property(o => o.CouponDiscountAmount)
+            .HasConversion(money => money.Amount, amount => Money.FromReais(amount))
+            .HasColumnName("CouponDiscountAmount")
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValueSql("0")
+            .IsRequired();
 
         builder.Property(o => o.CustomerEmail)
             .HasConversion(email => email.Value, value => Email.Create(value))

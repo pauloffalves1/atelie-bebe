@@ -50,6 +50,17 @@ public sealed class OrderService : IOrderService
             }
         }
 
+        if (!string.IsNullOrWhiteSpace(request.CouponCode))
+        {
+            var coupon = await _unitOfWork.Coupons.GetByCodeAsync(request.CouponCode, ct);
+            if (coupon is null || !coupon.IsValid)
+                throw new ConflictException("Cupom inválido ou expirado.");
+
+            var discount = Money.FromReais(Math.Round(order.ItemsTotal.Amount * coupon.DiscountPercentage / 100m, 2));
+            order.ApplyCoupon(coupon.Code, discount);
+            coupon.RecordUse();
+        }
+
         order.Submit();
         _unitOfWork.Orders.Add(order);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -248,5 +259,7 @@ public sealed class OrderService : IOrderService
         o.Items.Select(i => new OrderItemDto(i.Id, i.ProductId, i.ProductName, i.UnitPrice.Amount, i.Quantity, i.Subtotal.Amount, i.OptionsJson)).ToList(),
         o.PaymentStatus.ToString(),
         o.ExternalPaymentId,
-        o.TrackingCode);
+        o.TrackingCode,
+        o.CouponCode,
+        o.CouponDiscountAmount.Amount);
 }

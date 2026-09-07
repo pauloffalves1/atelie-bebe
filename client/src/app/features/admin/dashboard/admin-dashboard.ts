@@ -32,4 +32,10 @@ export class AdminDashboard implements OnInit {
     if (total === 0) return '0%';
     return `${Math.round((count / total) * 100)}%`;
   }
+
+  salesBarHeight(revenue: number): string {
+    const days = this.dashboard()?.salesLast30Days ?? [];
+    const max = Math.max(1, ...days.map((d) => d.revenue));
+    return `${Math.max(2, Math.round((revenue / max) * 100))}%`;
+  }
 }
