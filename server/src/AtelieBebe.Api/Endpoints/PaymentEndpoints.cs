@@ -38,6 +38,20 @@ public static class PaymentEndpoints
         }).DisableAntiforgery();
     }
 
+    /// <summary>
+    /// Only mapped in Development (see Program.cs) — backs the fake payment page shown when
+    /// FakePaymentGateway is in use, so the checkout → payment → confirmation flow can be
+    /// previewed before real Mercado Pago credentials exist. Never registered in production, so
+    /// there's no route here to guard against even if someone finds the URL.
+    /// </summary>
+    public static void MapFakePaymentEndpoints(this WebApplication app)
+    {
+        app.MapPost("/api/payments/mercadopago/simulate/{orderId:guid}", async (Guid orderId, SimulatePaymentRequest request, IOrderService service, CancellationToken ct) =>
+            Results.Ok(await service.SimulatePaymentAsync(orderId, request.Approved, ct)))
+            .WithTags("Pagamentos");
+    }
+
     private sealed record MercadoPagoWebhookPayload(MercadoPagoWebhookData? Data);
     private sealed record MercadoPagoWebhookData(string? Id);
+    public sealed record SimulatePaymentRequest(bool Approved);
 }

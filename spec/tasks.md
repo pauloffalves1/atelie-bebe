@@ -275,3 +275,8 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 27.8 `dotnet test`/`ng test` completos (111 backend, incluindo 4 novos testes de domínio para `MarkPaymentApproved`/`MarkPaymentRejected`; 31 frontend); `dotnet build`/`ng build` sem erros
     - [ ] 27.9 Verificação end-to-end com credenciais reais do Mercado Pago — bloqueada até o ateliê criar a conta e fornecer o Access Token (o webhook só é alcançável publicamente após deploy, não é testável do dev local sem um túnel)
     - [x] 27.10 `README.md` (RF40) e `spec/requirements.md`/`spec/design.md` (Requisito 27) atualizados
+  - Simulação local (para pré-visualizar o fluxo antes das credenciais reais)
+    - [x] 27.11 `FakePaymentGateway` (Infrastructure/Payments) registrado no lugar do gateway real só quando `Development` + `AccessToken` vazio (`AddInfrastructure`) — nunca ativa em produção, mesmo sem token
+    - [x] 27.12 Rota pública `/pagamento-simulado/:orderId` (`fake-payment.ts`/`.html`) simula a tela de Checkout Pro (Pix/boleto/cartão + "Simular pagamento aprovado"/"recusado"), com aviso de "Ambiente de teste"
+    - [x] 27.13 `POST /api/payments/mercadopago/simulate/{orderId}` (`MapFakePaymentEndpoints`, só mapeado quando `IsDevelopment()` — a rota não existe no binário publicado) + `OrderService.SimulatePaymentAsync` (marca o pagamento direto, sem gateway nem webhook)
+    - [x] 27.14 Verificado no navegador: checkout → redirecionamento para `/pagamento-simulado` → "Simular pagamento aprovado" → confirmação do pedido e `/admin/encomendas/:id` mostrando "Pagamento aprovado"

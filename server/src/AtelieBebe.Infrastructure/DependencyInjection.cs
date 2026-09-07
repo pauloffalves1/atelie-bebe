@@ -15,7 +15,7 @@ namespace AtelieBebe.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, bool isDevelopment = false)
     {
         services.AddSingleton<DomainEventsToOutboxInterceptor>();
 
@@ -38,8 +38,18 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHttpClient<INotificationSender, WhatsAppNotificationSender>(client =>
             client.BaseAddress = new Uri("https://graph.facebook.com/"));
-        services.AddHttpClient<IPaymentGateway, MercadoPagoGateway>(client =>
-            client.BaseAddress = new Uri("https://api.mercadopago.com/"));
+        var mercadoPagoAccessToken = configuration[$"{MercadoPagoOptions.SectionName}:AccessToken"];
+        if (isDevelopment && string.IsNullOrWhiteSpace(mercadoPagoAccessToken))
+        {
+            // No real credentials locally yet — swap in a gateway that simulates Checkout Pro
+            // via our own SPA instead of skipping the payment step entirely (see FakePaymentGateway).
+            services.AddScoped<IPaymentGateway, FakePaymentGateway>();
+        }
+        else
+        {
+            services.AddHttpClient<IPaymentGateway, MercadoPagoGateway>(client =>
+                client.BaseAddress = new Uri("https://api.mercadopago.com/"));
+        }
 
         services.AddHostedService<OutboxProcessor>();
 

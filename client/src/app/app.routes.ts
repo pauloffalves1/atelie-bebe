@@ -136,6 +136,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/public/order-confirmation/order-confirmation').then((m) => m.OrderConfirmation),
       },
+      {
+        path: 'pagamento-simulado/:orderId',
+        title: `Pagamento (simulação) — ${SITE_NAME}`,
+        loadComponent: () => import('./features/public/fake-payment/fake-payment').then((m) => m.FakePayment),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

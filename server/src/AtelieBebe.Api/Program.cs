@@ -11,7 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.IsDevelopment());
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
@@ -82,6 +82,10 @@ app.MapCustomerEndpoints();
 app.MapSiteImageEndpoints();
 app.MapGalleryEndpoints();
 app.MapPaymentEndpoints();
+if (app.Environment.IsDevelopment())
+{
+    app.MapFakePaymentEndpoints();
+}
 
 await DbInitializer.InitializeAsync(app.Services);
 

@@ -153,6 +153,21 @@ public sealed class OrderService : IOrderService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
+    public async Task<OrderDto> SimulatePaymentAsync(Guid orderId, bool approved, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, ct)
+            ?? throw new NotFoundException("Pedido", orderId);
+
+        if (approved)
+            order.MarkPaymentApproved($"FAKE-{orderId}");
+        else
+            order.MarkPaymentRejected($"FAKE-{orderId}");
+
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return ToDto(order);
+    }
+
     private static OrderStatus ParseStatus(string status)
     {
         if (!Enum.TryParse<OrderStatus>(status, true, out var parsed))
