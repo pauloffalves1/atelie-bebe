@@ -101,6 +101,18 @@ public sealed class ResendEmailSender : IEmailSender
                 """),
             ct);
 
+    public Task SendEmailVerificationAsync(string name, string email, string verificationUrl, CancellationToken ct = default) =>
+        SendAsync(
+            email,
+            "Confirme seu e-mail",
+            Wrap($"""
+                <p>Olá, {name}!</p>
+                <p>Para confirmar que este é o seu e-mail, clique no link abaixo (válido por 24 horas):</p>
+                <p><a href="{verificationUrl}">{verificationUrl}</a></p>
+                <p>Se você não criou uma conta no Ateliê Layette Baby, pode ignorar este e-mail.</p>
+                """),
+            ct);
+
     private async Task SendAsync(string toEmail, string subject, string html, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))

@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

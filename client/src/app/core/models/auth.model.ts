@@ -44,4 +44,5 @@ export interface CustomerProfile {
   addressCity: string | null;
   addressState: string | null;
   addressZipCode: string | null;
+  emailVerified: boolean;
 }

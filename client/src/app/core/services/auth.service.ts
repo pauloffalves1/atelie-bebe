@@ -46,6 +46,14 @@ export class AuthService {
       .pipe(tap(() => this.logout()));
   }
 
+  verifyEmail(token: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/verify-email`, { token });
+  }
+
+  resendVerification(): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/resend-verification`, {});
+  }
+
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(USER_KEY);

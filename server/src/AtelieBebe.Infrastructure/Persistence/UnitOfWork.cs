@@ -23,6 +23,7 @@ public sealed class UnitOfWork : IUnitOfWork
     public IProductReviewRepository ProductReviews { get; }
     public IPasswordResetTokenRepository PasswordResetTokens { get; }
     public ICouponRepository Coupons { get; }
+    public IEmailVerificationTokenRepository EmailVerificationTokens { get; }
 
     public UnitOfWork(AppDbContext dbContext)
     {
@@ -37,6 +38,7 @@ public sealed class UnitOfWork : IUnitOfWork
         ProductReviews = new ProductReviewRepository(dbContext);
         PasswordResetTokens = new PasswordResetTokenRepository(dbContext);
         Coupons = new CouponRepository(dbContext);
+        EmailVerificationTokens = new EmailVerificationTokenRepository(dbContext);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _dbContext.SaveChangesAsync(ct);

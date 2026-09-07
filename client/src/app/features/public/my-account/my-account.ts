@@ -16,6 +16,10 @@ export class MyAccount implements OnInit {
   readonly loading = signal(true);
   readonly statusLabels = ORDER_STATUS_LABELS;
 
+  readonly emailVerified = signal(true);
+  readonly resendingVerification = signal(false);
+  readonly verificationSent = signal(false);
+
   readonly confirmingDelete = signal(false);
   readonly deletePassword = signal('');
   readonly deleting = signal(false);
@@ -34,6 +38,22 @@ export class MyAccount implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+
+    this.auth.getProfile().subscribe({
+      next: (profile) => this.emailVerified.set(profile.emailVerified),
+      error: () => {},
+    });
+  }
+
+  resendVerification(): void {
+    this.resendingVerification.set(true);
+    this.auth.resendVerification().subscribe({
+      next: () => {
+        this.resendingVerification.set(false);
+        this.verificationSent.set(true);
+      },
+      error: () => this.resendingVerification.set(false),
     });
   }
 

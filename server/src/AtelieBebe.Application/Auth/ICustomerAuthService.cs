@@ -10,4 +10,9 @@ public interface ICustomerAuthService
     Task RequestPasswordResetAsync(string email, CancellationToken ct = default);
     Task ResetPasswordAsync(string token, string newPassword, CancellationToken ct = default);
     Task DeleteAccountAsync(Guid customerId, string password, CancellationToken ct = default);
+
+    Task VerifyEmailAsync(string token, CancellationToken ct = default);
+
+    /// <summary>No-op (never throws) if the account is already verified or doesn't exist — same non-leaking spirit as password reset.</summary>
+    Task ResendEmailVerificationAsync(Guid customerId, CancellationToken ct = default);
 }

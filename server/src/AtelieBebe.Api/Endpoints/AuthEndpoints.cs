@@ -38,6 +38,18 @@ public static class AuthEndpoints
             return Results.NoContent();
         }).RequireAuthorization("CustomerOnly").RequireRateLimiting("auth");
 
+        customerGroup.MapPost("/verify-email", async (VerifyEmailRequest request, ICustomerAuthService service, CancellationToken ct) =>
+        {
+            await service.VerifyEmailAsync(request.Token, ct);
+            return Results.NoContent();
+        }).RequireRateLimiting("auth");
+
+        customerGroup.MapPost("/resend-verification", async (HttpContext http, ICustomerAuthService service, CancellationToken ct) =>
+        {
+            await service.ResendEmailVerificationAsync(http.User.GetUserId(), ct);
+            return Results.NoContent();
+        }).RequireAuthorization("CustomerOnly").RequireRateLimiting("auth");
+
         var adminGroup = app.MapGroup("/api/admin/auth").WithTags("Autenticação (admin)");
 
         adminGroup.MapPost("/login", async (AdminLoginRequest request, IAdminAuthService service, CancellationToken ct) =>

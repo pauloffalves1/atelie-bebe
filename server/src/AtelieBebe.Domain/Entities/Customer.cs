@@ -14,6 +14,7 @@ public sealed class Customer : Entity, IAggregateRoot
     public string? Phone { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public bool IsAnonymized { get; private set; }
+    public bool EmailVerified { get; private set; }
 
     public string? AddressStreet { get; private set; }
     public string? AddressNumber { get; private set; }
@@ -83,6 +84,8 @@ public sealed class Customer : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(phone))
             throw new DomainException("O telefone/WhatsApp é obrigatório.");
 
+        if (!Email.Equals(email)) EmailVerified = false;
+
         Name = name.Trim();
         Email = email;
         Cpf = cpf;
@@ -104,6 +107,17 @@ public sealed class Customer : Entity, IAggregateRoot
 
         AddDomainEvent(new PasswordResetRequestedDomainEvent(Id, Name, Email.Value, resetUrl));
     }
+
+    /// <summary>Raises the event that carries a one-time confirmation link to the customer's e-mail — same generation/persistence split as <see cref="RequestPasswordReset"/>.</summary>
+    public void RequestEmailVerification(string verificationUrl)
+    {
+        if (string.IsNullOrWhiteSpace(verificationUrl))
+            throw new DomainException("A URL de verificação é obrigatória.");
+
+        AddDomainEvent(new EmailVerificationRequestedDomainEvent(Id, Name, Email.Value, verificationUrl));
+    }
+
+    public void VerifyEmail() => EmailVerified = true;
 
     /// <summary>
     /// Scrubs personal data (LGPD account-deletion request) while keeping the row itself — orders
@@ -130,5 +144,6 @@ public sealed class Customer : Entity, IAggregateRoot
         AddressZipCode = null;
         PasswordHash = unusablePasswordHash;
         IsAnonymized = true;
+        EmailVerified = false;
     }
 }

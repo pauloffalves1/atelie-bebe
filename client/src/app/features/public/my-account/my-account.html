@@ -5,6 +5,22 @@
       <p class="text-secondary mt-3">Olá, {{ auth.currentUser()?.name }}! Aqui estão suas encomendas.</p>
     </div>
 
+    @if (!emailVerified()) {
+      <div class="alert alert-warning small rounded-4 d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        @if (verificationSent()) {
+          <span>E-mail de verificação reenviado! Confira sua caixa de entrada.</span>
+        } @else {
+          <span>Seu e-mail ainda não foi confirmado.</span>
+          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill" [disabled]="resendingVerification()" (click)="resendVerification()">
+            @if (resendingVerification()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Reenviar e-mail de confirmação
+          </button>
+        }
+      </div>
+    }
+
     @if (loading()) {
       <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
     } @else if (orders().length === 0) {

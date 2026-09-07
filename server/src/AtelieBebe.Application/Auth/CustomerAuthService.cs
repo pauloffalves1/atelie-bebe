@@ -10,6 +10,7 @@ namespace AtelieBebe.Application.Auth;
 public sealed class CustomerAuthService : ICustomerAuthService
 {
     private static readonly TimeSpan ResetTokenValidity = TimeSpan.FromHours(1);
+    private static readonly TimeSpan VerificationTokenValidity = TimeSpan.FromHours(24);
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
@@ -51,6 +52,7 @@ public sealed class CustomerAuthService : ICustomerAuthService
             request.AddressZipCode);
 
         _unitOfWork.Customers.Add(customer);
+        IssueEmailVerification(customer);
         await _unitOfWork.SaveChangesAsync(ct);
 
         var token = _jwtTokenGenerator.GenerateCustomerToken(customer);
@@ -75,7 +77,8 @@ public sealed class CustomerAuthService : ICustomerAuthService
         return new CustomerProfileDto(
             customer.Id, customer.Name, customer.Email.Value, customer.Phone, customer.Cpf?.Value,
             customer.AddressStreet, customer.AddressNumber, customer.AddressComplement,
-            customer.AddressNeighborhood, customer.AddressCity, customer.AddressState, customer.AddressZipCode);
+            customer.AddressNeighborhood, customer.AddressCity, customer.AddressState, customer.AddressZipCode,
+            customer.EmailVerified);
     }
 
     public async Task RequestPasswordResetAsync(string email, CancellationToken ct = default)
@@ -129,6 +132,40 @@ public sealed class CustomerAuthService : ICustomerAuthService
             customer.Anonymize(_passwordHasher.Hash(Guid.NewGuid().ToString("N")));
 
         await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task VerifyEmailAsync(string token, CancellationToken ct = default)
+    {
+        var verificationToken = await _unitOfWork.EmailVerificationTokens.GetByTokenHashAsync(HashToken(token), ct);
+        if (verificationToken is null || !verificationToken.IsValid)
+            throw new UnauthorizedAppException("Link inválido ou expirado. Solicite um novo e-mail de verificação.");
+
+        var customer = await _unitOfWork.Customers.GetByIdAsync(verificationToken.CustomerId, ct)
+            ?? throw new UnauthorizedAppException("Link inválido ou expirado. Solicite um novo e-mail de verificação.");
+
+        verificationToken.MarkUsed();
+        customer.VerifyEmail();
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task ResendEmailVerificationAsync(Guid customerId, CancellationToken ct = default)
+    {
+        var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, ct);
+        if (customer is null || customer.IsAnonymized || customer.EmailVerified) return;
+
+        IssueEmailVerification(customer);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    private void IssueEmailVerification(Customer customer)
+    {
+        var rawToken = GenerateRawToken();
+        var token = EmailVerificationToken.Create(customer.Id, HashToken(rawToken), VerificationTokenValidity);
+        _unitOfWork.EmailVerificationTokens.Add(token);
+
+        var verificationUrl = $"{_appUrlProvider.PublicUrl.TrimEnd('/')}/verificar-email?token={rawToken}";
+        customer.RequestEmailVerification(verificationUrl);
     }
 
     private static string GenerateRawToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));

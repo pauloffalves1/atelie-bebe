@@ -18,4 +18,7 @@ public interface IEmailSender
 
     /// <summary>Only channel used for password resets — WhatsApp templates need Meta pre-approval, which a reset link's one-off nature doesn't justify.</summary>
     Task SendPasswordResetAsync(string name, string email, string resetUrl, CancellationToken ct = default);
+
+    /// <summary>Same reasoning as password reset — e-mail only, no WhatsApp template for a one-off confirmation link.</summary>
+    Task SendEmailVerificationAsync(string name, string email, string verificationUrl, CancellationToken ct = default);
 }

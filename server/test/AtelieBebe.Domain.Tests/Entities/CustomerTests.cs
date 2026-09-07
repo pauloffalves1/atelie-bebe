@@ -175,4 +175,68 @@ public class CustomerTests
         Assert.Equal(emailAfterFirst, customer.Email);
         Assert.Equal("first-hash", customer.PasswordHash);
     }
+
+    [Fact]
+    public void RequestEmailVerification_Valid_RaisesEvent()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        customer.RequestEmailVerification("https://layettebaby.com.br/verificar-email?token=abc");
+
+        var domainEvent = Assert.Single(customer.DomainEvents.OfType<EmailVerificationRequestedDomainEvent>());
+        Assert.Equal(customer.Id, domainEvent.CustomerId);
+        Assert.Equal("https://layettebaby.com.br/verificar-email?token=abc", domainEvent.VerificationUrl);
+    }
+
+    [Fact]
+    public void RequestEmailVerification_WithEmptyUrl_Throws()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        Assert.Throws<DomainException>(() => customer.RequestEmailVerification(" "));
+    }
+
+    [Fact]
+    public void VerifyEmail_SetsEmailVerifiedTrue()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+
+        customer.VerifyEmail();
+
+        Assert.True(customer.EmailVerified);
+    }
+
+    [Fact]
+    public void UpdateDetails_ChangingEmail_ResetsEmailVerified()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+        customer.VerifyEmail();
+        var newEmail = Email.Create("maria.nova@ateliebebe.com.br");
+
+        customer.UpdateDetails("Maria Silva", newEmail, CustomerCpf, "11999999999");
+
+        Assert.False(customer.EmailVerified);
+    }
+
+    [Fact]
+    public void UpdateDetails_KeepingSameEmail_DoesNotResetEmailVerified()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+        customer.VerifyEmail();
+
+        customer.UpdateDetails("Maria Silva Souza", CustomerEmail, CustomerCpf, "11988887777");
+
+        Assert.True(customer.EmailVerified);
+    }
+
+    [Fact]
+    public void Anonymize_ClearsEmailVerified()
+    {
+        var customer = Customer.Register("Maria Silva", CustomerEmail, CustomerCpf, "hash", "11999999999");
+        customer.VerifyEmail();
+
+        customer.Anonymize("unusable-hash");
+
+        Assert.False(customer.EmailVerified);
+    }
 }

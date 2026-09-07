@@ -115,6 +115,10 @@ public sealed class OutboxProcessor : BackgroundService
                 // E-mail only — see IEmailSender.SendPasswordResetAsync for why WhatsApp is skipped here.
                 await TrySendEmailAsync(() => emailSender.SendPasswordResetAsync(e.Name, e.Email, e.ResetUrl, ct), logger);
                 break;
+            case EmailVerificationRequestedDomainEvent e:
+                // E-mail only — same reasoning as password reset.
+                await TrySendEmailAsync(() => emailSender.SendEmailVerificationAsync(e.Name, e.Email, e.VerificationUrl, ct), logger);
+                break;
             case OrderStatusChangedDomainEvent e:
                 await TrySendEmailAsync(() => emailSender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerName, e.CustomerEmail, e.OldStatus.ToString(), e.NewStatus.ToString(), ct), logger);
                 await sender.SendOrderStatusChangedAsync(e.OrderId, e.CustomerName, e.CustomerPhone, e.OldStatus.ToString(), e.NewStatus.ToString(), ct);

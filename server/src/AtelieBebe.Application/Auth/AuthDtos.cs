@@ -13,8 +13,10 @@ public sealed record AuthResponse(string Token, Guid Id, string Name, string Ema
 public sealed record CustomerProfileDto(
     Guid Id, string Name, string Email, string? Phone, string? Cpf,
     string? AddressStreet, string? AddressNumber, string? AddressComplement,
-    string? AddressNeighborhood, string? AddressCity, string? AddressState, string? AddressZipCode);
+    string? AddressNeighborhood, string? AddressCity, string? AddressState, string? AddressZipCode,
+    bool EmailVerified);
 
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
 public sealed record DeleteAccountRequest(string Password);
+public sealed record VerifyEmailRequest(string Token);
