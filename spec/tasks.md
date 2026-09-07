@@ -261,25 +261,25 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 26.5 `dotnet test`/`ng test` completos (107+4 novos testes de domínio, 31 frontend); verificado via API (`curl`: upload, list, delete com confirmação de que o arquivo físico some) e no navegador (upload/exclusão refletidos em `/admin/galeria` e `/galeria`, lightbox continua funcionando)
   - [x] 26.6 `README.md` (RF38, RF39) e `spec/requirements.md`/`spec/design.md` (Requisitos 25, 26) atualizados
 
-- [x] 27. Pagamento online no checkout via Mercado Pago (Requisito 27 / RF40, design em `spec/design.md`)
+- [x] 27. Pagamento online no checkout via PagBank (Requisito 27 / RF40, design em `spec/design.md`)
   - Backend
     - [x] 27.1 `PaymentStatus` (Domain/Enums); `Order.PaymentStatus`/`ExternalPaymentId` + `MarkPaymentApproved`/`MarkPaymentRejected` (idempotentes — nunca rebaixam um pagamento já `Pago`); migration `AddOrderPaymentStatus`
-    - [x] 27.2 `IPaymentGateway` (Application/Abstractions); `MercadoPagoGateway`/`MercadoPagoOptions`/`AppUrlOptions` (Infrastructure/Payments) — `HttpClient` para `https://api.mercadopago.com/`, degrada graciosamente (sem token configurado, `IsConfigured = false`, nenhuma preferência é criada), mesmo padrão do `INotificationSender`
-    - [x] 27.3 `OrderService.CreateStoreOrderAsync` cria a preferência de pagamento e anexa `PaymentUrl` ao `OrderDto` quando o gateway está configurado; `HandlePaymentWebhookAsync` reconsulta o pagamento na API do Mercado Pago (nunca confia no payload do webhook) e atualiza o pedido pelo `external_reference`
-    - [x] 27.4 `PaymentEndpoints` (`POST /api/payments/mercadopago/webhook`, sempre HTTP 200) registrado em `Program.cs`
+    - [x] 27.2 `IPaymentGateway` (Application/Abstractions); `PagBankGateway`/`PagBankOptions`/`AppUrlOptions` (Infrastructure/Payments) — `HttpClient` para `https://api.pagbank.com/`, degrada graciosamente (sem token configurado, `IsConfigured = false`, nenhuma preferência é criada), mesmo padrão do `INotificationSender`
+    - [x] 27.3 `OrderService.CreateStoreOrderAsync` cria o checkout e anexa `PaymentUrl` ao `OrderDto` quando o gateway está configurado; `HandlePaymentWebhookAsync` reconsulta o pedido na API do PagBank (nunca confia no payload do webhook) e atualiza o pedido pelo `reference_id`
+    - [x] 27.4 `PaymentEndpoints` (`POST /api/payments/pagbank/webhook`, sempre HTTP 200) registrado em `Program.cs`
   - Frontend
     - [x] 27.5 `order.model.ts`: `PaymentStatus`, `PAYMENT_STATUS_LABELS`, `Order.paymentStatus`/`externalPaymentId`/`paymentUrl`
     - [x] 27.6 `checkout.ts`: redireciona (`window.location.href`) para `order.paymentUrl` quando presente, em vez de ir direto para a confirmação
     - [x] 27.7 `order-confirmation.html`/`admin-order-detail.html`: selo de status de pagamento ao lado do selo de status do pedido
   - Verificação e documentação
     - [x] 27.8 `dotnet test`/`ng test` completos (111 backend, incluindo 4 novos testes de domínio para `MarkPaymentApproved`/`MarkPaymentRejected`; 31 frontend); `dotnet build`/`ng build` sem erros
-    - [ ] 27.9 Verificação end-to-end com credenciais reais do Mercado Pago — bloqueada até o ateliê criar a conta e fornecer o Access Token (o webhook só é alcançável publicamente após deploy, não é testável do dev local sem um túnel)
+    - [ ] 27.9 Verificação end-to-end com credenciais reais do PagBank — bloqueada até o ateliê criar a conta e fornecer o Access Token (o webhook só é alcançável publicamente após deploy, não é testável do dev local sem um túnel)
     - [x] 27.10 `README.md` (RF40) e `spec/requirements.md`/`spec/design.md` (Requisito 27) atualizados
-    - [x] 27.10.1 Restrito a Pix e cartão de crédito: `CreatePreferenceAsync` envia `payment_methods.excluded_payment_types` (boleto/`ticket`, débito, pré-pago, carteira digital, moeda digital, caixa eletrônico); simulador local (`fake-payment.html`) atualizado para não oferecer mais boleto
+    - [x] 27.10.1 Restrito a Pix e cartão de crédito: `CreatePreferenceAsync` envia `payment_methods: [{type:"CREDIT_CARD"},{type:"PIX"}]` (lista de inclusão direta, ao contrário do Mercado Pago que só permitia excluir); simulador local (`fake-payment.html`) atualizado para não oferecer mais boleto
   - Simulação local (para pré-visualizar o fluxo antes das credenciais reais)
-    - [x] 27.11 `FakePaymentGateway` (Infrastructure/Payments) registrado no lugar do gateway real só quando `Development` + `AccessToken` vazio (`AddInfrastructure`) — nunca ativa em produção, mesmo sem token
-    - [x] 27.12 Rota pública `/pagamento-simulado/:orderId` (`fake-payment.ts`/`.html`) simula a tela de Checkout Pro (Pix/cartão + "Simular pagamento aprovado"/"recusado"), com aviso de "Ambiente de teste"
-    - [x] 27.13 `POST /api/payments/mercadopago/simulate/{orderId}` (`MapFakePaymentEndpoints`, só mapeado quando `IsDevelopment()` — a rota não existe no binário publicado) + `OrderService.SimulatePaymentAsync` (marca o pagamento direto, sem gateway nem webhook)
+    - [x] 27.11 `FakePaymentGateway` (Infrastructure/Payments) registrado no lugar do gateway real só quando `Development` + `Token` vazio (`AddInfrastructure`) — nunca ativa em produção, mesmo sem token
+    - [x] 27.12 Rota pública `/pagamento-simulado/:orderId` (`fake-payment.ts`/`.html`) simula a página hospedada do PagBank (Pix/cartão + "Simular pagamento aprovado"/"recusado"), com aviso de "Ambiente de teste"
+    - [x] 27.13 `POST /api/payments/pagbank/simulate/{orderId}` (`MapFakePaymentEndpoints`, só mapeado quando `IsDevelopment()` — a rota não existe no binário publicado) + `OrderService.SimulatePaymentAsync` (marca o pagamento direto, sem gateway nem webhook)
     - [x] 27.14 Verificado no navegador: checkout → redirecionamento para `/pagamento-simulado` → "Simular pagamento aprovado" → confirmação do pedido e `/admin/encomendas/:id` mostrando "Pagamento aprovado"
 
 - [x] 28. Gestão de pagamento das encomendas no admin (Requisito 28 / RF41, design em `spec/design.md`)
@@ -324,3 +324,13 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - Verificação e documentação
     - [x] 32.6 `dotnet test`/`ng test` completos (102+20 backend, 31 frontend); verificado no navegador de ponta a ponta: cadastro de cliente teste → compra do produto → avaliação de 4 estrelas com comentário → nota média "4,0 (1 avaliação)" exibida corretamente → tentativa de reavaliar bloqueada
     - [x] 32.7 `README.md` (RF45) e `spec/requirements.md`/`spec/design.md` (Requisito 32) atualizados
+
+- [x] 33. Troca do gateway de pagamento: Mercado Pago → PagBank (Requisito 27/28 revisados, RF40/RF41 sem numeração nova)
+  - [x] 33.1 `MercadoPagoGateway`/`MercadoPagoOptions` removidos; novos `PagBankGateway`/`PagBankOptions` (Infrastructure/Payments) — mesma interface `IPaymentGateway`, sem tocar `OrderService`/endpoints
+  - [x] 33.2 `POST /checkouts` (não `checkout/preferences`) com `payment_methods: [{type:"CREDIT_CARD"},{type:"PIX"}]` (lista de inclusão, mais simples que a exclusão do Mercado Pago); `reference_id` = `Order.Id`, mesmo papel do `external_reference` anterior
+  - [x] 33.3 `GetPaymentAsync` consulta `GET /orders/{id}` (não `/v1/payments/{id}`) e lê `charges[].status` (`PAID`/`DECLINED`/`CANCELED`/`AUTHORIZED`/`IN_ANALYSIS`/`WAITING`), normalizando para o vocabulário que `OrderService` já entende (`approved`/`rejected`)
+  - [x] 33.4 `PagBankOptions.Sandbox` (bool) alterna a `BaseAddress` do `HttpClient` entre `api.pagseguro.com` e `sandbox.api.pagseguro.com` — registrado via `AddHttpClient(Action<IServiceProvider,HttpClient>)` para poder ler essa flag
+  - [x] 33.5 Webhook (`POST /api/payments/pagbank/webhook`) simplificado: só lê o campo `id` do corpo (PagBank sempre manda o objeto completo, mas continuamos só usando o id — nunca confiando no status do payload); um id de *checkout* (em vez de *order*) 404 na consulta e no-opa naturalmente, sem precisar checar o tipo antes
+  - [x] 33.6 Textos/comentários atualizados em toda a base (código + `README.md` + `spec/`) trocando "Mercado Pago"/"Checkout Pro" por "PagBank"
+  - [x] 33.7 `dotnet build`/`dotnet test` (102+20) e `ng build`/`ng test` (31) sem erros após a troca
+  - [ ] 33.8 **Bloqueado**: token de produção do PagBank retorna `403 allowlist_access_required` ao criar um checkout — API/payload confirmados corretos (erro chega depois da autenticação), falta o PagBank liberar o acesso à API de Checkout para a conta/aplicação (chamado aberto pelo administrador com o suporte do PagBank). Até lá, `PagBank:Token` **não é configurado em produção** — o checkout continua funcionando normalmente sem redirecionamento de pagamento, mesmo comportamento de antes desta troca

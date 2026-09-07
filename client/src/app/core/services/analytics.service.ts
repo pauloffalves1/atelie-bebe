@@ -16,7 +16,7 @@ declare global {
  * Loads Google Analytics (GA4) and/or Meta Pixel only when their IDs are set in environment.ts.
  * Both are blank until the ateliê creates the accounts — with no IDs configured this is a
  * complete no-op (no script tags injected, no third-party requests), same "degrade gracefully"
- * pattern used for WhatsApp/Mercado Pago when their credentials aren't configured yet.
+ * pattern used for WhatsApp/PagBank when their credentials aren't configured yet.
  */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {

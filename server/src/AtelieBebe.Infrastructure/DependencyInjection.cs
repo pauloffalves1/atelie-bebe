@@ -10,6 +10,7 @@ using AtelieBebe.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace AtelieBebe.Infrastructure;
 
@@ -28,7 +29,7 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<WhatsAppOptions>(configuration.GetSection(WhatsAppOptions.SectionName));
-        services.Configure<MercadoPagoOptions>(configuration.GetSection(MercadoPagoOptions.SectionName));
+        services.Configure<PagBankOptions>(configuration.GetSection(PagBankOptions.SectionName));
         services.Configure<AppUrlOptions>(configuration.GetSection(AppUrlOptions.SectionName));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -38,17 +39,20 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHttpClient<INotificationSender, WhatsAppNotificationSender>(client =>
             client.BaseAddress = new Uri("https://graph.facebook.com/"));
-        var mercadoPagoAccessToken = configuration[$"{MercadoPagoOptions.SectionName}:AccessToken"];
-        if (isDevelopment && string.IsNullOrWhiteSpace(mercadoPagoAccessToken))
+        var pagBankToken = configuration[$"{PagBankOptions.SectionName}:Token"];
+        if (isDevelopment && string.IsNullOrWhiteSpace(pagBankToken))
         {
-            // No real credentials locally yet — swap in a gateway that simulates Checkout Pro
-            // via our own SPA instead of skipping the payment step entirely (see FakePaymentGateway).
+            // No real credentials locally yet — swap in a gateway that simulates the hosted
+            // checkout via our own SPA instead of skipping the payment step entirely (see FakePaymentGateway).
             services.AddScoped<IPaymentGateway, FakePaymentGateway>();
         }
         else
         {
-            services.AddHttpClient<IPaymentGateway, MercadoPagoGateway>(client =>
-                client.BaseAddress = new Uri("https://api.mercadopago.com/"));
+            services.AddHttpClient<IPaymentGateway, PagBankGateway>((sp, client) =>
+            {
+                var sandbox = sp.GetRequiredService<IOptions<PagBankOptions>>().Value.Sandbox;
+                client.BaseAddress = new Uri(sandbox ? "https://sandbox.api.pagseguro.com/" : "https://api.pagseguro.com/");
+            });
         }
 
         services.AddHostedService<OutboxProcessor>();

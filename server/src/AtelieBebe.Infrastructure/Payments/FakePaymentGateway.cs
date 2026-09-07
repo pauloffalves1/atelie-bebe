@@ -4,14 +4,14 @@ using Microsoft.Extensions.Options;
 namespace AtelieBebe.Infrastructure.Payments;
 
 /// <summary>
-/// Stands in for MercadoPagoGateway in local development, before the ateliê has real Mercado
-/// Pago credentials — lets the checkout → payment → confirmation flow be previewed end-to-end
+/// Stands in for PagBankGateway in local development, before the ateliê has real PagBank
+/// credentials — lets the checkout → payment → confirmation flow be previewed end-to-end
 /// without calling any real API. "Payment" here is just a redirect to our own SPA page
 /// (<see cref="AppUrlOptions.PublicUrl"/>/pagamento-simulado/{orderId}), which posts straight to
 /// OrderService.SimulatePaymentAsync — GetPaymentAsync is never actually called in this flow.
 /// Only ever wired up in Development (see DependencyInjection.AddInfrastructure); production
-/// with a blank access token must fall back to MercadoPagoGateway (IsConfigured = false, no
-/// payment step at all), never to a fake approval.
+/// with a blank token must fall back to PagBankGateway (IsConfigured = false, no payment step
+/// at all), never to a fake approval.
 /// </summary>
 public sealed class FakePaymentGateway : IPaymentGateway
 {

@@ -417,22 +417,22 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 
 ---
 
-## Requisito 27: Pagamento online no checkout (Mercado Pago)
+## Requisito 27: Pagamento online no checkout (PagBank)
 
 **User Story:** Como ateliê, quero oferecer PIX e cartão de crédito como formas de pagamento no checkout, para que o cliente pague no ato da compra em vez de combinar o pagamento por fora.
 
 **Rastreamento:** RF40.
 
 **Acceptance Criteria**
-1. QUANDO um pedido de loja é criado (`POST /api/orders/store`) E o gateway de pagamento está configurado (`MercadoPago:AccessToken` presente), O SISTEMA DEVE criar uma preferência de pagamento no Mercado Pago (Checkout Pro) para o valor total do pedido e devolver a URL de pagamento na resposta (`PaymentUrl`).
+1. QUANDO um pedido de loja é criado (`POST /api/orders/store`) E o gateway de pagamento está configurado (`PagBank:Token` presente), O SISTEMA DEVE criar um checkout hospedado no PagBank para o valor total do pedido e devolver a URL de pagamento na resposta (`PaymentUrl`).
 2. QUANDO o gateway de pagamento NÃO está configurado, O SISTEMA DEVE criar o pedido normalmente, sem `PaymentUrl` e sem erro — o comportamento é idêntico ao de antes deste requisito.
-3. O frontend, ao receber uma `PaymentUrl` na resposta do checkout, DEVE redirecionar o navegador do cliente para essa URL (a página de pagamento hospedada pelo Mercado Pago) em vez de ir direto para a confirmação do pedido.
-4. O SISTEMA DEVE expor um endpoint de webhook (`POST /api/payments/mercadopago/webhook`) que, ao ser chamado pelo Mercado Pago, reconsulta o status do pagamento diretamente na API do Mercado Pago (nunca confia no status vindo no corpo da notificação) e atualiza `Orders.PaymentStatus` do pedido correspondente (localizado pelo `external_reference`, que é o id do pedido).
-5. O SISTEMA DEVE tratar como aprovado (`PaymentStatus = Pago`) apenas o status `approved` do Mercado Pago, e como recusado (`PaymentStatus = Recusado`) os status `rejected` e `cancelled`; qualquer outro status (`pending`, `in_process`, etc.) NÃO altera o `PaymentStatus` atual do pedido, que permanece `Pendente`.
+3. O frontend, ao receber uma `PaymentUrl` na resposta do checkout, DEVE redirecionar o navegador do cliente para essa URL (a página de pagamento hospedada pelo PagBank) em vez de ir direto para a confirmação do pedido.
+4. O SISTEMA DEVE expor um endpoint de webhook (`POST /api/payments/pagbank/webhook`) que, ao ser chamado pelo PagBank, reconsulta o status do pagamento diretamente na API do PagBank (nunca confia no status vindo no corpo da notificação) e atualiza `Orders.PaymentStatus` do pedido correspondente (localizado pelo `reference_id` devolvido nessa consulta, que é o id do pedido).
+5. O SISTEMA DEVE tratar como aprovado (`PaymentStatus = Pago`) apenas quando a cobrança mais recente do pedido está com status `PAID` no PagBank, e como recusado (`PaymentStatus = Recusado`) quando está `DECLINED` ou `CANCELED`; qualquer outro status (`AUTHORIZED`, `IN_ANALYSIS`, `WAITING`, etc.) NÃO altera o `PaymentStatus` atual do pedido, que permanece `Pendente`.
 6. UMA VEZ que um pedido está com `PaymentStatus = Pago`, o SISTEMA NÃO DEVE rebaixá-lo para `Recusado` ou `Pendente` em razão de uma notificação de webhook posterior, duplicada ou fora de ordem (idempotência).
-7. O endpoint de webhook DEVE sempre responder HTTP 200, mesmo quando a notificação vem malformada, sem id de pagamento reconhecível, ou referenciando um pedido inexistente — para que o Mercado Pago não fique retentando indefinidamente uma notificação que nunca vai ser processável.
+7. O endpoint de webhook DEVE sempre responder HTTP 200, mesmo quando a notificação vem malformada, sem id reconhecível, referenciando um checkout (em vez de um pedido pago) ou um pedido inexistente — para que o PagBank não fique retentando indefinidamente uma notificação que nunca vai ser processável.
 8. `PaymentStatus` (`Pendente` | `Pago` | `Recusado`) é independente do status de produção/entrega do pedido (`Order.Status`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo.
-9. A página de pagamento hospedada DEVE oferecer apenas Pix e cartão de crédito — boleto e qualquer outro meio de pagamento que o Mercado Pago ofereça (débito, carteira digital, etc.) DEVEM ser excluídos da preferência criada.
+9. A página de pagamento hospedada DEVE oferecer apenas Pix e cartão de crédito — nenhum outro meio de pagamento que o PagBank ofereça (boleto, débito, carteira digital, etc.) DEVE aparecer como opção no checkout criado.
 
 ---
 
@@ -445,10 +445,10 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 **Acceptance Criteria**
 1. O SISTEMA DEVE oferecer, na listagem de encomendas do admin (`/admin/encomendas`), um filtro por status de pagamento (`Pendente` | `Pago` | `Recusado`), independente do filtro por status de produção/entrega já existente, e exibir o status de pagamento de cada encomenda na própria linha da tabela.
 2. QUANDO o administrador abre o detalhe de uma encomenda cujo `PaymentStatus` NÃO é `Pago`, O SISTEMA DEVE oferecer um botão "Gerar link de pagamento".
-3. QUANDO o administrador clica nesse botão, O SISTEMA DEVE criar uma nova preferência de pagamento no Mercado Pago para o valor total da encomenda e apresentar a URL resultante com um botão para copiar o link e outro para abrir a página de pagamento em uma nova aba.
+3. QUANDO o administrador clica nesse botão, O SISTEMA DEVE criar uma nova preferência de pagamento no PagBank para o valor total da encomenda e apresentar a URL resultante com um botão para copiar o link e outro para abrir a página de pagamento em uma nova aba.
 4. SE o gateway de pagamento não estiver configurado, O SISTEMA DEVE rejeitar a geração do link com uma mensagem de erro clara, em vez de falhar silenciosamente ou gerar uma URL inválida.
 5. SE a encomenda já estiver com `PaymentStatus = Pago`, O SISTEMA NÃO DEVE oferecer a opção de gerar um novo link de pagamento — não faz sentido cobrar de novo por um pedido já pago.
-6. Gerar um novo link de pagamento NÃO DEVE alterar o `PaymentStatus` atual da encomenda nem seus dados persistidos — é só a criação de uma preferência adicional no Mercado Pago; a confirmação de pagamento continua acontecendo exclusivamente pelo webhook (Requisito 27).
+6. Gerar um novo link de pagamento NÃO DEVE alterar o `PaymentStatus` atual da encomenda nem seus dados persistidos — é só a criação de uma preferência adicional no PagBank; a confirmação de pagamento continua acontecendo exclusivamente pelo webhook (Requisito 27).
 
 ---
 

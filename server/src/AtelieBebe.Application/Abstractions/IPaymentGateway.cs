@@ -5,7 +5,7 @@ public sealed record PaymentPreference(string CheckoutUrl, string? ExternalId);
 public sealed record PaymentDetails(string Status, string? ExternalReference);
 
 /// <summary>
-/// Payment provider boundary (currently Mercado Pago). Never called from a use case as a hard
+/// Payment provider boundary (currently PagBank). Never called from a use case as a hard
 /// dependency for the checkout to succeed — CreatePreferenceAsync returns null when the gateway
 /// isn't configured yet (blank access token), and the order is still created normally without a
 /// payment redirect, matching how INotificationSender degrades gracefully when unconfigured.

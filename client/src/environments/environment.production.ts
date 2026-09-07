@@ -4,7 +4,7 @@ export const environment = {
   siteUrl: 'https://layettebaby.com.br',
   analytics: {
     // Blank until real IDs exist — AnalyticsService no-ops without them, same "degrade gracefully"
-    // pattern used for WhatsApp/Mercado Pago when their credentials aren't configured yet.
+    // pattern used for WhatsApp/PagBank when their credentials aren't configured yet.
     googleAnalyticsId: '',
     metaPixelId: '',
   },

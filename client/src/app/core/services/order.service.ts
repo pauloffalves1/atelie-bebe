@@ -48,6 +48,6 @@ export class OrderService {
   // ---- fake payment (dev-only, see FakePaymentGateway) ----
 
   simulatePayment(orderId: string, approved: boolean): Observable<Order> {
-    return this.http.post<Order>(`${environment.apiUrl}/payments/mercadopago/simulate/${orderId}`, { approved });
+    return this.http.post<Order>(`${environment.apiUrl}/payments/pagbank/simulate/${orderId}`, { approved });
   }
 }
