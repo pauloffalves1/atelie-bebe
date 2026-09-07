@@ -14,12 +14,15 @@ public sealed class OrderRepository : IOrderRepository
     public Task<Order?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         _dbContext.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id, ct);
 
-    public async Task<(IReadOnlyList<Order> Items, int TotalItems)> ListAsync(OrderStatus? status, int page, int pageSize, CancellationToken ct = default)
+    public async Task<(IReadOnlyList<Order> Items, int TotalItems)> ListAsync(OrderStatus? status, PaymentStatus? paymentStatus, int page, int pageSize, CancellationToken ct = default)
     {
         var query = _dbContext.Orders.Include(o => o.Items).AsQueryable();
 
         if (status is not null)
             query = query.Where(o => o.Status == status);
+
+        if (paymentStatus is not null)
+            query = query.Where(o => o.PaymentStatus == paymentStatus);
 
         query = query.OrderByDescending(o => o.CreatedAt);
 

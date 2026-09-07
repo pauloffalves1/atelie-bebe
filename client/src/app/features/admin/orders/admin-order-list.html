@@ -2,13 +2,25 @@
   <h2 class="mb-1">Encomendas</h2>
   <p class="text-secondary mb-4">Acompanhe e atualize o status das encomendas.</p>
 
-  <div class="d-flex flex-wrap gap-2 mb-4">
+  <div class="d-flex flex-wrap gap-2 mb-2">
     <button class="btn btn-sm rounded-pill" [class.btn-dark]="activeStatus() === null" [class.btn-outline-secondary]="activeStatus() !== null" (click)="filterByStatus(null)">
       Todas
     </button>
     @for (status of statuses; track status) {
       <button class="btn btn-sm rounded-pill" [class.btn-dark]="activeStatus() === status" [class.btn-outline-secondary]="activeStatus() !== status" (click)="filterByStatus(status)">
         {{ statusLabels[status] }}
+      </button>
+    }
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <span class="small text-secondary">Pagamento:</span>
+    <button class="btn btn-sm rounded-pill" [class.btn-dark]="activePaymentStatus() === null" [class.btn-outline-secondary]="activePaymentStatus() !== null" (click)="filterByPaymentStatus(null)">
+      Todos
+    </button>
+    @for (paymentStatus of paymentStatuses; track paymentStatus) {
+      <button class="btn btn-sm rounded-pill" [class.btn-dark]="activePaymentStatus() === paymentStatus" [class.btn-outline-secondary]="activePaymentStatus() !== paymentStatus" (click)="filterByPaymentStatus(paymentStatus)">
+        {{ paymentStatusLabels[paymentStatus] }}
       </button>
     }
   </div>
@@ -24,6 +36,7 @@
               <th>Cliente</th>
               <th>Tipo</th>
               <th>Status</th>
+              <th>Pagamento</th>
               <th>Data</th>
               <th class="text-end">Total</th>
               <th class="text-end">Ações</th>
@@ -38,6 +51,13 @@
                 </td>
                 <td>{{ order.type === 'Loja' ? 'Loja' : 'Personalizada' }}</td>
                 <td><span class="status-pill" [class]="'status-' + order.status">{{ statusLabels[order.status] }}</span></td>
+                <td>
+                  <span class="small" [class.text-success]="order.paymentStatus === 'Pago'"
+                        [class.text-danger]="order.paymentStatus === 'Recusado'"
+                        [class.text-secondary]="order.paymentStatus === 'Pendente'">
+                    {{ paymentStatusLabels[order.paymentStatus] }}
+                  </span>
+                </td>
                 <td>{{ order.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="text-end fw-bold text-blush">{{ order.total | currency:'BRL' }}</td>
                 <td class="text-end">
@@ -46,7 +66,7 @@
               </tr>
             }
             @if (orders().length === 0) {
-              <tr><td colspan="6" class="text-center text-secondary py-4">Nenhuma encomenda encontrada.</td></tr>
+              <tr><td colspan="7" class="text-center text-secondary py-4">Nenhuma encomenda encontrada.</td></tr>
             }
           </tbody>
         </table>

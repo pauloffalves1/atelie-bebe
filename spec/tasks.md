@@ -280,3 +280,14 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 27.12 Rota pública `/pagamento-simulado/:orderId` (`fake-payment.ts`/`.html`) simula a tela de Checkout Pro (Pix/boleto/cartão + "Simular pagamento aprovado"/"recusado"), com aviso de "Ambiente de teste"
     - [x] 27.13 `POST /api/payments/mercadopago/simulate/{orderId}` (`MapFakePaymentEndpoints`, só mapeado quando `IsDevelopment()` — a rota não existe no binário publicado) + `OrderService.SimulatePaymentAsync` (marca o pagamento direto, sem gateway nem webhook)
     - [x] 27.14 Verificado no navegador: checkout → redirecionamento para `/pagamento-simulado` → "Simular pagamento aprovado" → confirmação do pedido e `/admin/encomendas/:id` mostrando "Pagamento aprovado"
+
+- [x] 28. Gestão de pagamento das encomendas no admin (Requisito 28 / RF41, design em `spec/design.md`)
+  - Backend
+    - [x] 28.1 `IOrderRepository.ListAsync`/`OrderRepository` ganham filtro por `PaymentStatus`; `IOrderService.ListAsync`/`GET /api/admin/orders` expõem `paymentStatus` como novo query param
+    - [x] 28.2 `IOrderService.GeneratePaymentLinkAsync` (recusa se já pago ou gateway não configurado); `POST /api/admin/orders/{id}/payment-link`
+  - Frontend
+    - [x] 28.3 `admin-order-list.ts`/`.html`: filtro por status de pagamento + coluna "Pagamento" na tabela
+    - [x] 28.4 `admin-order-detail.ts`/`.html`: card "Pagamento" com botão "Gerar link de pagamento", campo com o link + "Copiar", botão "Abrir página de pagamento" (aberta também automaticamente ao gerar)
+  - Verificação e documentação
+    - [x] 28.5 `dotnet test`/`ng test` completos (111 backend, 31 frontend); `dotnet build`/`ng build` sem erros; verificado no navegador: filtro por pagamento na listagem, geração de link no detalhe abrindo a página correspondente
+    - [x] 28.6 `README.md` (RF41) e `spec/requirements.md`/`spec/design.md` (Requisito 28) atualizados

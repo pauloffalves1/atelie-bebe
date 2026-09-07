@@ -36,6 +36,11 @@ export class AdminOrderDetail implements OnInit {
   readonly statusLabels = ORDER_STATUS_LABELS;
   readonly paymentStatusLabels = PAYMENT_STATUS_LABELS;
 
+  readonly generatingPaymentLink = signal(false);
+  readonly paymentLinkError = signal<string | null>(null);
+  readonly paymentLink = signal<string | null>(null);
+  readonly paymentLinkCopied = signal(false);
+
   private orderId!: string;
 
   constructor(
@@ -67,6 +72,42 @@ export class AdminOrderDetail implements OnInit {
         this.errorMessage.set(err?.error?.detail ?? 'Não foi possível atualizar o status.');
       },
     });
+  }
+
+  generatePaymentLink(): void {
+    this.generatingPaymentLink.set(true);
+    this.paymentLinkError.set(null);
+    this.paymentLinkCopied.set(false);
+
+    this.orderService.generatePaymentLink(this.orderId).subscribe({
+      next: ({ paymentUrl }) => {
+        this.paymentLink.set(paymentUrl);
+        this.generatingPaymentLink.set(false);
+        window.open(paymentUrl, '_blank', 'noopener');
+      },
+      error: (err) => {
+        this.generatingPaymentLink.set(false);
+        this.paymentLinkError.set(err?.error?.detail ?? 'Não foi possível gerar o link de pagamento.');
+      },
+    });
+  }
+
+  openPaymentLink(): void {
+    const url = this.paymentLink();
+    if (url) window.open(url, '_blank', 'noopener');
+  }
+
+  copyPaymentLink(): void {
+    const url = this.paymentLink();
+    if (!url) return;
+
+    navigator.clipboard.writeText(url).then(
+      () => {
+        this.paymentLinkCopied.set(true);
+        setTimeout(() => this.paymentLinkCopied.set(false), 2000);
+      },
+      () => this.paymentLinkError.set('Não foi possível copiar o link automaticamente — selecione e copie o texto do campo.'),
+    );
   }
 
   parsedCustomDetails(): CustomOrderDetails | null {

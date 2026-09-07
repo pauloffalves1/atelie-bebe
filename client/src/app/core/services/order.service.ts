@@ -30,14 +30,19 @@ export class OrderService {
 
   // ---- admin ----
 
-  listAllForAdmin(status?: string, page = 1, pageSize = 20): Observable<PagedResult<Order>> {
+  listAllForAdmin(status?: string, paymentStatus?: string, page = 1, pageSize = 20): Observable<PagedResult<Order>> {
     const params: Record<string, string | number> = { page, pageSize };
     if (status) params['status'] = status;
+    if (paymentStatus) params['paymentStatus'] = paymentStatus;
     return this.http.get<PagedResult<Order>>(this.adminUrl, { params });
   }
 
   changeStatus(id: string, status: string): Observable<Order> {
     return this.http.patch<Order>(`${this.adminUrl}/${id}/status`, { status });
+  }
+
+  generatePaymentLink(orderId: string): Observable<{ paymentUrl: string }> {
+    return this.http.post<{ paymentUrl: string }>(`${this.adminUrl}/${orderId}/payment-link`, {});
   }
 
   // ---- fake payment (dev-only, see FakePaymentGateway) ----

@@ -274,6 +274,7 @@ npm test        # testes unitários (Vitest)
 | RF38 | O sistema deve permitir que o administrador envie a foto de um produto como arquivo (upload), além de continuar aceitando colar uma URL, no formulário de produto do admin | Administrador |
 | RF39 | O sistema deve permitir que o administrador adicione e remova fotos da galeria pública (`/galeria`) pelo painel administrativo (`/admin/galeria`), sem precisar de deploy de código | Administrador |
 | RF40 | O sistema deve oferecer PIX, boleto e cartão de crédito como meios de pagamento no checkout de loja, via Mercado Pago Checkout Pro: ao criar o pedido, se o gateway estiver configurado, o cliente é redirecionado a uma página de pagamento hospedada; o status do pagamento (`Orders.PaymentStatus`) é atualizado de forma assíncrona via webhook (`POST /api/payments/mercadopago/webhook`), sempre reconsultando a API do Mercado Pago pelo id do pagamento em vez de confiar no conteúdo da notificação; sem gateway configurado, o pedido é criado normalmente, sem redirecionamento | Cliente / Sistema |
+| RF41 | O sistema deve permitir que o administrador filtre a listagem de encomendas (`/admin/encomendas`) por status de pagamento, veja esse status em cada linha e, no detalhe de uma encomenda ainda não paga, gere um novo link de pagamento (nova preferência do Mercado Pago) para copiar/reenviar ao cliente ou abrir diretamente | Administrador |
 
 ### Requisitos não funcionais
 

@@ -102,6 +102,36 @@
           @if (o.customerCpf) { <p class="small mb-0">CPF: {{ o.customerCpf | cpfMask }}</p> }
         </div>
 
+        @if (o.paymentStatus !== 'Pago') {
+          <div class="stat-card mb-4">
+            <h6 class="mb-3"><i class="bi bi-credit-card me-2"></i>Pagamento</h6>
+
+            @if (paymentLinkError()) {
+              <div class="alert alert-danger small rounded-4">{{ paymentLinkError() }}</div>
+            }
+
+            @if (paymentLink(); as link) {
+              <div class="input-group input-group-sm mb-2">
+                <input type="text" class="form-control" [value]="link" readonly>
+                <button class="btn btn-outline-secondary" type="button" (click)="copyPaymentLink()">
+                  {{ paymentLinkCopied() ? 'Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+              <button class="btn btn-outline-primary btn-sm rounded-pill w-100" (click)="openPaymentLink()">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Abrir página de pagamento
+              </button>
+            } @else {
+              <p class="small text-secondary mb-3">Gere um link de pagamento para reenviar ao cliente ou abrir a página de pagamento diretamente.</p>
+              <button class="btn btn-primary rounded-pill w-100" [disabled]="generatingPaymentLink()" (click)="generatePaymentLink()">
+                @if (generatingPaymentLink()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Gerar link de pagamento
+              </button>
+            }
+          </div>
+        }
+
         <div class="stat-card">
           <h6 class="mb-3">Atualizar status</h6>
 

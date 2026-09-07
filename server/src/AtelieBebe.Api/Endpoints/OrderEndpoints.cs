@@ -32,10 +32,15 @@ public static class OrderEndpoints
 
         var adminGroup = app.MapGroup("/api/admin/orders").WithTags("Encomendas (admin)").RequireAuthorization("AdminOnly");
 
-        adminGroup.MapGet("/", async (string? status, IOrderService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
-            Results.Ok(await service.ListAsync(status, page, pageSize, ct)));
+        adminGroup.MapGet("/", async (string? status, string? paymentStatus, IOrderService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
+            Results.Ok(await service.ListAsync(status, paymentStatus, page, pageSize, ct)));
 
         adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, IOrderService service, CancellationToken ct) =>
             Results.Ok(await service.ChangeStatusAsync(id, request, ct)));
+
+        // Lets an admin (re)generate a payment link for an order — e.g. the customer abandoned the
+        // original Checkout Pro page, or the order was created before the gateway was configured.
+        adminGroup.MapPost("/{id:guid}/payment-link", async (Guid id, IOrderService service, CancellationToken ct) =>
+            Results.Ok(new { paymentUrl = await service.GeneratePaymentLinkAsync(id, ct) }));
     }
 }

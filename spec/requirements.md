@@ -432,3 +432,19 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 6. UMA VEZ que um pedido está com `PaymentStatus = Pago`, o SISTEMA NÃO DEVE rebaixá-lo para `Recusado` ou `Pendente` em razão de uma notificação de webhook posterior, duplicada ou fora de ordem (idempotência).
 7. O endpoint de webhook DEVE sempre responder HTTP 200, mesmo quando a notificação vem malformada, sem id de pagamento reconhecível, ou referenciando um pedido inexistente — para que o Mercado Pago não fique retentando indefinidamente uma notificação que nunca vai ser processável.
 8. `PaymentStatus` (`Pendente` | `Pago` | `Recusado`) é independente do status de produção/entrega do pedido (`Order.Status`) — um pedido pode estar `EmProducao` com pagamento ainda `Pendente`, por exemplo.
+
+---
+
+## Requisito 28: Gestão de pagamento das encomendas no admin
+
+**User Story:** Como ateliê, quero ver rapidamente quais encomendas já foram pagas e poder gerar um novo link de pagamento para as que não foram, para acompanhar o fluxo de caixa e resolver casos de cliente que abandonou o pagamento ou cujo pedido foi criado antes do gateway estar configurado.
+
+**Rastreamento:** RF41.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE oferecer, na listagem de encomendas do admin (`/admin/encomendas`), um filtro por status de pagamento (`Pendente` | `Pago` | `Recusado`), independente do filtro por status de produção/entrega já existente, e exibir o status de pagamento de cada encomenda na própria linha da tabela.
+2. QUANDO o administrador abre o detalhe de uma encomenda cujo `PaymentStatus` NÃO é `Pago`, O SISTEMA DEVE oferecer um botão "Gerar link de pagamento".
+3. QUANDO o administrador clica nesse botão, O SISTEMA DEVE criar uma nova preferência de pagamento no Mercado Pago para o valor total da encomenda e apresentar a URL resultante com um botão para copiar o link e outro para abrir a página de pagamento em uma nova aba.
+4. SE o gateway de pagamento não estiver configurado, O SISTEMA DEVE rejeitar a geração do link com uma mensagem de erro clara, em vez de falhar silenciosamente ou gerar uma URL inválida.
+5. SE a encomenda já estiver com `PaymentStatus = Pago`, O SISTEMA NÃO DEVE oferecer a opção de gerar um novo link de pagamento — não faz sentido cobrar de novo por um pedido já pago.
+6. Gerar um novo link de pagamento NÃO DEVE alterar o `PaymentStatus` atual da encomenda nem seus dados persistidos — é só a criação de uma preferência adicional no Mercado Pago; a confirmação de pagamento continua acontecendo exclusivamente pelo webhook (Requisito 27).

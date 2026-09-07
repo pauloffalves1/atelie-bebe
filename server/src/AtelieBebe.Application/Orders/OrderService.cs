@@ -89,14 +89,22 @@ public sealed class OrderService : IOrderService
         return await GetByIdAsync(order.Id, ct);
     }
 
-    public async Task<PagedResult<OrderDto>> ListAsync(string? status, int page, int pageSize, CancellationToken ct = default)
+    public async Task<PagedResult<OrderDto>> ListAsync(string? status, string? paymentStatus, int page, int pageSize, CancellationToken ct = default)
     {
         OrderStatus? parsedStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
             parsedStatus = ParseStatus(status);
 
+        PaymentStatus? parsedPaymentStatus = null;
+        if (!string.IsNullOrWhiteSpace(paymentStatus))
+        {
+            if (!Enum.TryParse<PaymentStatus>(paymentStatus, true, out var parsed))
+                throw new ConflictException($"Status de pagamento inválido: '{paymentStatus}'.");
+            parsedPaymentStatus = parsed;
+        }
+
         var (normalizedPage, normalizedPageSize) = Pagination.Normalize(page, pageSize);
-        var (orders, totalItems) = await _unitOfWork.Orders.ListAsync(parsedStatus, normalizedPage, normalizedPageSize, ct);
+        var (orders, totalItems) = await _unitOfWork.Orders.ListAsync(parsedStatus, parsedPaymentStatus, normalizedPage, normalizedPageSize, ct);
         return new PagedResult<OrderDto>(orders.Select(ToDto).ToList(), normalizedPage, normalizedPageSize, totalItems);
     }
 
@@ -151,6 +159,26 @@ public sealed class OrderService : IOrderService
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task<string> GeneratePaymentLinkAsync(Guid orderId, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, ct)
+            ?? throw new NotFoundException("Pedido", orderId);
+
+        if (order.PaymentStatus == PaymentStatus.Pago)
+            throw new ConflictException("Este pedido já está pago — não é necessário gerar um novo link de pagamento.");
+
+        if (!_paymentGateway.IsConfigured)
+            throw new ConflictException("O meio de pagamento online ainda não foi configurado.");
+
+        var preference = await _paymentGateway.CreatePreferenceAsync(
+            order.Id, "Pedido Ateliê Layette Baby", order.Total.Amount, order.CustomerEmail.Value, ct);
+
+        if (preference is null)
+            throw new ConflictException("Não foi possível gerar o link de pagamento agora. Tente novamente em instantes.");
+
+        return preference.CheckoutUrl;
     }
 
     public async Task<OrderDto> SimulatePaymentAsync(Guid orderId, bool approved, CancellationToken ct = default)
