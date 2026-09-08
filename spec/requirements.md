@@ -829,3 +829,19 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. O cliente DEVE poder ver a lista de todos os seus produtos favoritados (`/favoritos`).
 4. QUANDO um produto favoritado por um ou mais clientes passa de inativo para ativo, O SISTEMA DEVE enviar um e-mail a cada cliente que o favoritou, avisando que voltou a ficar disponível.
 5. Reativar um produto que já estava ativo, ou desativá-lo, NÃO DEVE disparar esse aviso.
+
+---
+
+## Requisito 56: Lembrete de carrinho abandonado
+
+**User Story:** Como ateliê, quero avisar um cliente que deixou itens no carrinho sem finalizar a compra, para recuperar vendas que quase aconteceram.
+
+**Rastreamento:** RF68.
+
+**Acceptance Criteria**
+1. QUANDO um cliente autenticado altera o carrinho, O SISTEMA DEVE salvar uma cópia dos itens no servidor, associada à conta do cliente.
+2. QUANDO o carrinho de um cliente autenticado fica vazio, O SISTEMA DEVE remover essa cópia em vez de manter uma cópia vazia.
+3. QUANDO uma cópia de carrinho fica sem nenhuma atualização por um período configurado de inatividade e nunca recebeu um lembrete, O SISTEMA DEVE enviar um e-mail ao cliente listando os produtos deixados no carrinho.
+4. O SISTEMA NÃO DEVE enviar mais de um lembrete para o mesmo período de abandono de um carrinho.
+5. QUANDO o cliente volta a alterar o carrinho depois de já ter recebido um lembrete, O SISTEMA DEVE permitir um novo lembrete se esse carrinho for abandonado de novo depois.
+6. O carrinho de um cliente não autenticado NÃO DEVE ser rastreado no servidor.

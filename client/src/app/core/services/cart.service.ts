@@ -1,8 +1,12 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { CartItem } from '../models/cart.model';
 import { Product } from '../models/product.model';
+import { AuthService } from './auth.service';
 
 const STORAGE_KEY = 'atelie-bebe.cart';
+const SYNC_DEBOUNCE_MS = 2000;
 
 function normalize(value?: string | null): string | null {
   return value ?? null;
@@ -18,6 +22,10 @@ function matches(item: CartItem, productId: string, embroideryText?: string | nu
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  private syncTimeout: ReturnType<typeof setTimeout> | undefined;
+
   private readonly itemsSignal = signal<CartItem[]>(this.readStoredCart());
 
   readonly items = this.itemsSignal.asReadonly();
@@ -25,6 +33,12 @@ export class CartService {
   readonly totalPrice = computed(() =>
     this.itemsSignal().reduce((sum, item) => sum + item.product.effectivePrice * item.quantity, 0),
   );
+
+  constructor() {
+    // Picks up anything added while logged out (or before this tab loaded) as soon as we know
+    // there's an authenticated customer to attribute the cart to.
+    if (this.auth.isAuthenticated()) this.scheduleSync();
+  }
 
   add(product: Product, quantity = 1, embroideryText?: string | null, threadColor?: string | null): void {
     const items = [...this.itemsSignal()];
@@ -57,6 +71,7 @@ export class CartService {
   private persist(items: CartItem[]): void {
     this.itemsSignal.set(items);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    if (this.auth.isAuthenticated()) this.scheduleSync();
   }
 
   private readStoredCart(): CartItem[] {
@@ -66,5 +81,22 @@ export class CartService {
     } catch {
       return [];
     }
+  }
+
+  /**
+   * Debounced push of the current cart to the server, purely so an abandoned-cart reminder can
+   * be sent later — the cart is never read back from the server into the UI.
+   */
+  private scheduleSync(): void {
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = setTimeout(() => {
+      const items = this.itemsSignal().map((item) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        embroideryText: item.embroideryText ?? null,
+        threadColor: item.threadColor ?? null,
+      }));
+      this.http.put(`${environment.apiUrl}/cart-sync`, { items }).subscribe({ error: () => {} });
+    }, SYNC_DEBOUNCE_MS);
   }
 }

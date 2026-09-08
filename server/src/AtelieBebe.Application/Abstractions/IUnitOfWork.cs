@@ -20,6 +20,7 @@ public interface IUnitOfWork
     ICouponRepository Coupons { get; }
     IEmailVerificationTokenRepository EmailVerificationTokens { get; }
     IWishlistItemRepository WishlistItems { get; }
+    ICartSnapshotRepository CartSnapshots { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

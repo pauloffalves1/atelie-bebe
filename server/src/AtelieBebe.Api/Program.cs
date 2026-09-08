@@ -128,6 +128,7 @@ app.MapSitemapEndpoints();
 app.MapReviewEndpoints();
 app.MapCouponEndpoints();
 app.MapWishlistEndpoints();
+app.MapCartSyncEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapFakePaymentEndpoints();

@@ -1,5 +1,7 @@
 namespace AtelieBebe.Application.Abstractions;
 
+public sealed record AbandonedCartItem(string ProductName, string ProductUrl, int Quantity);
+
 /// <summary>
 /// Independent notification channel alongside INotificationSender (WhatsApp) — dispatched
 /// separately by the outbox processor so a failure/misconfiguration in one channel never blocks
@@ -24,4 +26,7 @@ public interface IEmailSender
 
     /// <summary>Sent to every customer with the product on their wishlist when it goes from inactive back to active.</summary>
     Task SendProductBackInStockAsync(string customerName, string customerEmail, string productName, string productUrl, CancellationToken ct = default);
+
+    /// <summary>Sent once per abandoned cart — links to each product directly rather than assuming the customer's local cart is still intact.</summary>
+    Task SendAbandonedCartReminderAsync(string customerName, string customerEmail, IReadOnlyList<AbandonedCartItem> items, string shopUrl, CancellationToken ct = default);
 }

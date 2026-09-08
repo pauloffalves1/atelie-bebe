@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using AtelieBebe.Application.Abstractions;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -123,6 +124,23 @@ public sealed class ResendEmailSender : IEmailSender
                 <p><a href="{productUrl}">Ver produto</a></p>
                 """),
             ct);
+
+    public Task SendAbandonedCartReminderAsync(string customerName, string customerEmail, IReadOnlyList<AbandonedCartItem> items, string shopUrl, CancellationToken ct = default)
+    {
+        var itemsHtml = string.Join("", items.Select(i =>
+            $"""<li><a href="{i.ProductUrl}">{i.ProductName}</a> — {i.Quantity}x</li>"""));
+
+        return SendAsync(
+            customerEmail,
+            "Você esqueceu algo no seu carrinho!",
+            Wrap($"""
+                <p>Olá, {customerName}!</p>
+                <p>Notamos que você deixou alguns itens no carrinho e ainda não finalizou o pedido:</p>
+                <ul>{itemsHtml}</ul>
+                <p><a href="{shopUrl}">Voltar à loja</a></p>
+                """),
+            ct);
+    }
 
     private async Task SendAsync(string toEmail, string subject, string html, CancellationToken ct)
     {

@@ -1,4 +1,5 @@
 using AtelieBebe.Application.Auth;
+using AtelieBebe.Application.Cart;
 using AtelieBebe.Application.Contact;
 using AtelieBebe.Application.Coupons;
 using AtelieBebe.Application.Customers;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ICouponService, CouponService>();
         services.AddScoped<IWishlistService, WishlistService>();
+        services.AddScoped<ICartSyncService, CartSyncService>();
         return services;
     }
 }

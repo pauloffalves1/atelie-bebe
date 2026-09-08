@@ -1,5 +1,6 @@
 using AtelieBebe.Application.Abstractions;
 using AtelieBebe.Application.Dashboard;
+using AtelieBebe.Infrastructure.Cart;
 using AtelieBebe.Infrastructure.Notifications;
 using AtelieBebe.Infrastructure.Outbox;
 using AtelieBebe.Infrastructure.Payments;
@@ -61,6 +62,7 @@ public static class DependencyInjection
         }
 
         services.AddHostedService<OutboxProcessor>();
+        services.AddHostedService<AbandonedCartReminderProcessor>();
 
         return services;
     }

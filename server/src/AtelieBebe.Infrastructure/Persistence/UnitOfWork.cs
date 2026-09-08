@@ -25,6 +25,7 @@ public sealed class UnitOfWork : IUnitOfWork
     public ICouponRepository Coupons { get; }
     public IEmailVerificationTokenRepository EmailVerificationTokens { get; }
     public IWishlistItemRepository WishlistItems { get; }
+    public ICartSnapshotRepository CartSnapshots { get; }
 
     public UnitOfWork(AppDbContext dbContext)
     {
@@ -41,6 +42,7 @@ public sealed class UnitOfWork : IUnitOfWork
         Coupons = new CouponRepository(dbContext);
         EmailVerificationTokens = new EmailVerificationTokenRepository(dbContext);
         WishlistItems = new WishlistItemRepository(dbContext);
+        CartSnapshots = new CartSnapshotRepository(dbContext);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _dbContext.SaveChangesAsync(ct);

@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+    public DbSet<CartSnapshot> CartSnapshots => Set<CartSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

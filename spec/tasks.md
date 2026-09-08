@@ -533,3 +533,16 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 56.9 `dotnet build`/`dotnet test` (165 Domain + 20 Application); `dotnet ef migrations add AddWishlist`; `npm run build`/`npx ng test` (31 testes) sem erros
     - [x] 56.10 Verificado via curl fim a fim: favoritar/desfavoritar idempotentes, listagem com dados do produto, admin desativa e reativa o produto → evento processado na outbox sem erro. Verificado no navegador: ícone de coração alterna estado no detalhe do produto, `/favoritos` lista e remove corretamente
     - [x] 56.11 `README.md` (RF67) e `spec/requirements.md`/`spec/design.md` (Requisito 55) atualizados
+
+- [x] 57. Lembrete de carrinho abandonado (Requisito 56 / RF68, design em `spec/design.md`)
+  - Backend
+    - [x] 57.1 `CartSnapshot` (Domain, upsert por cliente, `ReplaceItems` reseta `ReminderSentAt`); `ICartSnapshotRepository`/`CartSnapshotRepository`; `CartSnapshotConfiguration` (índice único `CustomerId`); migration `AddCartSnapshot`; testes de domínio (`CartSnapshotTests`, 4 casos)
+    - [x] 57.2 `CartSyncService.SaveAsync` (upsert; lista vazia remove a linha); `PUT /api/cart-sync` (`CustomerOnly`)
+    - [x] 57.3 `IEmailSender.SendAbandonedCartReminderAsync`/`ResendEmailSender` (linka cada produto, não o carrinho)
+    - [x] 57.4 `AbandonedCartReminderProcessor` (novo `BackgroundService`, independente da outbox — checagem por tempo, não reação a evento): poll a cada 15min, considera abandonado após 3h sem atualização, `MarkReminderSent()` mesmo se o e-mail falhar (at-most-once, sem retry)
+  - Frontend
+    - [x] 57.5 `CartService.persist()` ganha `scheduleSync()` (debounce 2s), só quando `AuthService.isAuthenticated()`; sincronização inicial no construtor se já autenticado ao carregar
+  - Verificação e documentação
+    - [x] 57.6 `dotnet build`/`dotnet test` (169 Domain + 20 Application); `dotnet ef migrations add AddCartSnapshot`; `npm run build`/`npx ng test` (31 testes) sem erros
+    - [x] 57.7 Verificado via curl: `PUT /api/cart-sync` grava e remove corretamente. Verificado com temporizadores temporariamente reduzidos (revertidos antes do commit): processor detectou carrinho inativo simulado, marcou `ReminderSentAt`, tentou enviar e-mail (falhou só por falta de `Resend:ApiKey` local), não reenviou no ciclo seguinte. Fluxo do cliente confirmado no navegador (adicionar ao carrinho autenticado → snapshot criado no servidor com os itens corretos)
+    - [x] 57.8 `README.md` (RF68) e `spec/requirements.md`/`spec/design.md` (Requisito 56) atualizados
