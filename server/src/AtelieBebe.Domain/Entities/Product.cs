@@ -1,4 +1,5 @@
 using AtelieBebe.Domain.Common;
+using AtelieBebe.Domain.Events;
 using AtelieBebe.Domain.Exceptions;
 using AtelieBebe.Domain.ValueObjects;
 
@@ -91,6 +92,9 @@ public sealed class Product : Entity, IAggregateRoot
 
     public void SetActive(bool active)
     {
+        if (active && !Active)
+            AddDomainEvent(new ProductBackInStockDomainEvent(Id, Name, Slug));
+
         Active = active;
         UpdatedAt = DateTime.UtcNow;
     }

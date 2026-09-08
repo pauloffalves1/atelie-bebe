@@ -19,6 +19,7 @@ public interface IUnitOfWork
     IPasswordResetTokenRepository PasswordResetTokens { get; }
     ICouponRepository Coupons { get; }
     IEmailVerificationTokenRepository EmailVerificationTokens { get; }
+    IWishlistItemRepository WishlistItems { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

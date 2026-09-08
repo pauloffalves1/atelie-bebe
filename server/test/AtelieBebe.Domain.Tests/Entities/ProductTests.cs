@@ -1,4 +1,6 @@
+using System.Linq;
 using AtelieBebe.Domain.Entities;
+using AtelieBebe.Domain.Events;
 using AtelieBebe.Domain.Exceptions;
 using AtelieBebe.Domain.ValueObjects;
 
@@ -36,6 +38,42 @@ public class ProductTests
         product.SetActive(false);
 
         Assert.False(product.Active);
+    }
+
+    [Fact]
+    public void SetActive_ReactivatingAfterDeactivation_RaisesBackInStockEvent()
+    {
+        var product = CreateProduct();
+        product.SetActive(false);
+        product.ClearDomainEvents();
+
+        product.SetActive(true);
+
+        var raised = Assert.Single(product.DomainEvents.OfType<ProductBackInStockDomainEvent>());
+        Assert.Equal(product.Id, raised.ProductId);
+        Assert.Equal(product.Slug, raised.ProductSlug);
+    }
+
+    [Fact]
+    public void SetActive_AlreadyActive_DoesNotRaiseBackInStockEvent()
+    {
+        var product = CreateProduct();
+        product.ClearDomainEvents();
+
+        product.SetActive(true);
+
+        Assert.Empty(product.DomainEvents.OfType<ProductBackInStockDomainEvent>());
+    }
+
+    [Fact]
+    public void SetActive_Deactivating_DoesNotRaiseBackInStockEvent()
+    {
+        var product = CreateProduct();
+        product.ClearDomainEvents();
+
+        product.SetActive(false);
+
+        Assert.Empty(product.DomainEvents.OfType<ProductBackInStockDomainEvent>());
     }
 
     [Fact]

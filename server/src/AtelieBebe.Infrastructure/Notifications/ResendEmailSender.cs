@@ -113,6 +113,17 @@ public sealed class ResendEmailSender : IEmailSender
                 """),
             ct);
 
+    public Task SendProductBackInStockAsync(string customerName, string customerEmail, string productName, string productUrl, CancellationToken ct = default) =>
+        SendAsync(
+            customerEmail,
+            $"{productName} está disponível de novo!",
+            Wrap($"""
+                <p>Olá, {customerName}!</p>
+                <p>O produto <strong>{productName}</strong>, que está na sua lista de favoritos, voltou a ficar disponível.</p>
+                <p><a href="{productUrl}">Ver produto</a></p>
+                """),
+            ct);
+
     private async Task SendAsync(string toEmail, string subject, string html, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))

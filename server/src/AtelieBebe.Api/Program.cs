@@ -127,6 +127,7 @@ app.MapPaymentEndpoints();
 app.MapSitemapEndpoints();
 app.MapReviewEndpoints();
 app.MapCouponEndpoints();
+app.MapWishlistEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapFakePaymentEndpoints();

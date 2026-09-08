@@ -344,6 +344,7 @@ Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma 
 | RF64 | O sistema deve incluir dados estruturados (JSON-LD, schema.org `Product`) na página de detalhe de cada produto, incluindo nota média e total de avaliações quando existirem | Sistema |
 | RF65 | O sistema deve exigir que o cliente confirme seu e-mail (link enviado no cadastro, válido por 24 horas) e permitir reenviar esse e-mail a qualquer momento pela própria conta | Cliente |
 | RF66 | O sistema deve redimensionar e comprimir automaticamente qualquer imagem enviada pelo administrador (produtos, galeria, fotos do site), sem exigir nenhuma ação manual de otimização antes do upload | Administrador |
+| RF67 | O sistema deve permitir que um cliente autenticado favorite/desfavorite produtos (`/favoritos`) e deve avisá-lo por e-mail quando um produto favoritado, antes pausado, voltar a ficar ativo | Cliente / Sistema |
 
 ### Requisitos não funcionais
 
@@ -471,3 +472,9 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 
 - `LocalFileStorageService` (único ponto de gravação de arquivo, usado por fotos de produto, galeria e imagens do site) decodifica toda imagem recebida via ImageSharp, redimensiona para no máximo 1600px no maior lado (mantendo proporção, sem upscale de imagens menores) e recomprime antes de salvar — JPEG e WEBP em qualidade 82, PNG com compressão máxima sem perda. O admin não precisa otimizar a foto antes de enviar.
 - Usa `SixLabors.ImageSharp` na série 2.x (licença Apache 2.0) de propósito, não a 3.x/4.x mais recente — a partir da 3.x o projeto passou a exigir registro de licença comercial (gratuita até certo faturamento, mas ainda assim uma conta em sixlabors.com), o que não faz sentido para uma operação de redimensionar/comprimir tão simples.
+
+### Favoritos e aviso de reposição (RF67)
+
+- `WishlistItem` (uma linha por combinação cliente+produto, índice único) guarda só os IDs — sem navegação para `Customer`/`Product`, no mesmo estilo de `ProductReview`. `POST/DELETE /api/wishlist/{productId}` (`CustomerOnly`) são idempotentes: favoritar de novo ou desfavoritar algo que já não está na lista não é erro.
+- Não há controle de estoque no catálogo (produtos são sempre feitos sob encomenda), então "reposição" aqui é o produto voltar de **pausado** para **ativo** — `Product.SetActive(true)` levanta `ProductBackInStockDomainEvent` só na transição `false → true` (reativar um produto já ativo, ou pausar, não dispara nada). O `OutboxProcessor` busca todos os clientes que favoritaram aquele produto e envia um e-mail a cada um (canal de e-mail apenas, mesmo padrão dos outros avisos pontuais).
+- `/produto/:slug` mostra um ícone de coração ao lado do nome (só para cliente autenticado) que alterna o favorito; `/favoritos` lista os produtos favoritados com um botão para remover.

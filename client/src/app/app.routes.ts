@@ -167,6 +167,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/public/my-account/my-account').then((m) => m.MyAccount),
       },
       {
+        path: 'favoritos',
+        title: `Meus favoritos — ${SITE_NAME}`,
+        canActivate: [customerGuard],
+        loadComponent: () => import('./features/public/wishlist/wishlist-page').then((m) => m.WishlistPage),
+      },
+      {
         path: 'pedido/:id',
         title: `Confirmação de pedido — ${SITE_NAME}`,
         loadComponent: () =>

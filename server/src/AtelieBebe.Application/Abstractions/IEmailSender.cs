@@ -21,4 +21,7 @@ public interface IEmailSender
 
     /// <summary>Same reasoning as password reset — e-mail only, no WhatsApp template for a one-off confirmation link.</summary>
     Task SendEmailVerificationAsync(string name, string email, string verificationUrl, CancellationToken ct = default);
+
+    /// <summary>Sent to every customer with the product on their wishlist when it goes from inactive back to active.</summary>
+    Task SendProductBackInStockAsync(string customerName, string customerEmail, string productName, string productUrl, CancellationToken ct = default);
 }

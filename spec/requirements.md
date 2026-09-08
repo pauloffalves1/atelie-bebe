@@ -813,3 +813,18 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 2. QUANDO uma imagem enviada já é menor que 1600px nos dois lados, O SISTEMA NÃO DEVE aumentá-la (sem upscale).
 3. O SISTEMA DEVE recomprimir toda imagem salva (JPEG/WEBP com perda controlada, PNG sem perda) para reduzir o tamanho do arquivo final.
 4. O formato do arquivo (extensão) DEVE permanecer o mesmo enviado pelo administrador.
+
+---
+
+## Requisito 55: Favoritos e aviso de reposição
+
+**User Story:** Como cliente, quero marcar produtos como favoritos para não perdê-los de vista, e ser avisado se um deles voltar a ficar disponível depois de pausado.
+
+**Rastreamento:** RF67.
+
+**Acceptance Criteria**
+1. O cliente autenticado DEVE poder favoritar um produto e, posteriormente, desfavoritá-lo.
+2. Favoritar um produto já favoritado, ou desfavoritar um produto que não está favoritado, NÃO DEVE resultar em erro (operação idempotente).
+3. O cliente DEVE poder ver a lista de todos os seus produtos favoritados (`/favoritos`).
+4. QUANDO um produto favoritado por um ou mais clientes passa de inativo para ativo, O SISTEMA DEVE enviar um e-mail a cada cliente que o favoritou, avisando que voltou a ficar disponível.
+5. Reativar um produto que já estava ativo, ou desativá-lo, NÃO DEVE disparar esse aviso.

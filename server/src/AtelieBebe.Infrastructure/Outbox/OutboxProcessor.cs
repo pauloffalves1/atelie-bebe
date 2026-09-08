@@ -63,6 +63,8 @@ public sealed class OutboxProcessor : BackgroundService
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var sender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
         var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var appUrls = scope.ServiceProvider.GetRequiredService<IAppUrlProvider>();
 
         var pending = await dbContext.OutboxMessages
             .Where(m => m.ProcessedOn == null && m.Attempts < MaxAttempts)
@@ -76,7 +78,7 @@ public sealed class OutboxProcessor : BackgroundService
         {
             try
             {
-                await DispatchAsync(message, sender, emailSender, _logger, ct);
+                await DispatchAsync(message, sender, emailSender, unitOfWork, appUrls, _logger, ct);
                 message.ProcessedOn = DateTime.UtcNow;
                 message.Error = null;
             }
@@ -91,7 +93,7 @@ public sealed class OutboxProcessor : BackgroundService
         await dbContext.SaveChangesAsync(ct);
     }
 
-    private static async Task DispatchAsync(OutboxMessage message, INotificationSender sender, IEmailSender emailSender, ILogger logger, CancellationToken ct)
+    private static async Task DispatchAsync(OutboxMessage message, INotificationSender sender, IEmailSender emailSender, IUnitOfWork unitOfWork, IAppUrlProvider appUrls, ILogger logger, CancellationToken ct)
     {
         var eventType = Type.GetType(message.Type)
             ?? throw new InvalidOperationException($"Tipo de evento desconhecido: {message.Type}");
@@ -130,6 +132,17 @@ public sealed class OutboxProcessor : BackgroundService
             case ContactMessageReceivedDomainEvent e:
                 await TrySendEmailAsync(() => emailSender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Email, ct), logger);
                 await sender.SendContactAcknowledgementAsync(e.MessageId, e.Name, e.Phone, ct);
+                break;
+            case ProductBackInStockDomainEvent e:
+                // E-mail only — a one-off "it's back" nudge doesn't justify a WhatsApp template.
+                var wishlisters = await unitOfWork.WishlistItems.ListByProductAsync(e.ProductId, ct);
+                var productUrl = $"{appUrls.PublicUrl.TrimEnd('/')}/produto/{e.ProductSlug}";
+                foreach (var item in wishlisters)
+                {
+                    var customer = await unitOfWork.Customers.GetByIdAsync(item.CustomerId, ct);
+                    if (customer is null || customer.IsAnonymized) continue;
+                    await TrySendEmailAsync(() => emailSender.SendProductBackInStockAsync(customer.Name, customer.Email.Value, e.ProductName, productUrl, ct), logger);
+                }
                 break;
             default:
                 throw new InvalidOperationException($"Nenhum handler registrado para o evento {domainEvent.GetType().Name}.");

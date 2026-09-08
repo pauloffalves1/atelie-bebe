@@ -9,6 +9,7 @@ import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
 import { ReviewService } from '../../../core/services/review.service';
 import { SeoService } from '../../../core/services/seo.service';
+import { WishlistService } from '../../../core/services/wishlist.service';
 import { resolveAssetUrl } from '../../../core/utils/asset-url';
 import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 
@@ -72,8 +73,12 @@ export class ProductDetail implements OnInit {
   });
 
   private readonly seo = inject(SeoService);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly reviewService = inject(ReviewService);
+  private readonly wishlistService = inject(WishlistService);
+
+  readonly isFavorited = signal(false);
+  readonly favoriteBusy = signal(false);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -126,6 +131,10 @@ export class ProductDetail implements OnInit {
             next: (eligibility) => this.eligibility.set(eligibility),
             error: () => {},
           });
+          this.wishlistService.getStatus(product.id).subscribe({
+            next: (status) => this.isFavorited.set(status.isFavorited),
+            error: () => {},
+          });
         }
       },
       error: () => {
@@ -137,6 +146,23 @@ export class ProductDetail implements OnInit {
 
   selectImage(index: number): void {
     this.activeImageIndex.set(index);
+  }
+
+  toggleFavorite(): void {
+    const product = this.product();
+    if (!product || this.favoriteBusy()) return;
+
+    this.favoriteBusy.set(true);
+    const wasFavorited = this.isFavorited();
+    const request = wasFavorited ? this.wishlistService.remove(product.id) : this.wishlistService.add(product.id);
+
+    request.subscribe({
+      next: () => {
+        this.isFavorited.set(!wasFavorited);
+        this.favoriteBusy.set(false);
+      },
+      error: () => this.favoriteBusy.set(false),
+    });
   }
 
   setReviewRating(rating: number): void {

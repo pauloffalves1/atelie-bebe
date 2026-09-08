@@ -7,6 +7,7 @@ using AtelieBebe.Application.Orders;
 using AtelieBebe.Application.Products;
 using AtelieBebe.Application.Reviews;
 using AtelieBebe.Application.SiteImages;
+using AtelieBebe.Application.Wishlist;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AtelieBebe.Application;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IGalleryImageService, GalleryImageService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ICouponService, CouponService>();
+        services.AddScoped<IWishlistService, WishlistService>();
         return services;
     }
 }

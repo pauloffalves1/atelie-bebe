@@ -516,3 +516,19 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 55.3 `dotnet build`/`dotnet test` sem falhas (159 Domain + 20 Application)
   - [x] 55.4 Verificado manualmente via curl contra a API local: upload de JPEG 3000×2000 (~109KB) → 1600×1067 (~37KB); upload de PNG 2500×1800 (~31KB) → 1600×1152 (~10KB)
   - [x] 55.5 `README.md` (RF66) e `spec/requirements.md`/`spec/design.md` (Requisito 54) atualizados
+
+- [x] 56. Favoritos e aviso de reposição (Requisito 55 / RF67, design em `spec/design.md`)
+  - Backend
+    - [x] 56.1 `WishlistItem` (Domain, espelha `ProductReview`); `IWishlistItemRepository`/`WishlistItemRepository`; `WishlistItemConfiguration` (índice único `CustomerId`+`ProductId`); migration `AddWishlist`; testes de domínio (`WishlistItemTests`, 3 casos)
+    - [x] 56.2 `ProductBackInStockDomainEvent`; `Product.SetActive` levanta o evento só na transição `false→true`; testes de domínio (`ProductTests`, 3 casos novos)
+    - [x] 56.3 `WishlistService` (`ListByCustomerAsync`/`GetStatusAsync`/`AddAsync`/`RemoveAsync`, os dois últimos idempotentes)
+    - [x] 56.4 `IEmailSender.SendProductBackInStockAsync`/`ResendEmailSender`; `OutboxProcessor` passa a resolver `IUnitOfWork`/`IAppUrlProvider` do escopo e ganha o `case ProductBackInStockDomainEvent` (busca favoritadores, envia e-mail a cada um)
+    - [x] 56.5 `GET/POST/DELETE /api/wishlist[/{productId}]` (`CustomerOnly`)
+  - Frontend
+    - [x] 56.6 `wishlist.model.ts`; `WishlistService` (`list`/`getStatus`/`add`/`remove`)
+    - [x] 56.7 Botão de coração em `product-detail.html`/`.ts` (só autenticado), alternando favorito
+    - [x] 56.8 `wishlist-page.ts`/`.html` (`/favoritos`); link "Meus favoritos" no dropdown do cliente
+  - Verificação e documentação
+    - [x] 56.9 `dotnet build`/`dotnet test` (165 Domain + 20 Application); `dotnet ef migrations add AddWishlist`; `npm run build`/`npx ng test` (31 testes) sem erros
+    - [x] 56.10 Verificado via curl fim a fim: favoritar/desfavoritar idempotentes, listagem com dados do produto, admin desativa e reativa o produto → evento processado na outbox sem erro. Verificado no navegador: ícone de coração alterna estado no detalhe do produto, `/favoritos` lista e remove corretamente
+    - [x] 56.11 `README.md` (RF67) e `spec/requirements.md`/`spec/design.md` (Requisito 55) atualizados
