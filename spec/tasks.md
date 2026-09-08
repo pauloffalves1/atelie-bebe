@@ -381,6 +381,7 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 34.2 `README.md`: comandos de instalação do cron (`*/30 * * * *`, rodar uma vez na VPS)
   - [x] 34.3 Instalação real na VPS — administrador rodou os comandos do README no servidor, backup confirmado funcionando (`atelie-bebe_2026-09-07_192107.db.gz` gerado com sucesso)
   - [x] 34.4 `server/ops/sync-offsite.sh` — `rclone sync` dos backups locais para o Google Drive, encadeado no cron depois de `backup-db.sh`; `README.md` documenta o passo manual de autorização OAuth (`rclone authorize`)
+  - [x] 34.5 `server/ops/sync-uploads-offsite.sh` — `rclone sync` da pasta de uploads (produtos/galeria/site) para uma segunda pasta no mesmo remoto `gdrive` já autorizado, encadeado no cron depois de `sync-offsite.sh`; `README.md` documenta a instalação. Requisito 33 (critério 6) e `spec/design.md` atualizados. Instalação real na VPS (cron) ainda pendente — script escrito e documentado, falta o administrador rodar os comandos do README
 
 - [x] 35. Edição de dados do cliente pelo admin (Requisito 34 / RF46, design em `spec/design.md`)
   - Backend

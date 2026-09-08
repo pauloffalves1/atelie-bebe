@@ -520,6 +520,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. O SISTEMA DEVE manter apenas os 10 backups mais recentes, removendo automaticamente os mais antigos, para não esgotar o espaço em disco indefinidamente.
 4. A instalação (agendamento via cron) É um passo manual único documentado no `README.md`, não algo que a aplicação faz sozinha.
 5. O SISTEMA DEVE ter um script (`server/ops/sync-offsite.sh`) que sincroniza os backups locais para um remoto fora do servidor (Google Drive via `rclone`), para sobreviver à perda do VPS inteiro (não só do arquivo do banco).
+6. O SISTEMA DEVE ter um script (`server/ops/sync-uploads-offsite.sh`) que sincroniza a pasta de imagens enviadas pelo admin (produtos, galeria, site) para o mesmo remoto fora do servidor, já que essas imagens não fazem parte do banco de dados e por isso não são cobertas pelos critérios 1-5.
 
 ---
 

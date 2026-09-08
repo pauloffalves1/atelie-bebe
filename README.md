@@ -265,6 +265,20 @@ sudo chmod +x /usr/local/bin/atelie-bebe-sync-offsite.sh
 
 Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-offsite.sh` manualmente uma vez e conferindo se os arquivos aparecem na pasta "atelie-bebe-backups" do Google Drive. Como o script roda `rclone sync` (não `copy`), qualquer arquivo apagado localmente pela retenção dos 10 mais recentes também é removido do Drive — o Drive espelha exatamente o conteúdo de `/var/backups/atelie-bebe/`, nunca acumula além disso.
 
+### Backup de mídia (fotos enviadas)
+
+O backup acima cobre só o banco de dados — as fotos enviadas pelo admin (produtos, galeria, site) ficam em `/var/www/atelie-bebe/uploads` (fora do banco) e **não** estavam em nenhum backup: perder o VPS perderia todas as imagens do catálogo. `server/ops/sync-uploads-offsite.sh` espelha essa pasta inteira para uma segunda pasta no mesmo Google Drive já configurado acima (`atelie-bebe-uploads-backup`), reaproveitando o mesmo remoto `gdrive` — não precisa configurar o rclone de novo.
+
+Instalar (depois de já ter configurado o rclone/`gdrive` na seção anterior):
+
+```bash
+sudo cp /var/www/atelie-bebe/server/ops/sync-uploads-offsite.sh /usr/local/bin/atelie-bebe-sync-uploads.sh
+sudo chmod +x /usr/local/bin/atelie-bebe-sync-uploads.sh
+( sudo crontab -l 2>/dev/null | grep -v atelie-bebe; echo "*/30 * * * * /usr/local/bin/atelie-bebe-backup.sh && /usr/local/bin/atelie-bebe-sync-offsite.sh && /usr/local/bin/atelie-bebe-sync-uploads.sh >> /var/log/atelie-bebe-backup.log 2>&1" ) | sudo crontab -
+```
+
+Assim como o backup do banco, é um `rclone sync` (espelha, não acumula) — uma foto apagada pelo admin some também do backup no Drive na próxima execução. Como fotos mudam bem menos que o banco, rodar a cada 30 minutos junto com o resto é só uma questão de conveniência (uma linha de cron só); o custo extra é baixo porque o `rclone sync` só transfere o que mudou. Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-uploads.sh` manualmente e conferindo a pasta "atelie-bebe-uploads-backup" no Google Drive.
+
 ## Requisitos
 
 ### Atores
