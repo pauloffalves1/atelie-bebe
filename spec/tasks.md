@@ -616,7 +616,7 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
 - [x] 66. PWA (Requisito 65 / RNF12, design em `spec/design.md`)
   - [x] 66.1 `ng add @angular/pwa` não funcionou (resolveu versão incompatível com Angular 22, depois falhou por restrição de `--allow-scripts`); `@angular/service-worker` instalado manualmente na versão exata do `@angular/core`
   - [x] 66.2 Ícones PNG (192/512) gerados a partir do `favicon.svg` existente via canvas no navegador (Claude-in-Chrome), já que não havia gerador de ícone no projeto; `manifest.webmanifest`; `index.html` com `<link rel="manifest">` e `theme-color`
-  - [x] 66.3 `ngsw-config.json` (shell prefetch, assets lazy, `dataGroup` freshness para `/api/products/**`); `provideServiceWorker(..., { enabled: !isDevMode() })`; `"serviceWorker": "ngsw-config.json"` só na configuração `production` do `angular.json`
+  - [x] 66.3 `ngsw-config.json` (shell prefetch, assets estáticos lazy, sem `dataGroup` para `/api/**` — removido depois de causar produtos/fotos desatualizados na loja); `provideServiceWorker(..., { enabled: !isDevMode() })`; `"serviceWorker": "ngsw-config.json"` só na configuração `production` do `angular.json`
   - [x] 66.4 Confirmado que `npm run build` gera `ngsw-worker.js`/`ngsw.json`/`manifest.webmanifest` em `dist/client/browser/`; `npx ng test` (31 testes) sem regressão
   - [x] 66.5 `README.md` (RNF12) e `spec/requirements.md`/`spec/design.md` (Requisito 65) atualizados
 
@@ -624,3 +624,25 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 67.1 `server/ops/nginx-compression.conf` — gzip pronto (sem módulo extra), Brotli documentado como bloco opcional comentado (precisa de módulo adicional)
   - [x] 67.2 `README.md` (RNF13) e `spec/requirements.md`/`spec/design.md` (Requisito 66) atualizados
   - [ ] 67.3 **Não aplicado**: instalação real do bloco de compressão na VPS — precisa o administrador colar/ajustar via SSH (mesmo padrão do Requisito 63)
+
+- [x] 68. Produtos relacionados (Requisito 67 / RF77)
+  - [x] 68.1 `product-detail.ts` busca 5 produtos da mesma categoria, remove o próprio produto, mostra até 4 numa seção "Você também pode gostar" (`product-detail.html`) — some se vazia
+  - [x] 68.2 `npm run build`/`npx ng test` sem erros; verificado no navegador (produto com outros da mesma categoria mostra as sugestões; sem categoria com mais produtos, a seção some)
+  - [x] 68.3 `README.md` e `spec/requirements.md` (Requisito 67) atualizados
+
+- [x] 69. Etiqueta de embalagem (Requisito 68 / RF78)
+  - [x] 69.1 Botão "Imprimir etiqueta" em `admin-order-detail` chama `window.print()`; conteúdo normal com `d-print-none`, bloco de etiqueta com `d-none d-print-block`
+  - [x] 69.2 Etiqueta dimensionada para impressora térmica de envio (10x15cm), não folha inteira: classe `.packing-slip` + `@media print { @page { size: 100mm 150mm } }` em `styles.scss` (ajustado depois do feedback de que a primeira versão imprimia a página inteira)
+  - [x] 69.3 `npm run build`/`npx ng test` sem erros; conteúdo do bloco de impressão revisado em código (destinatário, endereço, itens, bordado/cor, observações) — `window.print()` abre o diálogo nativo de impressão do SO, que trava automação de navegador, então não verificado via screenshot
+  - [x] 69.4 `README.md` e `spec/requirements.md` (Requisito 68) atualizados
+
+- [x] 70. Comprovante de pedido em PDF (Requisito 69 / RF79)
+  - [x] 70.1 `jspdf` instalado (`^4.2.1`, evitando a vulnerabilidade crítica via `dompurify` da série 2.x); botão "Baixar comprovante em PDF" em `order-confirmation` monta o PDF em coordenadas absolutas (cliente, endereço, itens, total) a partir do `Order` já carregado, sem chamada nova ao backend
+  - [x] 70.2 `npm run build`/`npx ng test` sem erros; verificado no navegador com um spy em `URL.createObjectURL` que o clique gera um Blob `application/pdf` válido (5133 bytes) sem exceção
+  - [x] 70.3 `README.md` e `spec/requirements.md` (Requisito 69) atualizados
+
+- [x] 71. Correção: flash de imagem padrão antes da imagem real (home, "Sobre") e catálogo desatualizado na loja
+  - [x] 71.1 `home.ts`/`about.ts`: `heroImageUrl`/`imageUrl` inicializados como `null` em vez de um caminho de imagem local fixo; template só renderiza a `<img>` quando o valor está definido (`@if (...; as url)`); valor final (admin ou fallback) só é atribuído depois que a chamada ao `SiteImageService` resolve (sucesso ou erro)
+  - [x] 71.2 Investigado o mesmo sintoma na loja: sem padrão de imagem fixa em `shop.ts`, mas o `dataGroup` `freshness` do service worker (tarefa 66.3) podia servir uma resposta cacheada de `/api/products` desatualizada — removido esse `dataGroup` inteiro
+  - [x] 71.3 `npm run build`/`npx ng test` sem erros; confirmado em produção (via DevTools/`caches`) que havia entradas cacheadas de `/api/products` antes da correção
+  - [x] 71.4 `README.md` e `spec/requirements.md` (Requisito 65, critério 4) atualizados

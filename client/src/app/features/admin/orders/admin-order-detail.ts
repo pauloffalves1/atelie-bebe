@@ -153,6 +153,10 @@ export class AdminOrderDetail implements OnInit {
     }
   }
 
+  printPackingSlip(): void {
+    window.print();
+  }
+
   parsedShippingAddress(): ShippingAddress | null {
     const json = this.order()?.shippingAddressJson;
     if (!json) return null;

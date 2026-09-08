@@ -1,7 +1,14 @@
-<div class="p-4 p-lg-5">
-  <div class="d-flex align-items-center gap-3 mb-4">
-    <a routerLink="/admin/encomendas" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-arrow-left"></i></a>
-    <h2 class="mb-0">Detalhes da encomenda</h2>
+<div class="p-4 p-lg-5 d-print-none">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <a routerLink="/admin/encomendas" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-arrow-left"></i></a>
+      <h2 class="mb-0">Detalhes da encomenda</h2>
+    </div>
+    @if (order()) {
+      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" (click)="printPackingSlip()">
+        <i class="bi bi-printer me-1"></i>Imprimir etiqueta
+      </button>
+    }
   </div>
 
   @if (loading()) {
@@ -198,3 +205,45 @@
     </div>
   }
 </div>
+
+@if (order(); as o) {
+  <div class="d-none d-print-block packing-slip">
+    <h4 class="mb-1">Ateliê Layette Baby</h4>
+    <p class="mb-2">Pedido #{{ o.id.slice(0, 8) }} — {{ o.createdAt | date:'dd/MM/yyyy' }}</p>
+
+    <div class="mb-2">
+      <h6 class="border-bottom pb-1 mb-1">Destinatário</h6>
+      <p class="mb-0"><strong>{{ o.customerName }}</strong></p>
+      @if (parsedShippingAddress(); as addr) {
+        <p class="mb-0">
+          {{ addr.street }}, {{ addr.number }}@if (addr.complement) { — {{ addr.complement }} }<br>
+          {{ addr.neighborhood }} — {{ addr.city }}/{{ addr.state }}<br>
+          CEP {{ addr.zipCode }}
+        </p>
+      } @else {
+        <p class="mb-0">Encomenda personalizada (sem endereço).</p>
+      }
+      @if (o.customerPhone) {
+        <p class="mb-0">Tel: {{ o.customerPhone }}</p>
+      }
+    </div>
+
+    <div>
+      <h6 class="border-bottom pb-1 mb-1">Itens</h6>
+      <ul class="list-unstyled mb-0">
+        @for (item of o.items; track item.id) {
+          <li class="mb-1">
+            <strong>{{ item.quantity }}x {{ item.productName }}</strong>
+            @if (parsedItemOptions(item.optionsJson); as opt) {
+              @if (opt.embroideryText) { <br>Bordado: {{ opt.embroideryText }} }
+              @if (opt.threadColor) { <br>Cor: {{ opt.threadColor }} }
+            }
+          </li>
+        }
+      </ul>
+      @if (o.notes) {
+        <p class="mb-0 mt-1"><strong>Obs.:</strong> {{ o.notes }}</p>
+      }
+    </div>
+  </div>
+}

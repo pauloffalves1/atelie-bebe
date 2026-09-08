@@ -389,3 +389,26 @@ img.rounded-4 {
     font-size: 1.1rem;
   }
 }
+
+// Etiqueta de embalagem (admin-order-detail): dimensionada para o formato mais comum de
+// impressora térmica de etiquetas de envio (10x15cm), não a página inteira.
+@media print {
+  @page {
+    size: 100mm 150mm;
+    margin: 4mm;
+  }
+
+  .packing-slip {
+    width: 92mm;
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .packing-slip h4 {
+    font-size: 13px;
+  }
+
+  .packing-slip h6 {
+    font-size: 10px;
+  }
+}

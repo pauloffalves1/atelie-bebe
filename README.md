@@ -393,6 +393,9 @@ sudo nginx -t && sudo systemctl reload nginx
 | RF74 | O sistema deve exibir um botão flutuante de WhatsApp em todas as páginas públicas, abrindo uma conversa direta com o ateliê | Visitante |
 | RF75 | O sistema deve permitir que qualquer visitante consulte o status de um pedido informando o e-mail usado na compra e o número do pedido, sem precisar estar logado | Visitante |
 | RF76 | O checkout deve exibir selos informativos de segurança (criptografia, dados de pagamento não armazenados no servidor, dados pessoais não compartilhados) | Cliente |
+| RF77 | A página de detalhe do produto deve sugerir até 4 produtos relacionados (mesma categoria) | Cliente |
+| RF78 | O painel admin deve permitir imprimir uma etiqueta de embalagem com destinatário e itens do pedido | Ateliê |
+| RF79 | A página de confirmação de pedido deve permitir baixar um comprovante em PDF do pedido | Cliente |
 
 ### Requisitos não funcionais
 
@@ -574,10 +577,21 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 
 ### PWA (RNF12)
 
-- `@angular/service-worker` (fixado na mesma versão exata do `@angular/core` instalado — a resolução automática de `latest` trouxe uma versão mais nova exigindo um `@angular/core` que este projeto ainda não usa). `ngsw-config.json`: cacheia o shell da aplicação (`prefetch`) e imagens/assets (`lazy`), mais um `dataGroup` com estratégia `freshness` para `/api/products/**` (tenta a rede primeiro, cai pro cache só se a rede falhar ou demorar mais de 3s — navegar pelo catálogo continua funcionando com conexão instável).
+- `@angular/service-worker` (fixado na mesma versão exata do `@angular/core` instalado — a resolução automática de `latest` trouxe uma versão mais nova exigindo um `@angular/core` que este projeto ainda não usa). `ngsw-config.json`: cacheia o shell da aplicação (`prefetch`) e imagens/assets estáticos como `/images/**` (`lazy`) — sem nenhum `dataGroup` para `/api/**`: as respostas da API (produtos, imagens do site) nunca passam pelo cache do service worker, sempre buscadas da rede. Um `dataGroup` com estratégia `freshness` para `/api/products/**` chegou a existir, mas foi removido: mesmo em "network-first", ele guardava a última resposta bem-sucedida e podia servi-la quando a rede demorasse mais que o timeout, mostrando produtos/fotos desatualizados na loja logo após uma edição no admin — para um catálogo pequeno em um VPS com rede estável, esse cache não valia o risco de dado velho.
 - `manifest.webmanifest` (nome, cores do tema, ícones 192px/512px) referenciado em `index.html` junto com a meta `theme-color`. Os ícones PNG foram gerados a partir do `favicon.svg` já existente (renderizado em canvas via um script no próprio navegador, já que não havia gerador de ícone no projeto) — mesmo desenho do favicon, só em tamanho maior.
 - `provideServiceWorker(..., { enabled: !isDevMode() })` — nunca ativa em `ng serve` (evitaria o cache atrapalhar o hot-reload durante desenvolvimento); `angular.json` liga `"serviceWorker": "ngsw-config.json"` só na configuração `production`. Confirmado que `ngsw-worker.js`/`ngsw.json`/`manifest.webmanifest` saem no `dist/client/browser/` depois de um `npm run build`.
 
 ### Compressão HTTP (RNF13)
 
 - `server/ops/nginx-compression.conf`: bloco de referência pra colar em `/etc/nginx/nginx.conf` (ou no `server {}` do site) — não aplicado automaticamente, mesmo padrão dos outros arquivos em `server/ops/`. `gzip` vem pronto no Nginx (sem módulo extra); Brotli, que comprime melhor, precisa de um módulo à parte (`nginx-module-brotli`) — documentado como opcional, com os comandos de instalação, mas comentado por padrão pra não quebrar um `nginx -t` em uma VPS que não tenha o módulo.
+
+### Produtos relacionados e etiqueta de embalagem (RF77-78)
+
+- **Produtos relacionados**: `product-detail.ts` busca até 5 produtos da mesma categoria (`ProductService.list(categoria, 1, 5)`) ao carregar o produto, remove o próprio produto do resultado e mostra até 4 numa seção "Você também pode gostar" abaixo das avaliações. Some inteiramente se não houver nenhum outro produto na categoria.
+- **Etiqueta de embalagem**: botão "Imprimir etiqueta" em `/admin/encomendas/:id` chama `window.print()`; o conteúdo normal da tela usa `d-print-none` (some na impressão) e um bloco `d-none d-print-block` com destinatário/endereço/itens/bordado aparece só ao imprimir. Diferente de um "imprimir a página inteira", esse bloco usa a classe `.packing-slip` (`styles.scss`) com uma regra `@media print { @page { size: 100mm 150mm } }` — dimensionado pro formato mais comum de impressora térmica de etiqueta de envio (10x15cm) usada por ateliês pequenos, não uma folha A4.
+- **Comprovante em PDF (RF79)**: botão "Baixar comprovante em PDF" na página de confirmação de pedido (`/pedido/:id`), gerado no navegador com `jsPDF` (sem chamada ao backend) — mesmos dados já carregados na tela (cliente, endereço, itens, total). `jsPDF` fixado em `^4.2.1` em vez da versão `2.x` inicial: um `npm audit` acusou 4 vulnerabilidades na 2.5.2, a mais grave (crítica) via `dompurify`, dependência transitiva do recurso de renderizar HTML do jsPDF que este projeto não usa — a 4.x eliminou essa dependência.
+
+### Correção: flash de imagem padrão na home e "Sobre" antes da imagem real carregar
+
+- `home.ts` (`heroImageUrl`) e `about.ts` (`imageUrl`) inicializavam o signal já com um caminho de imagem local fixo (`/images/hero-fraldas.jpg`, `/images/sobre-fraldas.png`), que era renderizado imediatamente e só trocado pela imagem configurada no admin (`SiteImageService`) depois que a chamada à API respondia — um "flash" visível da imagem antiga a cada carregamento de página. Corrigido inicializando os dois signals como `null` (o template só renderiza a `<img>` quando o valor está definido, via `@if (...; as url)`) e só atribuindo um valor final — a imagem do admin, ou o padrão como fallback — depois que a chamada (sucesso ou erro) resolve.
+- Investigado o mesmo sintoma relatado na página da loja: `shop.ts` não tem esse padrão de imagem padrão fixa (usa só o resultado real de `ProductService.list`, atrás de um spinner de carregamento) — mas o `dataGroup` `freshness` do service worker para `/api/products/**` (RNF12) podia devolver a última resposta cacheada quando a rede demorasse mais que o timeout, mostrando produtos/fotos desatualizados. Removido esse `dataGroup` (ver seção PWA acima) como a correção mais provável para esse caso.

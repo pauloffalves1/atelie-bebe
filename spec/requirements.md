@@ -973,7 +973,7 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 1. O site DEVE ser instalável pelo navegador como aplicativo, com ícone e nome próprios.
 2. O build de produção DEVE gerar um service worker que cacheia o shell da aplicação e assets estáticos.
 3. O service worker NÃO DEVE ser ativado em ambiente de desenvolvimento (`ng serve`).
-4. Dados de catálogo (produtos) cacheados pelo service worker DEVEM sempre priorizar a rede quando disponível, usando o cache só como último recurso.
+4. O service worker NÃO DEVE cachear respostas de API (`/api/**`, incluindo o catálogo de produtos) — toda chamada à API busca sempre a rede, para não exibir preço/produto/foto desatualizado após uma alteração no admin.
 
 ---
 
@@ -987,3 +987,40 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 1. O SISTEMA DEVE fornecer a configuração de compressão gzip para tipos de conteúdo textuais (HTML, CSS, JS, JSON, SVG).
 2. A instalação dessa configuração é um passo manual documentado (mesmo padrão dos Requisitos 33 e 63) — não é gerenciada automaticamente por este repositório.
 3. Compressão Brotli é documentada como alternativa opcional de melhor taxa de compressão, condicionada à instalação de um módulo adicional do Nginx.
+
+---
+
+## Requisito 67: Produtos relacionados
+
+**User Story:** Como cliente navegando um produto, quero ver outras peças parecidas, para descobrir mais opções sem voltar à loja.
+
+**Rastreamento:** RF77.
+
+**Acceptance Criteria**
+1. A página de detalhe do produto DEVE sugerir até 4 produtos da mesma categoria, excluindo o próprio produto.
+2. Se não houver nenhum outro produto na mesma categoria, a seção de sugestões NÃO DEVE aparecer.
+
+---
+
+## Requisito 68: Etiqueta de embalagem
+
+**User Story:** Como ateliê, quero imprimir uma etiqueta com os dados do pedido, para colar no pacote na hora do envio.
+
+**Rastreamento:** RF78.
+
+**Acceptance Criteria**
+1. O painel admin DEVE oferecer um botão para imprimir uma etiqueta com destinatário, endereço, itens e observações do pedido.
+2. A etiqueta impressa NÃO DEVE ocupar uma folha inteira — DEVE ser dimensionada para o formato comum de impressora térmica de etiqueta de envio (10x15cm).
+3. O restante da tela de detalhe do pedido NÃO DEVE aparecer na impressão da etiqueta.
+
+---
+
+## Requisito 69: Comprovante de pedido em PDF
+
+**User Story:** Como cliente, quero baixar um comprovante em PDF do meu pedido, para guardar ou imprimir depois.
+
+**Rastreamento:** RF79.
+
+**Acceptance Criteria**
+1. A página de confirmação de pedido DEVE oferecer um botão para baixar um comprovante em PDF com os dados do pedido (cliente, endereço, itens, total).
+2. A geração do PDF DEVE ocorrer no navegador, sem exigir uma chamada adicional ao backend.

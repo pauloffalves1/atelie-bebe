@@ -11,7 +11,9 @@ import { resolveAssetUrl } from '../../../core/utils/asset-url';
   templateUrl: './about.html',
 })
 export class About implements OnInit {
-  readonly imageUrl = signal('/images/sobre-fraldas.png');
+  // Null until the site-images lookup resolves, so the template renders nothing rather than a
+  // default image that then gets swapped for the real one (a visible "flash" on every load).
+  readonly imageUrl = signal<string | null>(null);
 
   constructor(
     private readonly siteImageService: SiteImageService,
@@ -28,9 +30,9 @@ export class About implements OnInit {
     this.siteImageService.list().subscribe({
       next: (images) => {
         const about = images.find((i) => i.key === 'about');
-        if (about) this.imageUrl.set(resolveAssetUrl(about.url));
+        this.imageUrl.set(about ? resolveAssetUrl(about.url) : '/images/sobre-fraldas.png');
       },
-      error: () => {},
+      error: () => this.imageUrl.set('/images/sobre-fraldas.png'),
     });
   }
 }

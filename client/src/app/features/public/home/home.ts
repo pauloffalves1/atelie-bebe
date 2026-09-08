@@ -17,7 +17,9 @@ import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 export class Home implements OnInit {
   readonly featured = signal<Product[]>([]);
   readonly loading = signal(true);
-  readonly heroImageUrl = signal('/images/hero-fraldas.jpg');
+  // Null until the site-images lookup resolves, so the template renders nothing rather than a
+  // default image that then gets swapped for the real one (a visible "flash" on every load).
+  readonly heroImageUrl = signal<string | null>(null);
 
   constructor(
     private readonly productService: ProductService,
@@ -43,9 +45,9 @@ export class Home implements OnInit {
     this.siteImageService.list().subscribe({
       next: (images) => {
         const hero = images.find((i) => i.key === 'home-hero');
-        if (hero) this.heroImageUrl.set(resolveAssetUrl(hero.url));
+        this.heroImageUrl.set(hero ? resolveAssetUrl(hero.url) : '/images/hero-fraldas.jpg');
       },
-      error: () => {},
+      error: () => this.heroImageUrl.set('/images/hero-fraldas.jpg'),
     });
   }
 }

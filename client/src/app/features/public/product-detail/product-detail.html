@@ -226,4 +226,30 @@
       </div>
     </div>
   </section>
+
+  @if (relatedProducts().length > 0) {
+    <section class="py-4">
+      <div class="container">
+        <h5 class="mb-4">Você também pode gostar</h5>
+        <div class="row g-4">
+          @for (related of relatedProducts(); track related.id) {
+            <div class="col-6 col-md-3">
+              <div class="card card-product h-100">
+                <a [routerLink]="['/produto', related.slug]">
+                  <img [src]="related.imageUrl | assetUrl" class="card-img-top" [alt]="related.name" loading="lazy">
+                </a>
+                <div class="card-body d-flex flex-column">
+                  <h6 class="mb-1">
+                    <a [routerLink]="['/produto', related.slug]" class="text-dark">{{ related.name }}</a>
+                  </h6>
+                  <p class="fw-bold text-blush mb-3 mt-auto">{{ related.effectivePrice | currency:'BRL' }}</p>
+                  <a [routerLink]="['/produto', related.slug]" class="btn btn-sm btn-outline-primary rounded-pill">Ver produto</a>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
 }

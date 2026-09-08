@@ -60,6 +60,8 @@ export class ProductDetail implements OnInit {
     return [...(p.imageUrl ? [p.imageUrl] : []), ...p.imageUrls];
   });
 
+  readonly relatedProducts = signal<Product[]>([]);
+
   readonly reviews = signal<ProductReview[]>([]);
   readonly eligibility = signal<ReviewEligibility | null>(null);
   readonly reviewRating = signal(5);
@@ -138,6 +140,11 @@ export class ProductDetail implements OnInit {
             error: () => {},
           });
         }
+
+        this.productService.list(product.category, 1, 5).subscribe({
+          next: (result) => this.relatedProducts.set(result.items.filter((p) => p.id !== product.id).slice(0, 4)),
+          error: () => {},
+        });
       },
       error: () => {
         this.notFound.set(true);
