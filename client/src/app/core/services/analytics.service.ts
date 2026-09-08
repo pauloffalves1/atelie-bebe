@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { CookieConsentService } from './cookie-consent.service';
 
 declare global {
   interface Window {
@@ -13,19 +14,28 @@ declare global {
 }
 
 /**
- * Loads Google Analytics (GA4) and/or Meta Pixel only when their IDs are set in environment.ts.
- * Both are blank until the ateliê creates the accounts — with no IDs configured this is a
- * complete no-op (no script tags injected, no third-party requests), same "degrade gracefully"
- * pattern used for WhatsApp/PagBank when their credentials aren't configured yet.
+ * Loads Google Analytics (GA4) and/or Meta Pixel only when their IDs are set in environment.ts
+ * AND the visitor has accepted cookies. Both IDs are blank until the ateliê creates the accounts
+ * — with no IDs configured this is a complete no-op (no script tags injected, no third-party
+ * requests), same "degrade gracefully" pattern used for WhatsApp/PagBank when their credentials
+ * aren't configured yet.
  */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
+  private readonly consent = inject(CookieConsentService);
 
-  init(): void {
+  private started = false;
+
+  /** Safe to call anytime — loads the scripts only if consent is already accepted; otherwise a no-op until initIfAccepted() runs again. */
+  initIfAccepted(): void {
+    if (this.started || !this.consent.isAccepted) return;
+
     const { googleAnalyticsId, metaPixelId } = environment.analytics;
     if (!googleAnalyticsId && !metaPixelId) return;
+
+    this.started = true;
 
     if (googleAnalyticsId) this.loadGoogleAnalytics(googleAnalyticsId);
     if (metaPixelId) this.loadMetaPixel(metaPixelId);

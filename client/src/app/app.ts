@@ -1,10 +1,11 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AnalyticsService } from './core/services/analytics.service';
+import { CookieBanner } from './shared/components/cookie-banner/cookie-banner';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CookieBanner],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -24,7 +25,7 @@ export class App implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     window.addEventListener('mousemove', this.onMouseMove);
-    this.analytics.init();
+    this.analytics.initIfAccepted();
   }
 
   ngOnDestroy(): void {
