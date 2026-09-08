@@ -929,3 +929,18 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. O administrador DEVE poder consultar a lista de inscritos ativos.
 4. O administrador DEVE poder exportar a lista de inscritos ativos em CSV.
 5. O SISTEMA NÃO PRECISA enviar campanhas de e-mail marketing — apenas capturar e exportar a lista para uso em uma ferramenta externa.
+
+---
+
+## Requisito 63: Cache de imagens e assets estáticos
+
+**User Story:** Como ateliê, quero que fotos e arquivos do site sejam guardados em cache pelo navegador do visitante, para o site carregar mais rápido em visitas repetidas e reduzir a carga no servidor.
+
+**Rastreamento:** RNF11.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE fornecer a configuração de cabeçalhos de cache para imagens enviadas (nome de arquivo imutável — nunca muda de conteúdo uma vez criado).
+2. O SISTEMA DEVE fornecer a configuração de cabeçalhos de cache para os arquivos JS/CSS do build do frontend (nome com hash de conteúdo).
+3. O arquivo `index.html` NÃO DEVE ser cacheado, para que uma nova versão do site seja sempre servida corretamente após um deploy.
+4. A instalação da configuração de cache é um passo manual documentado (a configuração do Nginx na VPS não é gerenciada por este repositório), assim como o backup do banco (Requisito 33).
+5. Uma CDN (ex. Cloudflare) na frente do domínio é uma melhoria opcional adicional, documentada mas não aplicada automaticamente — exige trocar os servidores de nome do domínio, uma decisão e execução do ateliê, não do sistema.

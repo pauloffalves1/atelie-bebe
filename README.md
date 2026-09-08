@@ -292,6 +292,18 @@ sudo chmod +x /usr/local/bin/atelie-bebe-sync-uploads.sh
 
 Assim como o backup do banco, é um `rclone sync` (espelha, não acumula) — uma foto apagada pelo admin some também do backup no Drive na próxima execução. Como fotos mudam bem menos que o banco, rodar a cada 30 minutos junto com o resto é só uma questão de conveniência (uma linha de cron só); o custo extra é baixo porque o `rclone sync` só transfere o que mudou. Teste rodando `sudo /usr/local/bin/atelie-bebe-sync-uploads.sh` manualmente e conferindo a pasta "atelie-bebe-uploads-backup" no Google Drive.
 
+### Cache de imagens e assets estáticos
+
+Hoje o Nginx da VPS não define nenhum `Cache-Control` para as imagens (`/api/uploads/...`) nem para os arquivos JS/CSS do build do Angular — o navegador de cada visitante rebaixa tudo de novo a cada visita (ou faz uma requisição condicional) em vez de usar a cópia local. Como o nome de cada arquivo já é imutável por natureza (fotos ganham um nome `GUID` novo a cada upload; os arquivos do build do Angular já vêm com hash de conteúdo no nome, ex. `chunk-B0oRGu4P2.js`), dá para mandar o navegador guardar esses arquivos "para sempre" sem risco de servir uma versão desatualizada.
+
+`server/ops/nginx-cache-headers.conf` tem os blocos `location` prontos para colar no arquivo de configuração do Nginx na VPS (`/etc/nginx/sites-enabled/atelie-bebe`) — não é aplicado automaticamente pelo deploy, porque a configuração do Nginx não é versionada neste repositório. **Importante**: o bloco de `/api/uploads/` precisa dos mesmos `proxy_set_header` que o bloco `/api/` que já existe na sua configuração (rode `sudo nginx -T` pra ver o atual e copiar) — sem isso, esse endereço específico perderia o IP real do visitante encaminhado pelo proxy. Depois de colar e ajustar:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**CDN (Cloudflare) — decisão sua, não é algo que eu deva fazer sozinho**: colocar o Cloudflare (plano gratuito) na frente do domínio serviria imagens de um ponto mais perto do visitante (menos latência para quem acessa de fora do Brasil) e tiraria carga do VPS, mas exige trocar os servidores de nome (nameservers) do domínio no registro.br para os do Cloudflare — uma mudança de DNS que pode deixar o site fora do ar por um tempo se algo for configurado errado, e também afeta e-mail se o domínio tiver caixas de e-mail configuradas. Se quiser seguir com isso: (1) crie uma conta gratuita em cloudflare.com e adicione `layettebaby.com.br`; (2) o Cloudflare vai importar os registros DNS atuais automaticamente — confira que o registro A do domínio aponta para o IP da VPS antes de continuar; (3) troque os nameservers no painel do registro.br para os dois que o Cloudflare indicar; (4) espere a propagação (pode levar até 24h) e confirme que o site continua no ar; (5) no painel do Cloudflare, ative "Proxy" (ícone de nuvem laranja) no registro do domínio para passar a servir pelo CDN. Me avise quando tiver os nameservers do Cloudflare em mãos que eu ajudo a revisar a configuração antes de você aplicar.
+
 ## Requisitos
 
 ### Atores
@@ -393,6 +405,7 @@ Assim como o backup do banco, é um `rclone sync` (espelha, não acumula) — um
 | RNF08 | A interface deve ser responsiva e totalmente localizada em português brasileiro (pt-BR) |
 | RNF09 | O banco de dados de produção deve ter uma rotina de backup diário automatizada, armazenada fora da pasta de publicação (sobrevive a deploys) |
 | RNF10 | O fluxo de compra (personalizar produto, cadastrar/logar, finalizar checkout) deve ter um teste automatizado de ponta a ponta, rodando num navegador de verdade contra o backend real |
+| RNF11 | Imagens e arquivos estáticos com nome imutável (uploads com nome gerado, build do frontend com hash de conteúdo) devem ser servidos com cabeçalhos de cache de longa duração |
 
 ## Regras de negócio
 

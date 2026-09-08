@@ -597,3 +597,9 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 63.4 `dotnet test` (184 Domain + 20 Application); `dotnet ef migrations add AddNewsletterSubscriber`; `npm run build`/`npx ng test` (31 testes) sem erros
   - [x] 63.5 Verificado via curl (inscrição idempotente, lista, export CSV) e no navegador (rodapé confirma inscrição, `/admin/newsletter` lista os inscritos reais)
   - [x] 63.6 `README.md` (RF73) e `spec/requirements.md`/`spec/design.md` (Requisito 62) atualizados
+
+- [x] 64. Cache de imagens e assets estáticos (Requisito 63 / RNF11, design em `spec/design.md`)
+  - [x] 64.1 `server/ops/nginx-cache-headers.conf` — blocos de referência para `/api/uploads/` (imutável, herda `proxy_set_header` do bloco `/api/` real da VPS — documentado como passo manual) e para `*.js`/`*.css` do build (imutável); `index.html` explicitamente `no-cache`
+  - [x] 64.2 Confirmado que o build do Angular já usa nomes com hash de conteúdo (`ls client/dist/client/browser/` depois de `npm run build`)
+  - [x] 64.3 `README.md` (RNF11) e `spec/requirements.md`/`spec/design.md` (Requisito 63) atualizados
+  - [ ] 64.4 **Não aplicado**: instalação real do bloco de cache na VPS (precisa o administrador colar/ajustar via SSH) e CDN Cloudflare (precisa o administrador criar a conta e trocar os nameservers do domínio) — ambos documentados no `README.md` como passos manuais/opcionais, aguardando decisão do ateliê
