@@ -223,9 +223,22 @@ npm install
 npm start      # ng serve — http://localhost:4200
 npm run build   # build de produção em dist/
 npm test        # testes unitários (Vitest)
+npm run test:e2e   # teste end-to-end do fluxo de compra (Playwright) — veja "Testes end-to-end" abaixo
 ```
 
 `client/src/environments/environment.ts` aponta `apiUrl` para `http://localhost:5120/api`. Se o backend rodar em outra porta, ajuste esse arquivo e a lista `Cors:AllowedOrigins` em `appsettings.json`.
+
+### Testes end-to-end (Playwright)
+
+`client/e2e/store-purchase.spec.ts` simula o fluxo mais crítico do site de ponta a ponta num navegador de verdade: personalizar um produto (bordado + cor da linha), criar uma conta (o checkout exige cliente logado), preencher o checkout e confirmar o pedido, terminando na página "Pedido recebido!". Exige o backend já rodando em `http://localhost:5120` (o Playwright só sobe o `ng serve`, não a API — `webServer` no `playwright.config.ts` reaproveita um `ng serve` já rodando via `reuseExistingServer`).
+
+```bash
+cd client
+npx playwright install chromium   # uma vez, baixa o navegador usado pelos testes
+npm run test:e2e
+```
+
+`npm run test:e2e` chama `node ./node_modules/@playwright/test/cli.js test` diretamente em vez de `npx playwright test` — nesta máquina, `npx` (por algum wrapper/shim do ambiente, não do Playwright em si) carrega `@playwright/test` duas vezes e produz o erro "Playwright Test did not expect test() to be called here"; chamar o `cli.js` direto evita esse caminho e funciona normalmente. Se `npx playwright test` funcionar sem erro no seu ambiente, pode usar normalmente.
 
 ### Backup do banco de dados (produção)
 
@@ -378,6 +391,7 @@ Assim como o backup do banco, é um `rclone sync` (espelha, não acumula) — um
 | RNF07 | A persistência de um evento de domínio deve ser atômica em relação à alteração de dados que o originou (mesma transação) |
 | RNF08 | A interface deve ser responsiva e totalmente localizada em português brasileiro (pt-BR) |
 | RNF09 | O banco de dados de produção deve ter uma rotina de backup diário automatizada, armazenada fora da pasta de publicação (sobrevive a deploys) |
+| RNF10 | O fluxo de compra (personalizar produto, cadastrar/logar, finalizar checkout) deve ter um teste automatizado de ponta a ponta, rodando num navegador de verdade contra o backend real |
 
 ## Regras de negócio
 

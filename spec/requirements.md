@@ -901,3 +901,16 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. QUANDO a autenticação de dois fatores está ativa, O SISTEMA DEVE exigir um código válido, além de e-mail e senha corretos, para completar o login.
 4. Um código inválido ou expirado NÃO DEVE permitir o login.
 5. O administrador DEVE poder desativar a autenticação de dois fatores, mediante confirmação da senha atual.
+
+---
+
+## Requisito 61: Teste automatizado de ponta a ponta do fluxo de compra
+
+**User Story:** Como ateliê, quero um teste automatizado que simule uma compra real, para detectar quebras no fluxo mais crítico do site antes que um cliente de verdade perceba.
+
+**Rastreamento:** RNF10.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE ter um teste automatizado que simula, num navegador real, um visitante personalizando um produto, criando uma conta, preenchendo o checkout e confirmando o pedido.
+2. O teste DEVE rodar contra o backend real (não simulado/mockado), verificando a integração de ponta a ponta.
+3. O teste DEVE terminar confirmando que a página de pedido confirmado foi exibida.

@@ -581,3 +581,11 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 61.7 Algoritmo TOTP verificado contra uma implementação independente em Node (códigos batem). Fluxo completo testado via curl (setup → enable → login exige 2FA → verify → disable) e no navegador
     - [x] 61.8 **Bug encontrado e corrigido durante a verificação no navegador**: `admin-login.html` usava `(ngSubmit)` sem o componente importar `FormsModule` (só tinha `ReactiveFormsModule`) — sem a diretiva `NgForm`, o clique disparava submit nativo do HTML (recarregando a página, perdendo o estado, nenhuma requisição a `/2fa/verify` era feita). Corrigido importando `FormsModule`; reverificado com sucesso depois
     - [x] 61.9 `README.md` (RF72) e `spec/requirements.md`/`spec/design.md` (Requisito 60) atualizados
+
+- [x] 62. Teste automatizado de ponta a ponta do fluxo de compra (Requisito 61 / RNF10, design em `spec/design.md`)
+  - [x] 62.1 `@playwright/test` instalado (dev dependency) + Chromium baixado; `playwright.config.ts` (`webServer` reaproveitando `ng serve`)
+  - [x] 62.2 `client/e2e/store-purchase.spec.ts`: personalizar produto (bordado + cor) → carrinho → cadastro (CPF com dígito verificador válido gerado no teste, e-mail único) → checkout → confirmação do pedido
+  - [x] 62.3 **Corrigido durante a escrita do teste**: a suposição inicial de checkout de convidado estava errada — `/checkout` exige `customerGuard`; teste ajustado para passar pelo cadastro primeiro
+  - [x] 62.4 **Problema de ambiente contornado**: `npx playwright test` falha nesta máquina com "did not expect test() to be called here" (reproduzido até com um teste mínimo em JS puro, via Bash e PowerShell) — algum wrapper do `npx` carrega `@playwright/test` duas vezes; chamar `node ./node_modules/@playwright/test/cli.js test` direto resolve. `npm run test:e2e` usa essa chamada direta
+  - [x] 62.5 Teste passando (`npm run test:e2e`) contra o backend local real
+  - [x] 62.6 `README.md` (RNF10) e `spec/requirements.md`/`spec/design.md` (Requisito 61) atualizados
