@@ -22,6 +22,7 @@ public interface IUnitOfWork
     IWishlistItemRepository WishlistItems { get; }
     ICartSnapshotRepository CartSnapshots { get; }
     IAuditLogRepository AuditLogs { get; }
+    INewsletterSubscriberRepository NewsletterSubscribers { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

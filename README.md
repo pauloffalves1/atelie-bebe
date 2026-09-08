@@ -377,6 +377,7 @@ Assim como o backup do banco, é um `rclone sync` (espelha, não acumula) — um
 | RF70 | O sistema deve permitir que um cliente anexe uma foto opcional à sua avaliação de produto | Cliente |
 | RF71 | O sistema deve registrar um log de auditoria (quem, o quê, quando) para as principais ações administrativas (produtos, pedidos, cupons, clientes, login), visível em `/admin/auditoria` | Administrador / Sistema |
 | RF72 | O sistema deve oferecer autenticação de dois fatores (TOTP) opcional para o login administrativo, configurável em `/admin/seguranca` | Administrador |
+| RF73 | O sistema deve permitir que um visitante se inscreva para receber novidades por e-mail (rodapé do site), e que o administrador consulte e exporte essa lista para uso em campanhas de marketing | Visitante / Administrador |
 
 ### Requisitos não funcionais
 
@@ -540,3 +541,8 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 - Login em duas etapas quando `TwoFactorEnabled`: `POST /api/admin/auth/login` responde `{requiresTwoFactor: true, adminId}` (sem token ainda) em vez do token direto; `POST /api/admin/auth/2fa/verify` (`{adminId, code}`) completa o login. `POST /2fa/disable` exige a senha atual (não o código 2FA) para desativar — evita que perder o celular com o app autenticador bloqueie o admin para sempre, desde que ele ainda saiba a senha.
 - Verificado com uma implementação independente do algoritmo TOTP (escrita em Node, sem reaproveitar nenhum código do projeto) gerando códigos e confirmando que batem com os códigos que o `TotpService` do servidor aceita — dá confiança de que a implementação segue o RFC corretamente, não só "algum código de 6 dígitos".
 - **Bug encontrado e corrigido durante a verificação no navegador**: o formulário do código 2FA usava `(ngSubmit)` sem o componente importar `FormsModule` (só tinha `ReactiveFormsModule`, que não inclui a diretiva `NgForm`) — sem `NgForm`, o clique no botão disparava um submit **nativo** do HTML (recarregando a página inteira e perdendo todo o estado em memória) em vez de chamar o método do componente. O código nunca chegava a ser enviado ao servidor. Só apareceu testando de verdade no navegador (build e testes unitários não capturam esse tipo de problema); corrigido importando `FormsModule` no componente.
+
+### Newsletter (RF73)
+
+- `NewsletterSubscriber` (uma linha por e-mail, índice único) — `POST /api/newsletter/subscribe` (público) é idempotente: inscrever de novo, ou reinscrever um e-mail que já tinha saído (`Active = false`), nunca é erro. O sistema **não** envia campanhas — só captura e exporta; enviar de fato fica por conta de uma ferramenta externa (Mailchimp, Resend Broadcast) usando o CSV exportado.
+- Formulário de inscrição no rodapé de toda página pública (`PublicLayout`). `GET /api/admin/newsletter` (lista) e `GET /api/admin/newsletter/export` (CSV, mesmo padrão de `Escape`/`CultureInfo` do export de encomendas) alimentam a nova tela `/admin/newsletter`.

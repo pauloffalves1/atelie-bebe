@@ -61,13 +61,13 @@
   <footer class="bg-dark text-light pt-5 pb-4 mt-5">
     <div class="container">
       <div class="row gy-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <h5 class="fw-script text-blush fs-3 mb-3 brand-embroidered">Ateliê Layette Baby</h5>
           <p class="text-white-50 small">
             Fraldas de ombro e boca bordadas com muito carinho para os primeiros dias do seu bebê.
           </p>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <h6 class="text-uppercase small fw-bold mb-3">Navegação</h6>
           <ul class="list-unstyled small">
             <li class="mb-2"><a routerLink="/loja" class="text-white-50">Loja</a></li>
@@ -76,12 +76,35 @@
             <li class="mb-2"><a routerLink="/galeria" class="text-white-50">Galeria</a></li>
           </ul>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <h6 class="text-uppercase small fw-bold mb-3">Fale conosco</h6>
           <ul class="list-unstyled small text-white-50">
             <li class="mb-2"><i class="bi bi-whatsapp me-2"></i>(11) 91313-0481</li>
             <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>São Bernardo do Campo · SP</li>
           </ul>
+        </div>
+        <div class="col-md-3">
+          <h6 class="text-uppercase small fw-bold mb-3">Novidades por e-mail</h6>
+          @if (newsletterSubscribed()) {
+            <p class="small text-white-50 mb-0"><i class="bi bi-check-circle me-1"></i>Inscrição confirmada!</p>
+          } @else {
+            <p class="small text-white-50">Receba avisos de novidades e promoções.</p>
+            <div class="input-group input-group-sm">
+              <input
+                type="email"
+                class="form-control"
+                placeholder="Seu e-mail"
+                [ngModel]="newsletterEmail()"
+                (ngModelChange)="newsletterEmail.set($event)">
+              <button type="button" class="btn btn-primary" [disabled]="newsletterSubmitting()" (click)="subscribeNewsletter()">
+                @if (newsletterSubmitting()) {
+                  <span class="spinner-border spinner-border-sm"></span>
+                } @else {
+                  <i class="bi bi-send"></i>
+                }
+              </button>
+            </div>
+          }
         </div>
       </div>
       <hr class="border-secondary my-4">

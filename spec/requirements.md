@@ -914,3 +914,18 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 1. O SISTEMA DEVE ter um teste automatizado que simula, num navegador real, um visitante personalizando um produto, criando uma conta, preenchendo o checkout e confirmando o pedido.
 2. O teste DEVE rodar contra o backend real (não simulado/mockado), verificando a integração de ponta a ponta.
 3. O teste DEVE terminar confirmando que a página de pedido confirmado foi exibida.
+
+---
+
+## Requisito 62: Newsletter
+
+**User Story:** Como ateliê, quero capturar e-mails de visitantes interessados em novidades, para poder anunciar promoções e lançamentos por e-mail no futuro.
+
+**Rastreamento:** RF73.
+
+**Acceptance Criteria**
+1. O visitante DEVE poder se inscrever para receber novidades por e-mail, informando apenas o e-mail.
+2. Inscrever um e-mail já inscrito, ou reinscrever um e-mail que havia se descadastrado, NÃO DEVE resultar em erro.
+3. O administrador DEVE poder consultar a lista de inscritos ativos.
+4. O administrador DEVE poder exportar a lista de inscritos ativos em CSV.
+5. O SISTEMA NÃO PRECISA enviar campanhas de e-mail marketing — apenas capturar e exportar a lista para uso em uma ferramenta externa.

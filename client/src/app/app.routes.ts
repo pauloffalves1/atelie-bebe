@@ -77,6 +77,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/gallery/admin-gallery').then((m) => m.AdminGallery),
       },
       {
+        path: 'newsletter',
+        title: `Newsletter — ${SITE_NAME}`,
+        loadComponent: () => import('./features/admin/newsletter/admin-newsletter').then((m) => m.AdminNewsletter),
+      },
+      {
         path: 'auditoria',
         title: `Auditoria — ${SITE_NAME}`,
         loadComponent: () => import('./features/admin/audit-log/admin-audit-log').then((m) => m.AdminAuditLog),

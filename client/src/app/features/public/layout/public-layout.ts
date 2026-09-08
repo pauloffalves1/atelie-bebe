@@ -1,23 +1,44 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
+import { NewsletterService } from '../../../core/services/newsletter.service';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, FormsModule],
   templateUrl: './public-layout.html',
 })
 export class PublicLayout {
   readonly currentYear = new Date().getFullYear();
 
+  readonly newsletterEmail = signal('');
+  readonly newsletterSubmitting = signal(false);
+  readonly newsletterSubscribed = signal(false);
+
   constructor(
     readonly cart: CartService,
     readonly auth: AuthService,
+    private readonly newsletterService: NewsletterService,
   ) {}
 
   logout(): void {
     this.auth.logout();
+  }
+
+  subscribeNewsletter(): void {
+    if (!this.newsletterEmail() || this.newsletterSubmitting()) return;
+
+    this.newsletterSubmitting.set(true);
+    this.newsletterService.subscribe(this.newsletterEmail()).subscribe({
+      next: () => {
+        this.newsletterSubmitting.set(false);
+        this.newsletterSubscribed.set(true);
+        this.newsletterEmail.set('');
+      },
+      error: () => this.newsletterSubmitting.set(false),
+    });
   }
 }

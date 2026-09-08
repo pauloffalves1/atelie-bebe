@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<CartSnapshot> CartSnapshots => Set<CartSnapshot>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

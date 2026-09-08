@@ -589,3 +589,11 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 62.4 **Problema de ambiente contornado**: `npx playwright test` falha nesta máquina com "did not expect test() to be called here" (reproduzido até com um teste mínimo em JS puro, via Bash e PowerShell) — algum wrapper do `npx` carrega `@playwright/test` duas vezes; chamar `node ./node_modules/@playwright/test/cli.js test` direto resolve. `npm run test:e2e` usa essa chamada direta
   - [x] 62.5 Teste passando (`npm run test:e2e`) contra o backend local real
   - [x] 62.6 `README.md` (RNF10) e `spec/requirements.md`/`spec/design.md` (Requisito 61) atualizados
+
+- [x] 63. Newsletter (Requisito 62 / RF73, design em `spec/design.md`)
+  - [x] 63.1 `NewsletterSubscriber` (Domain); `INewsletterSubscriberRepository`/`NewsletterSubscriberRepository`; `NewsletterSubscriberConfiguration`; migration `AddNewsletterSubscriber`; testes de domínio (`NewsletterSubscriberTests`, 3 casos)
+  - [x] 63.2 `NewsletterService.SubscribeAsync` (idempotente); `POST /api/newsletter/subscribe` (público), `GET/GET export /api/admin/newsletter` (`AdminOnly`)
+  - [x] 63.3 Formulário de inscrição no rodapé (`PublicLayout`, botão comum sem `<form>`); `AdminNewsletter` (`/admin/newsletter`, listagem + exportar CSV); link na sidebar
+  - [x] 63.4 `dotnet test` (184 Domain + 20 Application); `dotnet ef migrations add AddNewsletterSubscriber`; `npm run build`/`npx ng test` (31 testes) sem erros
+  - [x] 63.5 Verificado via curl (inscrição idempotente, lista, export CSV) e no navegador (rodapé confirma inscrição, `/admin/newsletter` lista os inscritos reais)
+  - [x] 63.6 `README.md` (RF73) e `spec/requirements.md`/`spec/design.md` (Requisito 62) atualizados

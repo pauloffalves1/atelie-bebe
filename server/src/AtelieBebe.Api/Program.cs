@@ -130,6 +130,7 @@ app.MapCouponEndpoints();
 app.MapWishlistEndpoints();
 app.MapCartSyncEndpoints();
 app.MapAuditLogEndpoints();
+app.MapNewsletterEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapFakePaymentEndpoints();

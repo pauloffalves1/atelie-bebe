@@ -27,6 +27,7 @@ public sealed class UnitOfWork : IUnitOfWork
     public IWishlistItemRepository WishlistItems { get; }
     public ICartSnapshotRepository CartSnapshots { get; }
     public IAuditLogRepository AuditLogs { get; }
+    public INewsletterSubscriberRepository NewsletterSubscribers { get; }
 
     public UnitOfWork(AppDbContext dbContext)
     {
@@ -45,6 +46,7 @@ public sealed class UnitOfWork : IUnitOfWork
         WishlistItems = new WishlistItemRepository(dbContext);
         CartSnapshots = new CartSnapshotRepository(dbContext);
         AuditLogs = new AuditLogRepository(dbContext);
+        NewsletterSubscribers = new NewsletterSubscriberRepository(dbContext);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _dbContext.SaveChangesAsync(ct);
