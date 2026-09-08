@@ -76,6 +76,16 @@ export const routes: Routes = [
         title: `Galeria — ${SITE_NAME}`,
         loadComponent: () => import('./features/admin/gallery/admin-gallery').then((m) => m.AdminGallery),
       },
+      {
+        path: 'auditoria',
+        title: `Auditoria — ${SITE_NAME}`,
+        loadComponent: () => import('./features/admin/audit-log/admin-audit-log').then((m) => m.AdminAuditLog),
+      },
+      {
+        path: 'seguranca',
+        title: `Segurança — ${SITE_NAME}`,
+        loadComponent: () => import('./features/admin/security/admin-security').then((m) => m.AdminSecurity),
+      },
     ],
   },
   {

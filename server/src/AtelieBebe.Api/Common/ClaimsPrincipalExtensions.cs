@@ -14,4 +14,7 @@ public static class ClaimsPrincipalExtensions
     /// <summary>Like <see cref="GetUserId"/>, but returns null instead of throwing when there is no authenticated user.</summary>
     public static Guid? GetUserIdOrNull(this ClaimsPrincipal principal) =>
         principal.Identity?.IsAuthenticated == true ? principal.GetUserId() : null;
+
+    public static string GetName(this ClaimsPrincipal principal) =>
+        principal.FindFirstValue(ClaimTypes.Name) ?? "Desconhecido";
 }

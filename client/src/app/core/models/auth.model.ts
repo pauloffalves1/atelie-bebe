@@ -5,6 +5,17 @@ export interface AuthResponse {
   email: string;
 }
 
+export interface AdminLoginResponse {
+  requiresTwoFactor: boolean;
+  adminId: string | null;
+  auth: AuthResponse | null;
+}
+
+export interface TwoFactorSetup {
+  secret: string;
+  otpAuthUri: string;
+}
+
 export interface RegisterCustomerRequest {
   name: string;
   email: string;

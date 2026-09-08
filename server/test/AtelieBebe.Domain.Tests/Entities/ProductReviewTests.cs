@@ -65,4 +65,28 @@ public class ProductReviewTests
     {
         Assert.Throws<DomainException>(() => ProductReview.Create(ProductId, CustomerId, name!, 5, null));
     }
+
+    [Fact]
+    public void Create_WithPhotoUrl_SetsPhotoUrl()
+    {
+        var review = ProductReview.Create(ProductId, CustomerId, "Maria Silva", 5, null, "/api/uploads/reviews/photo.jpg");
+
+        Assert.Equal("/api/uploads/reviews/photo.jpg", review.PhotoUrl);
+    }
+
+    [Fact]
+    public void Create_WithoutPhotoUrl_IsNull()
+    {
+        var review = ProductReview.Create(ProductId, CustomerId, "Maria Silva", 5, null);
+
+        Assert.Null(review.PhotoUrl);
+    }
+
+    [Fact]
+    public void Create_WithBlankPhotoUrl_NormalizesToNull()
+    {
+        var review = ProductReview.Create(ProductId, CustomerId, "Maria Silva", 5, null, "   ");
+
+        Assert.Null(review.PhotoUrl);
+    }
 }

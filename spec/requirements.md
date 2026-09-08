@@ -845,3 +845,59 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 4. O SISTEMA NÃO DEVE enviar mais de um lembrete para o mesmo período de abandono de um carrinho.
 5. QUANDO o cliente volta a alterar o carrinho depois de já ter recebido um lembrete, O SISTEMA DEVE permitir um novo lembrete se esse carrinho for abandonado de novo depois.
 6. O carrinho de um cliente não autenticado NÃO DEVE ser rastreado no servidor.
+
+---
+
+## Requisito 57: Consentimento de cookies
+
+**User Story:** Como ateliê, quero pedir consentimento antes de carregar cookies de análise, para respeitar a privacidade do visitante e a legislação aplicável.
+
+**Rastreamento:** RF69.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE exibir um aviso de cookies ao visitante que ainda não fez uma escolha.
+2. QUANDO o visitante aceita, O SISTEMA DEVE carregar os scripts de análise configurados (se houver) e não exibir o aviso novamente.
+3. QUANDO o visitante recusa, O SISTEMA NÃO DEVE carregar nenhum script de análise, e não deve exibir o aviso novamente.
+4. A escolha do visitante DEVE ser lembrada entre visitas (mesmo navegador).
+
+---
+
+## Requisito 58: Fotos em avaliações de produto
+
+**User Story:** Como cliente, quero anexar uma foto à minha avaliação, para mostrar como a peça personalizada ficou de verdade.
+
+**Rastreamento:** RF70.
+
+**Acceptance Criteria**
+1. O cliente elegível a avaliar um produto DEVE poder, opcionalmente, anexar uma foto à avaliação antes de enviá-la.
+2. A foto enviada DEVE passar pela mesma otimização (redimensionamento/compressão) aplicada a qualquer outra imagem do sistema.
+3. Uma avaliação sem foto DEVE continuar funcionando normalmente (a foto é opcional, não obrigatória).
+4. A foto DEVE aparecer junto com a avaliação na listagem pública do produto.
+
+---
+
+## Requisito 59: Log de auditoria administrativo
+
+**User Story:** Como ateliê, quero saber quem fez qual alteração no painel administrativo e quando, para ter responsabilização caso mais de uma pessoa tenha acesso.
+
+**Rastreamento:** RF71.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE registrar quem (qual admin), o quê (que ação) e quando, para as principais ações administrativas: alterações de produto, mudança de status de pedido, criação/ativação de cupom, edição de cliente e login administrativo.
+2. O administrador DEVE poder consultar esse histórico, paginado, do mais recente para o mais antigo.
+3. O registro de auditoria NÃO DEVE poder ser editado ou apagado pela interface administrativa.
+
+---
+
+## Requisito 60: Autenticação de dois fatores para administrador
+
+**User Story:** Como ateliê, quero exigir um segundo fator de autenticação no login administrativo, para reduzir o risco de invasão do painel caso a senha vaze.
+
+**Rastreamento:** RF72.
+
+**Acceptance Criteria**
+1. O administrador DEVE poder ativar a autenticação de dois fatores (TOTP) na própria conta, escaneando ou digitando manualmente uma chave em um aplicativo autenticador.
+2. A ativação SÓ DEVE se efetivar após o administrador confirmar um código válido gerado a partir dessa chave.
+3. QUANDO a autenticação de dois fatores está ativa, O SISTEMA DEVE exigir um código válido, além de e-mail e senha corretos, para completar o login.
+4. Um código inválido ou expirado NÃO DEVE permitir o login.
+5. O administrador DEVE poder desativar a autenticação de dois fatores, mediante confirmação da senha atual.

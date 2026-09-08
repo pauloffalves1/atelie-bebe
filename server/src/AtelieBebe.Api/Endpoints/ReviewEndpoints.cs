@@ -1,4 +1,5 @@
 using AtelieBebe.Api.Common;
+using AtelieBebe.Application.Abstractions;
 using AtelieBebe.Application.Reviews;
 
 namespace AtelieBebe.Api.Endpoints;
@@ -19,5 +20,18 @@ public static class ReviewEndpoints
         group.MapPost("/", async (Guid productId, CreateReviewRequest request, HttpContext http, IReviewService service, CancellationToken ct) =>
             Results.Ok(await service.CreateAsync(productId, http.User.GetUserId(), request, ct)))
             .RequireAuthorization("CustomerOnly");
+
+        group.MapPost("/photo", async (IFormFile file, IFileStorageService fileStorage, CancellationToken ct) =>
+        {
+            var extension = ImageUploadValidator.ValidateAndGetExtension(file);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            await using var stream = file.OpenReadStream();
+            var url = await fileStorage.SaveAsync("reviews", fileName, stream, ct);
+
+            return Results.Ok(new { url });
+        })
+        .RequireAuthorization("CustomerOnly")
+        .DisableAntiforgery();
     }
 }

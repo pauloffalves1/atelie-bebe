@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<ITotpService, TotpService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHttpClient<INotificationSender, WhatsAppNotificationSender>(client =>
             client.BaseAddress = new Uri("https://graph.facebook.com/"));

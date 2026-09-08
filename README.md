@@ -360,6 +360,10 @@ Assim como o backup do banco, é um `rclone sync` (espelha, não acumula) — um
 | RF66 | O sistema deve redimensionar e comprimir automaticamente qualquer imagem enviada pelo administrador (produtos, galeria, fotos do site), sem exigir nenhuma ação manual de otimização antes do upload | Administrador |
 | RF67 | O sistema deve permitir que um cliente autenticado favorite/desfavorite produtos (`/favoritos`) e deve avisá-lo por e-mail quando um produto favoritado, antes pausado, voltar a ficar ativo | Cliente / Sistema |
 | RF68 | O sistema deve enviar um e-mail de lembrete a um cliente autenticado que deixou itens no carrinho sem finalizar o pedido por um período de inatividade, uma única vez por carrinho | Cliente / Sistema |
+| RF69 | O sistema deve pedir consentimento de cookies ao visitante antes de carregar qualquer script de análise (Google Analytics/Meta Pixel), respeitando a escolha de recusar | Visitante |
+| RF70 | O sistema deve permitir que um cliente anexe uma foto opcional à sua avaliação de produto | Cliente |
+| RF71 | O sistema deve registrar um log de auditoria (quem, o quê, quando) para as principais ações administrativas (produtos, pedidos, cupons, clientes, login), visível em `/admin/auditoria` | Administrador / Sistema |
+| RF72 | O sistema deve oferecer autenticação de dois fatores (TOTP) opcional para o login administrativo, configurável em `/admin/seguranca` | Administrador |
 
 ### Requisitos não funcionais
 
@@ -498,3 +502,27 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 
 - O carrinho continua vivendo só no navegador (localStorage) — nada muda aí. Para um cliente **autenticado**, toda mudança no carrinho (adicionar, alterar quantidade, remover, esvaziar) dispara, com um debounce de 2s, um `PUT /api/cart-sync` que envia uma cópia dos itens (produto, quantidade, bordado, cor) para o servidor — só para permitir o aviso, o carrinho nunca é lido de volta para a UI a partir daí. Um carrinho esvaziado (array vazio) apaga a cópia no servidor em vez de salvar uma vazia.
 - `CartSnapshot` (uma linha por cliente, upsert) guarda os itens como JSON e uma marca de "lembrete já enviado" (`ReminderSentAt`). Um `BackgroundService` novo (`AbandonedCartReminderProcessor`, independente da outbox — isso é uma checagem por tempo, "quanto silêncio já passou", não uma reação a um evento de domínio) verifica a cada 15 minutos se algum carrinho ficou sem atualização por 3 horas e ainda não recebeu lembrete; quando acha um, envia um e-mail (linkando direto para cada produto, não assumindo que o carrinho local do cliente ainda tem os itens) e marca `ReminderSentAt`, garantindo no máximo um lembrete por carrinho — uma nova atividade no carrinho (qualquer mudança) reseta essa marca, então um cliente que volta e mexe no carrinho de novo pode receber outro lembrete se abandonar de novo depois.
+
+### Consentimento de cookies (RF69)
+
+- `CookieConsentService` (localStorage, `atelie-bebe.cookie-consent`) guarda a escolha do visitante (`accepted`/`declined`/indeciso). `AnalyticsService.initIfAccepted()` substitui o antigo `init()` incondicional — só carrega GA4/Meta Pixel se `environment.analytics` tiver IDs configurados **e** o visitante já tiver aceitado; sem consentimento, nenhum script de terceiro carrega, mesmo com IDs configurados.
+- `<app-cookie-banner>` (`shared/components/cookie-banner/`) aparece fixo no rodapé enquanto a escolha estiver indecisa, com link para a Política de Privacidade; "Aceitar" chama `analytics.initIfAccepted()` imediatamente (sem precisar recarregar a página).
+
+### Fotos em avaliações (RF70)
+
+- `ProductReview.PhotoUrl` (nullable) segue o mesmo padrão de upload em duas etapas já usado para fotos de produto: `POST /api/products/{productId}/reviews/photo` (`CustomerOnly`, mesma validação/otimização de imagem do `LocalFileStorageService`, salva em `uploads/reviews/`) retorna a URL, que o cliente inclui em `CreateReviewRequest.PhotoUrl` ao enviar a avaliação de fato.
+- Frontend: campo de foto opcional no formulário de avaliação (preview + botão de remover antes de enviar); a foto aparece junto com nota/comentário na lista pública de avaliações.
+
+### Log de auditoria administrativo (RF71)
+
+- `AuditLog` (Domain, `IAggregateRoot`): `AdminId`/`AdminName` (denormalizado — sobrevive mesmo que o admin seja removido no futuro), `Action` (código curto, ex. `ProductUpdated`), `Details` (resumo legível), `CreatedAt`. Sem eventos de domínio nem outbox — é gravado diretamente pelos endpoints administrativos (camada Api), depois da operação principal já ter sido concluída com sucesso, via `IAuditLogService.RecordAsync`.
+- Instrumentado nos endpoints de maior impacto: produtos (criar/editar/ativar-desativar/promoção), pedidos (mudança de status/código de rastreio), cupons (criar/ativar-desativar), clientes (editar pelo admin) e login administrativo (incluindo login via 2FA). Não é uma auditoria genérica automática de toda escrita — cada endpoint decide explicitamente o que vale registrar.
+- `GET /api/admin/audit-log` (paginado, mesmo padrão de `PagedResult<T>` das outras listagens administrativas) alimenta `/admin/auditoria`.
+
+### Autenticação de dois fatores para admin (RF72)
+
+- TOTP (RFC 6238, o mesmo algoritmo do Google Authenticator/Authy) implementado à mão em `TotpService` (Infrastructure) em vez de um pacote NuGet — o algoritmo é pequeno e estável, e evita repetir a surpresa de licenciamento comercial que já aconteceu com o ImageSharp 3.x/4.x para uma funcionalidade tão sensível segurança-wise. Inclui Base32 encode/decode próprios (não existe suporte nativo no .NET).
+- `Admin.TwoFactorEnabled`/`TwoFactorSecret` (nullable). Fluxo de ativação é *stateless* no servidor: `POST /2fa/setup` gera um segredo novo (não persiste ainda) e devolve `{secret, otpAuthUri}`; o cliente mostra a chave para digitação manual no app autenticador; `POST /2fa/enable` recebe de volta `{secret, code}`, valida o código contra aquele segredo e só então persiste (`Admin.EnableTwoFactor`). Evita guardar um "segredo pendente" no banco antes da confirmação.
+- Login em duas etapas quando `TwoFactorEnabled`: `POST /api/admin/auth/login` responde `{requiresTwoFactor: true, adminId}` (sem token ainda) em vez do token direto; `POST /api/admin/auth/2fa/verify` (`{adminId, code}`) completa o login. `POST /2fa/disable` exige a senha atual (não o código 2FA) para desativar — evita que perder o celular com o app autenticador bloqueie o admin para sempre, desde que ele ainda saiba a senha.
+- Verificado com uma implementação independente do algoritmo TOTP (escrita em Node, sem reaproveitar nenhum código do projeto) gerando códigos e confirmando que batem com os códigos que o `TotpService` do servidor aceita — dá confiança de que a implementação segue o RFC corretamente, não só "algum código de 6 dígitos".
+- **Bug encontrado e corrigido durante a verificação no navegador**: o formulário do código 2FA usava `(ngSubmit)` sem o componente importar `FormsModule` (só tinha `ReactiveFormsModule`, que não inclui a diretiva `NgForm`) — sem `NgForm`, o clique no botão disparava um submit **nativo** do HTML (recarregando a página inteira e perdendo todo o estado em memória) em vez de chamar o método do componente. O código nunca chegava a ser enviado ao servidor. Só apareceu testando de verdade no navegador (build e testes unitários não capturam esse tipo de problema); corrigido importando `FormsModule` no componente.

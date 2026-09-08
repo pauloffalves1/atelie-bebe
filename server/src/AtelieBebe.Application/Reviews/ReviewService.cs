@@ -39,7 +39,7 @@ public sealed class ReviewService : IReviewService
         var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, ct)
             ?? throw new NotFoundException("Cliente", customerId);
 
-        var review = ProductReview.Create(product.Id, customerId, customer.Name, request.Rating, request.Comment);
+        var review = ProductReview.Create(product.Id, customerId, customer.Name, request.Rating, request.Comment, request.PhotoUrl);
         _unitOfWork.ProductReviews.Add(review);
         await _unitOfWork.SaveChangesAsync(ct);
 
@@ -47,5 +47,5 @@ public sealed class ReviewService : IReviewService
     }
 
     private static ProductReviewDto ToDto(ProductReview r) =>
-        new(r.Id, r.ProductId, r.CustomerName, r.Rating, r.Comment, r.CreatedAt);
+        new(r.Id, r.ProductId, r.CustomerName, r.Rating, r.Comment, r.PhotoUrl, r.CreatedAt);
 }

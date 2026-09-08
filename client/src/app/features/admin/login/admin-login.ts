@@ -1,12 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './admin-login.html',
 })
 export class AdminLogin {
@@ -14,6 +14,10 @@ export class AdminLogin {
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly awaitingTwoFactor = signal(false);
+  readonly twoFactorCode = signal('');
+
+  private pendingAdminId: string | null = null;
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -35,10 +39,33 @@ export class AdminLogin {
     this.errorMessage.set(null);
 
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/admin/dashboard']),
+      next: (response) => {
+        this.submitting.set(false);
+        if (response.requiresTwoFactor && response.adminId) {
+          this.pendingAdminId = response.adminId;
+          this.awaitingTwoFactor.set(true);
+        } else {
+          this.router.navigate(['/admin/dashboard']);
+        }
+      },
       error: () => {
         this.submitting.set(false);
         this.errorMessage.set('E-mail ou senha inválidos.');
+      },
+    });
+  }
+
+  submitTwoFactor(): void {
+    if (!this.pendingAdminId || !this.twoFactorCode()) return;
+
+    this.submitting.set(true);
+    this.errorMessage.set(null);
+
+    this.auth.verifyTwoFactor(this.pendingAdminId, this.twoFactorCode()).subscribe({
+      next: () => this.router.navigate(['/admin/dashboard']),
+      error: () => {
+        this.submitting.set(false);
+        this.errorMessage.set('Código inválido.');
       },
     });
   }

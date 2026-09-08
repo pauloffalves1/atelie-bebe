@@ -19,4 +19,10 @@ export class ReviewService {
   create(productId: string, request: CreateReviewRequest): Observable<ProductReview> {
     return this.http.post<ProductReview>(`${environment.apiUrl}/products/${productId}/reviews`, request);
   }
+
+  uploadPhoto(productId: string, file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${environment.apiUrl}/products/${productId}/reviews/photo`, formData);
+  }
 }

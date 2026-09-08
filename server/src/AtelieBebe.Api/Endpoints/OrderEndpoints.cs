@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using AtelieBebe.Api.Common;
+using AtelieBebe.Application.Audit;
 using AtelieBebe.Application.Orders;
 
 namespace AtelieBebe.Api.Endpoints;
@@ -38,11 +39,19 @@ public static class OrderEndpoints
         adminGroup.MapGet("/", async (string? status, string? paymentStatus, IOrderService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
             Results.Ok(await service.ListAsync(status, paymentStatus, page, pageSize, ct)));
 
-        adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, IOrderService service, CancellationToken ct) =>
-            Results.Ok(await service.ChangeStatusAsync(id, request, ct)));
+        adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, HttpContext http, IOrderService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.ChangeStatusAsync(id, request, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "OrderStatusChanged", $"Pedido #{id.ToString()[..8]} mudou para {updated.Status}", ct);
+            return Results.Ok(updated);
+        });
 
-        adminGroup.MapPatch("/{id:guid}/tracking-code", async (Guid id, SetTrackingCodeRequest request, IOrderService service, CancellationToken ct) =>
-            Results.Ok(await service.SetTrackingCodeAsync(id, request, ct)));
+        adminGroup.MapPatch("/{id:guid}/tracking-code", async (Guid id, SetTrackingCodeRequest request, HttpContext http, IOrderService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.SetTrackingCodeAsync(id, request, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "OrderTrackingCodeSet", $"Código de rastreio do pedido #{id.ToString()[..8]} definido", ct);
+            return Results.Ok(updated);
+        });
 
         // Lets an admin (re)generate a payment link for an order — e.g. the customer abandoned the
         // original Checkout Pro page, or the order was created before the gateway was configured.

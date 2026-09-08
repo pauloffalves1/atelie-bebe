@@ -164,6 +164,21 @@
                 <textarea class="form-control mb-3" rows="3" placeholder="Conte como foi sua experiência (opcional)"
                   [ngModel]="reviewComment()" (ngModelChange)="reviewComment.set($event)"></textarea>
 
+                <div class="mb-3">
+                  @if (reviewPhotoUrl()) {
+                    <div class="d-flex align-items-center gap-2">
+                      <img [src]="reviewPhotoUrl() | assetUrl" alt="Foto enviada" class="rounded-3" style="width: 64px; height: 64px; object-fit: cover;">
+                      <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" (click)="removeReviewPhoto()">Remover foto</button>
+                    </div>
+                  } @else {
+                    <label class="btn btn-sm btn-outline-secondary rounded-pill mb-0">
+                      @if (uploadingReviewPhoto()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                      <i class="bi bi-camera me-1"></i>Adicionar foto (opcional)
+                      <input type="file" accept="image/jpeg,image/png,image/webp" class="d-none" [disabled]="uploadingReviewPhoto()" (change)="onReviewPhotoSelected($event)">
+                    </label>
+                  }
+                </div>
+
                 <button class="btn btn-primary rounded-pill" [disabled]="submittingReview()" (click)="submitReview()">
                   @if (submittingReview()) { <span class="spinner-border spinner-border-sm me-2"></span> }
                   Enviar avaliação
@@ -199,6 +214,9 @@
                   </div>
                   @if (review.comment) {
                     <p class="small text-secondary mt-2 mb-0">{{ review.comment }}</p>
+                  }
+                  @if (review.photoUrl) {
+                    <img [src]="review.photoUrl | assetUrl" alt="Foto do cliente" class="rounded-3 mt-2" style="width: 96px; height: 96px; object-fit: cover;">
                   }
                 </li>
               }

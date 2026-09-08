@@ -17,5 +17,8 @@ public sealed class AdminRepository : IAdminRepository
         return _dbContext.Admins.FirstOrDefaultAsync(a => a.Email == normalized, ct);
     }
 
+    public Task<Admin?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        _dbContext.Admins.FirstOrDefaultAsync(a => a.Id == id, ct);
+
     public void Add(Admin admin) => _dbContext.Admins.Add(admin);
 }

@@ -14,6 +14,7 @@ public sealed class AdminConfiguration : IEntityTypeConfiguration<Admin>
 
         builder.Property(a => a.Name).IsRequired().HasMaxLength(200);
         builder.Property(a => a.PasswordHash).IsRequired();
+        builder.Property(a => a.TwoFactorSecret).HasMaxLength(64);
 
         builder.Property(a => a.Email)
             .HasConversion(email => email.Value, value => Email.Create(value))

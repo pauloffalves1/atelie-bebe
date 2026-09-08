@@ -21,6 +21,7 @@ public interface IUnitOfWork
     IEmailVerificationTokenRepository EmailVerificationTokens { get; }
     IWishlistItemRepository WishlistItems { get; }
     ICartSnapshotRepository CartSnapshots { get; }
+    IAuditLogRepository AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

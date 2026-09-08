@@ -64,6 +64,8 @@ export class ProductDetail implements OnInit {
   readonly eligibility = signal<ReviewEligibility | null>(null);
   readonly reviewRating = signal(5);
   readonly reviewComment = signal('');
+  readonly reviewPhotoUrl = signal<string | null>(null);
+  readonly uploadingReviewPhoto = signal(false);
   readonly submittingReview = signal(false);
   readonly reviewError = signal<string | null>(null);
 
@@ -169,6 +171,28 @@ export class ProductDetail implements OnInit {
     this.reviewRating.set(rating);
   }
 
+  onReviewPhotoSelected(event: Event): void {
+    const product = this.product();
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!product || !file) return;
+
+    this.uploadingReviewPhoto.set(true);
+    this.reviewService.uploadPhoto(product.id, file).subscribe({
+      next: ({ url }) => {
+        this.reviewPhotoUrl.set(url);
+        this.uploadingReviewPhoto.set(false);
+      },
+      error: (err) => {
+        this.uploadingReviewPhoto.set(false);
+        this.reviewError.set(err?.error?.detail ?? 'Não foi possível enviar a foto.');
+      },
+    });
+  }
+
+  removeReviewPhoto(): void {
+    this.reviewPhotoUrl.set(null);
+  }
+
   submitReview(): void {
     const product = this.product();
     if (!product) return;
@@ -176,19 +200,22 @@ export class ProductDetail implements OnInit {
     this.submittingReview.set(true);
     this.reviewError.set(null);
 
-    this.reviewService.create(product.id, { rating: this.reviewRating(), comment: this.reviewComment().trim() || null }).subscribe({
-      next: (review) => {
-        this.reviews.update((list) => [review, ...list]);
-        this.eligibility.update((current) => (current ? { ...current, alreadyReviewed: true } : current));
-        this.reviewComment.set('');
-        this.reviewRating.set(5);
-        this.submittingReview.set(false);
-      },
-      error: (err) => {
-        this.submittingReview.set(false);
-        this.reviewError.set(err?.error?.detail ?? 'Não foi possível enviar sua avaliação.');
-      },
-    });
+    this.reviewService
+      .create(product.id, { rating: this.reviewRating(), comment: this.reviewComment().trim() || null, photoUrl: this.reviewPhotoUrl() })
+      .subscribe({
+        next: (review) => {
+          this.reviews.update((list) => [review, ...list]);
+          this.eligibility.update((current) => (current ? { ...current, alreadyReviewed: true } : current));
+          this.reviewComment.set('');
+          this.reviewRating.set(5);
+          this.reviewPhotoUrl.set(null);
+          this.submittingReview.set(false);
+        },
+        error: (err) => {
+          this.submittingReview.set(false);
+          this.reviewError.set(err?.error?.detail ?? 'Não foi possível enviar sua avaliação.');
+        },
+      });
   }
 
   appendLetter(letter: string): void {

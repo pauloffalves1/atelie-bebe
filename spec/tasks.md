@@ -546,3 +546,38 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
     - [x] 57.6 `dotnet build`/`dotnet test` (169 Domain + 20 Application); `dotnet ef migrations add AddCartSnapshot`; `npm run build`/`npx ng test` (31 testes) sem erros
     - [x] 57.7 Verificado via curl: `PUT /api/cart-sync` grava e remove corretamente. Verificado com temporizadores temporariamente reduzidos (revertidos antes do commit): processor detectou carrinho inativo simulado, marcou `ReminderSentAt`, tentou enviar e-mail (falhou só por falta de `Resend:ApiKey` local), não reenviou no ciclo seguinte. Fluxo do cliente confirmado no navegador (adicionar ao carrinho autenticado → snapshot criado no servidor com os itens corretos)
     - [x] 57.8 `README.md` (RF68) e `spec/requirements.md`/`spec/design.md` (Requisito 56) atualizados
+
+- [x] 58. Consentimento de cookies (Requisito 57 / RF69, design em `spec/design.md`)
+  - [x] 58.1 `CookieConsentService`; `AnalyticsService.init()` → `initIfAccepted()` (condicionado a IDs configurados **e** consentimento aceito)
+  - [x] 58.2 `<app-cookie-banner>` (aceitar/recusar), renderizado em `app.html` fora do router-outlet
+  - [x] 58.3 `npm run build`/`npx ng test` sem erros; verificado no navegador (banner aparece, "Aceitar" salva e some, persiste em localStorage)
+  - [x] 58.4 `README.md` (RF69) e `spec/requirements.md`/`spec/design.md` (Requisito 57) atualizados
+
+- [x] 59. Fotos em avaliações de produto (Requisito 58 / RF70, design em `spec/design.md`)
+  - [x] 59.1 `ProductReview.PhotoUrl` (Domain, nullable); testes de domínio (3 casos novos)
+  - [x] 59.2 `POST /api/products/{productId}/reviews/photo` (`CustomerOnly`, mesma otimização de imagem do Requisito 54, pasta `reviews/`); `CreateReviewRequest.PhotoUrl`
+  - [x] 59.3 Frontend: upload de foto opcional no formulário de avaliação (preview + remover); exibição na listagem pública
+  - [x] 59.4 `dotnet test` (181 Domain + 20 Application); verificado via curl fim a fim (upload → criar avaliação com `photoUrl` → listagem retorna a foto)
+  - [x] 59.5 `README.md` (RF70) e `spec/requirements.md`/`spec/design.md` (Requisito 58) atualizados
+
+- [x] 60. Log de auditoria administrativo (Requisito 59 / RF71, design em `spec/design.md`)
+  - [x] 60.1 `AuditLog` (Domain); `IAuditLogRepository`/`AuditLogRepository`; `AuditLogConfiguration`; testes de domínio (`AuditLogTests`, 3 casos)
+  - [x] 60.2 `AuditLogService` (`RecordAsync`/`ListAsync` paginado); `IAdminRepository.GetByIdAsync`; `ClaimsPrincipalExtensions.GetName()`
+  - [x] 60.3 Instrumentado em `ProductEndpoints`, `OrderEndpoints`, `CouponEndpoints`, `CustomerEndpoints`, `AuthEndpoints` (login e 2FA)
+  - [x] 60.4 `GET /api/admin/audit-log` (paginado); `AdminAuditLog` (`/admin/auditoria`, reaproveitando `<app-pagination>`); link na sidebar
+  - [x] 60.5 Verificado via curl e no navegador: ações registradas na ordem certa, com admin/ação/detalhes corretos
+  - [x] 60.6 `README.md` (RF71) e `spec/requirements.md`/`spec/design.md` (Requisito 59) atualizados
+
+- [x] 61. Autenticação de dois fatores para administrador (Requisito 60 / RF72, design em `spec/design.md`)
+  - Backend
+    - [x] 61.1 `TotpService` (RFC 6238 hand-rolled, sem dependência externa — mesma razão do ImageSharp 2.x no Requisito 54); `Admin.TwoFactorEnabled`/`TwoFactorSecret`; testes de domínio (`AdminTests`, 5 casos)
+    - [x] 61.2 `AdminLoginResponse` (login em duas etapas); `BeginTwoFactorSetupAsync`/`EnableTwoFactorAsync`/`DisableTwoFactorAsync`/`VerifyTwoFactorAsync`/`IsTwoFactorEnabledAsync`
+    - [x] 61.3 `POST /2fa/setup`, `/2fa/enable`, `/2fa/disable`, `/2fa/verify`, `GET /2fa/status` (`AdminOnly` exceto `/verify`, que é o segundo passo do login); migration `AddReviewPhotoAuditLogAndAdminTwoFactor`
+  - Frontend
+    - [x] 61.4 `AdminAuthService` reescrito para o fluxo de duas etapas; `admin-login.ts`/`.html` com tela de código 2FA
+    - [x] 61.5 `AdminSecurity` (`/admin/seguranca`): ativar (mostra chave + confirma código) e desativar (confirma senha) 2FA; link na sidebar
+  - Verificação e documentação
+    - [x] 61.6 `dotnet build`/`dotnet test` (181 Domain + 20 Application); `npm run build`/`npx ng test` (31 testes) sem erros
+    - [x] 61.7 Algoritmo TOTP verificado contra uma implementação independente em Node (códigos batem). Fluxo completo testado via curl (setup → enable → login exige 2FA → verify → disable) e no navegador
+    - [x] 61.8 **Bug encontrado e corrigido durante a verificação no navegador**: `admin-login.html` usava `(ngSubmit)` sem o componente importar `FormsModule` (só tinha `ReactiveFormsModule`) — sem a diretiva `NgForm`, o clique disparava submit nativo do HTML (recarregando a página, perdendo o estado, nenhuma requisição a `/2fa/verify` era feita). Corrigido importando `FormsModule`; reverificado com sucesso depois
+    - [x] 61.9 `README.md` (RF72) e `spec/requirements.md`/`spec/design.md` (Requisito 60) atualizados

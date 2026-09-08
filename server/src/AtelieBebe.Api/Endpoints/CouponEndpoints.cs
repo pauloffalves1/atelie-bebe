@@ -1,3 +1,5 @@
+using AtelieBebe.Api.Common;
+using AtelieBebe.Application.Audit;
 using AtelieBebe.Application.Coupons;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -17,13 +19,18 @@ public static class CouponEndpoints
         adminGroup.MapGet("/", async (ICouponService service, CancellationToken ct) =>
             Results.Ok(await service.ListAsync(ct)));
 
-        adminGroup.MapPost("/", async (CreateCouponRequest request, ICouponService service, CancellationToken ct) =>
+        adminGroup.MapPost("/", async (CreateCouponRequest request, HttpContext http, ICouponService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
             var created = await service.CreateAsync(request, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "CouponCreated", $"Cupom '{created.Code}' criado ({created.DiscountPercentage}%)", ct);
             return Results.Created($"/api/admin/coupons/{created.Id}", created);
         });
 
-        adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, ICouponService service, CancellationToken ct) =>
-            Results.Ok(await service.SetActiveAsync(id, active, ct)));
+        adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, HttpContext http, ICouponService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.SetActiveAsync(id, active, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "CouponActiveChanged", $"Cupom '{updated.Code}' marcado como {(active ? "ativo" : "inativo")}", ct);
+            return Results.Ok(updated);
+        });
     }
 }

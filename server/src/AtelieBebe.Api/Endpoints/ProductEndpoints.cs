@@ -1,5 +1,6 @@
 using AtelieBebe.Api.Common;
 using AtelieBebe.Application.Abstractions;
+using AtelieBebe.Application.Audit;
 using AtelieBebe.Application.Products;
 
 namespace AtelieBebe.Api.Endpoints;
@@ -32,17 +33,26 @@ public static class ProductEndpoints
         adminGroup.MapGet("/{id:guid}", async (Guid id, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.GetForAdminAsync(id, ct)));
 
-        adminGroup.MapPost("/", async (CreateProductRequest request, IProductService service, CancellationToken ct) =>
+        adminGroup.MapPost("/", async (CreateProductRequest request, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
             var created = await service.CreateAsync(request, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductCreated", $"Produto '{created.Name}' criado", ct);
             return Results.Created($"/api/admin/products/{created.Id}", created);
         });
 
-        adminGroup.MapPut("/{id:guid}", async (Guid id, UpdateProductRequest request, IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.UpdateAsync(id, request, ct)));
+        adminGroup.MapPut("/{id:guid}", async (Guid id, UpdateProductRequest request, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.UpdateAsync(id, request, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductUpdated", $"Produto '{updated.Name}' atualizado", ct);
+            return Results.Ok(updated);
+        });
 
-        adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.SetActiveAsync(id, active, ct)));
+        adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.SetActiveAsync(id, active, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductActiveChanged", $"Produto '{updated.Name}' marcado como {(active ? "ativo" : "inativo")}", ct);
+            return Results.Ok(updated);
+        });
 
         adminGroup.MapPut("/{id:guid}/customers", async (Guid id, SetAllowedCustomersRequest request, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.SetAllowedCustomersAsync(id, request, ct)));
@@ -50,11 +60,20 @@ public static class ProductEndpoints
         adminGroup.MapPut("/{id:guid}/images", async (Guid id, SetProductImagesRequest request, IProductService service, CancellationToken ct) =>
             Results.Ok(await service.SetImagesAsync(id, request, ct)));
 
-        adminGroup.MapPatch("/{id:guid}/promotion", async (Guid id, SetPromotionRequest request, IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.SetPromotionAsync(id, request, ct)));
+        adminGroup.MapPatch("/{id:guid}/promotion", async (Guid id, SetPromotionRequest request, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.SetPromotionAsync(id, request, ct);
+            var summary = request.DiscountPercentage is null ? $"Promoção removida de '{updated.Name}'" : $"Promoção de {request.DiscountPercentage}% aplicada a '{updated.Name}'";
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductPromotionChanged", summary, ct);
+            return Results.Ok(updated);
+        });
 
-        adminGroup.MapPost("/promotions/bulk", async (BulkApplyPromotionRequest request, IProductService service, CancellationToken ct) =>
-            Results.Ok(await service.ApplyPromotionToManyAsync(request, ct)));
+        adminGroup.MapPost("/promotions/bulk", async (BulkApplyPromotionRequest request, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
+        {
+            var updated = await service.ApplyPromotionToManyAsync(request, ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductPromotionChanged", $"Promoção de {request.DiscountPercentage}% aplicada em massa a {updated.Count} produto(s)", ct);
+            return Results.Ok(updated);
+        });
 
         adminGroup.MapPost("/uploads", async (IFormFile file, IFileStorageService fileStorage, CancellationToken ct) =>
         {
