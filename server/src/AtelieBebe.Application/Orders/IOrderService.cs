@@ -12,6 +12,9 @@ public interface IOrderService
     Task<IReadOnlyList<OrderDto>> ExportAsync(string? status, string? paymentStatus, CancellationToken ct = default);
     Task<IReadOnlyList<OrderDto>> ListMineAsync(Guid customerId, CancellationToken ct = default);
     Task<OrderDto> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Guest order tracking — requires both the short order number and the customer's own e-mail to match.</summary>
+    Task<OrderDto> LookupAsync(string shortId, string email, CancellationToken ct = default);
     Task<OrderDto> ChangeStatusAsync(Guid id, UpdateOrderStatusRequest request, CancellationToken ct = default);
 
     /// <summary>Re-queries the payment gateway for the given payment id and updates the matching order's PaymentStatus. Never throws on a malformed/unknown id — webhooks must always get a 200.</summary>

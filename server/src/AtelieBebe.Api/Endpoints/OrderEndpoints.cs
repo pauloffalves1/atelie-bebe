@@ -4,6 +4,7 @@ using System.Text.Json;
 using AtelieBebe.Api.Common;
 using AtelieBebe.Application.Audit;
 using AtelieBebe.Application.Orders;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AtelieBebe.Api.Endpoints;
 
@@ -33,6 +34,12 @@ public static class OrderEndpoints
 
         group.MapGet("/{id:guid}", async (Guid id, IOrderService service, CancellationToken ct) =>
             Results.Ok(await service.GetByIdAsync(id, ct)));
+
+        // Guest order tracking: the short id alone is guessable (8 hex chars), so this is
+        // rate-limited like other secret-guessing endpoints (login, coupon validation).
+        group.MapGet("/lookup", async (string orderNumber, string email, IOrderService service, CancellationToken ct) =>
+            Results.Ok(await service.LookupAsync(orderNumber, email, ct)))
+            .RequireRateLimiting("auth");
 
         var adminGroup = app.MapGroup("/api/admin/orders").WithTags("Encomendas (admin)").RequireAuthorization("AdminOnly");
 

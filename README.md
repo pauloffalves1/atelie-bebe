@@ -390,6 +390,9 @@ sudo nginx -t && sudo systemctl reload nginx
 | RF71 | O sistema deve registrar um log de auditoria (quem, o quê, quando) para as principais ações administrativas (produtos, pedidos, cupons, clientes, login), visível em `/admin/auditoria` | Administrador / Sistema |
 | RF72 | O sistema deve oferecer autenticação de dois fatores (TOTP) opcional para o login administrativo, configurável em `/admin/seguranca` | Administrador |
 | RF73 | O sistema deve permitir que um visitante se inscreva para receber novidades por e-mail (rodapé do site), e que o administrador consulte e exporte essa lista para uso em campanhas de marketing | Visitante / Administrador |
+| RF74 | O sistema deve exibir um botão flutuante de WhatsApp em todas as páginas públicas, abrindo uma conversa direta com o ateliê | Visitante |
+| RF75 | O sistema deve permitir que qualquer visitante consulte o status de um pedido informando o e-mail usado na compra e o número do pedido, sem precisar estar logado | Visitante |
+| RF76 | O checkout deve exibir selos informativos de segurança (criptografia, dados de pagamento não armazenados no servidor, dados pessoais não compartilhados) | Cliente |
 
 ### Requisitos não funcionais
 
@@ -406,6 +409,8 @@ sudo nginx -t && sudo systemctl reload nginx
 | RNF09 | O banco de dados de produção deve ter uma rotina de backup diário automatizada, armazenada fora da pasta de publicação (sobrevive a deploys) |
 | RNF10 | O fluxo de compra (personalizar produto, cadastrar/logar, finalizar checkout) deve ter um teste automatizado de ponta a ponta, rodando num navegador de verdade contra o backend real |
 | RNF11 | Imagens e arquivos estáticos com nome imutável (uploads com nome gerado, build do frontend com hash de conteúdo) devem ser servidos com cabeçalhos de cache de longa duração |
+| RNF12 | O site deve ser instalável como aplicativo no celular/desktop (PWA), com ícone e nome próprios |
+| RNF13 | As respostas HTTP devem ser comprimidas (gzip no mínimo) para reduzir o tamanho transferido ao navegador |
 
 ## Regras de negócio
 
@@ -559,3 +564,19 @@ Exceções de domínio e aplicação são convertidas em respostas HTTP consiste
 
 - `NewsletterSubscriber` (uma linha por e-mail, índice único) — `POST /api/newsletter/subscribe` (público) é idempotente: inscrever de novo, ou reinscrever um e-mail que já tinha saído (`Active = false`), nunca é erro. O sistema **não** envia campanhas — só captura e exporta; enviar de fato fica por conta de uma ferramenta externa (Mailchimp, Resend Broadcast) usando o CSV exportado.
 - Formulário de inscrição no rodapé de toda página pública (`PublicLayout`). `GET /api/admin/newsletter` (lista) e `GET /api/admin/newsletter/export` (CSV, mesmo padrão de `Escape`/`CultureInfo` do export de encomendas) alimentam a nova tela `/admin/newsletter`.
+
+### Botão de WhatsApp, rastreamento de pedido e selos de segurança (RF74-76)
+
+- `<app-whatsapp-button>` (`shared/components/`): botão fixo no canto inferior direito de toda página pública, usando a mesma constante `WHATSAPP_NUMBER` já usada em `/contato` (extraída para `core/constants/site.ts` para não duplicar o número em dois lugares). Sobe automaticamente de posição enquanto o banner de cookies (RF69) ainda não foi decidido, pra não sobrepor os dois.
+- `GET /api/orders/lookup?orderNumber=...&email=...` (público, mesma política de rate limit `"auth"` das outras rotas de "adivinhar um segredo") — `IOrderRepository.GetByShortIdAndEmailAsync` filtra por e-mail no banco e depois compara o prefixo curto (`Id.ToString()[..8]`, o mesmo código já mostrado em todo lugar como "Pedido #xxxxxxxx") em memória, já que `Guid.ToString()` não é traduzível para SQL pelo provider do SQLite. Exige os dois dados batendo — só o número do pedido sozinho (8 caracteres hex, adivinhável) não é suficiente. Nova página pública `/rastrear-pedido` reaproveita a página de confirmação de pedido já existente (`/pedido/:id`) depois de encontrar o pedido.
+- Três linhas de selo de confiança (criptografia, dados de pagamento fora do servidor, dados pessoais não compartilhados) abaixo do botão "Confirmar pedido" no checkout — só texto informativo, sem nova lógica.
+
+### PWA (RNF12)
+
+- `@angular/service-worker` (fixado na mesma versão exata do `@angular/core` instalado — a resolução automática de `latest` trouxe uma versão mais nova exigindo um `@angular/core` que este projeto ainda não usa). `ngsw-config.json`: cacheia o shell da aplicação (`prefetch`) e imagens/assets (`lazy`), mais um `dataGroup` com estratégia `freshness` para `/api/products/**` (tenta a rede primeiro, cai pro cache só se a rede falhar ou demorar mais de 3s — navegar pelo catálogo continua funcionando com conexão instável).
+- `manifest.webmanifest` (nome, cores do tema, ícones 192px/512px) referenciado em `index.html` junto com a meta `theme-color`. Os ícones PNG foram gerados a partir do `favicon.svg` já existente (renderizado em canvas via um script no próprio navegador, já que não havia gerador de ícone no projeto) — mesmo desenho do favicon, só em tamanho maior.
+- `provideServiceWorker(..., { enabled: !isDevMode() })` — nunca ativa em `ng serve` (evitaria o cache atrapalhar o hot-reload durante desenvolvimento); `angular.json` liga `"serviceWorker": "ngsw-config.json"` só na configuração `production`. Confirmado que `ngsw-worker.js`/`ngsw.json`/`manifest.webmanifest` saem no `dist/client/browser/` depois de um `npm run build`.
+
+### Compressão HTTP (RNF13)
+
+- `server/ops/nginx-compression.conf`: bloco de referência pra colar em `/etc/nginx/nginx.conf` (ou no `server {}` do site) — não aplicado automaticamente, mesmo padrão dos outros arquivos em `server/ops/`. `gzip` vem pronto no Nginx (sem módulo extra); Brotli, que comprime melhor, precisa de um módulo à parte (`nginx-module-brotli`) — documentado como opcional, com os comandos de instalação, mas comentado por padrão pra não quebrar um `nginx -t` em uma VPS que não tenha o módulo.

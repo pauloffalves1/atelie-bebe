@@ -603,3 +603,23 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 64.2 Confirmado que o build do Angular já usa nomes com hash de conteúdo (`ls client/dist/client/browser/` depois de `npm run build`)
   - [x] 64.3 `README.md` (RNF11) e `spec/requirements.md`/`spec/design.md` (Requisito 63) atualizados
   - [ ] 64.4 **Não aplicado**: instalação real do bloco de cache na VPS (precisa o administrador colar/ajustar via SSH) e CDN Cloudflare (precisa o administrador criar a conta e trocar os nameservers do domínio) — ambos documentados no `README.md` como passos manuais/opcionais, aguardando decisão do ateliê
+
+- [x] 65. Botão de WhatsApp, rastreamento de pedido e selos de segurança (Requisito 64 / RF74-76, design em `spec/design.md`)
+  - [x] 65.1 `WHATSAPP_NUMBER` extraído para `core/constants/site.ts`; `<app-whatsapp-button>` (fixo, reage ao `CookieConsentService` pra não sobrepor o banner), renderizado em `PublicLayout`
+  - [x] 65.2 `IOrderRepository.GetByShortIdAndEmailAsync`/`IOrderService.LookupAsync`; `GET /api/orders/lookup` (público, rate-limited); `TrackOrder` (`/rastrear-pedido`) navega para `/pedido/:id` após encontrar
+  - [x] 65.3 Três linhas de selo de segurança no checkout, abaixo do botão de confirmar
+  - [x] 65.4 `dotnet build`/`dotnet test` (184 Domain + 20 Application); `npm run build`/`npx ng test` (31 testes) sem erros
+  - [x] 65.5 Verificado via curl (lookup com e-mail/número corretos retorna o pedido; errados retornam 404) e no navegador (WhatsApp visível em `/rastrear-pedido`, rastreamento redireciona pro pedido certo, selos aparecem no checkout)
+  - [x] 65.6 `README.md` (RF74-76) e `spec/requirements.md`/`spec/design.md` (Requisito 64) atualizados
+
+- [x] 66. PWA (Requisito 65 / RNF12, design em `spec/design.md`)
+  - [x] 66.1 `ng add @angular/pwa` não funcionou (resolveu versão incompatível com Angular 22, depois falhou por restrição de `--allow-scripts`); `@angular/service-worker` instalado manualmente na versão exata do `@angular/core`
+  - [x] 66.2 Ícones PNG (192/512) gerados a partir do `favicon.svg` existente via canvas no navegador (Claude-in-Chrome), já que não havia gerador de ícone no projeto; `manifest.webmanifest`; `index.html` com `<link rel="manifest">` e `theme-color`
+  - [x] 66.3 `ngsw-config.json` (shell prefetch, assets lazy, `dataGroup` freshness para `/api/products/**`); `provideServiceWorker(..., { enabled: !isDevMode() })`; `"serviceWorker": "ngsw-config.json"` só na configuração `production` do `angular.json`
+  - [x] 66.4 Confirmado que `npm run build` gera `ngsw-worker.js`/`ngsw.json`/`manifest.webmanifest` em `dist/client/browser/`; `npx ng test` (31 testes) sem regressão
+  - [x] 66.5 `README.md` (RNF12) e `spec/requirements.md`/`spec/design.md` (Requisito 65) atualizados
+
+- [x] 67. Compressão HTTP (Requisito 66 / RNF13, design em `spec/design.md`)
+  - [x] 67.1 `server/ops/nginx-compression.conf` — gzip pronto (sem módulo extra), Brotli documentado como bloco opcional comentado (precisa de módulo adicional)
+  - [x] 67.2 `README.md` (RNF13) e `spec/requirements.md`/`spec/design.md` (Requisito 66) atualizados
+  - [ ] 67.3 **Não aplicado**: instalação real do bloco de compressão na VPS — precisa o administrador colar/ajustar via SSH (mesmo padrão do Requisito 63)

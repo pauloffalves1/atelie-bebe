@@ -129,6 +129,13 @@ public sealed class OrderService : IOrderService
         return ToDto(order);
     }
 
+    public async Task<OrderDto> LookupAsync(string shortId, string email, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetByShortIdAndEmailAsync(shortId, email, ct)
+            ?? throw new NotFoundException("Pedido", shortId);
+        return ToDto(order);
+    }
+
     public async Task<OrderDto> ChangeStatusAsync(Guid id, UpdateOrderStatusRequest request, CancellationToken ct = default)
     {
         var order = await _unitOfWork.Orders.GetByIdAsync(id, ct)

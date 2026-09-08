@@ -4,11 +4,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { NewsletterService } from '../../../core/services/newsletter.service';
+import { WhatsappButton } from '../../../shared/components/whatsapp-button/whatsapp-button';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, FormsModule],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, FormsModule, WhatsappButton],
   templateUrl: './public-layout.html',
 })
 export class PublicLayout {

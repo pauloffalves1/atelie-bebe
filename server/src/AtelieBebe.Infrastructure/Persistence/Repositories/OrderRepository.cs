@@ -1,6 +1,7 @@
 using AtelieBebe.Domain.Entities;
 using AtelieBebe.Domain.Enums;
 using AtelieBebe.Domain.Repositories;
+using AtelieBebe.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace AtelieBebe.Infrastructure.Persistence.Repositories;
@@ -13,6 +14,18 @@ public sealed class OrderRepository : IOrderRepository
 
     public Task<Order?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         _dbContext.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public async Task<Order?> GetByShortIdAndEmailAsync(string shortId, string email, CancellationToken ct = default)
+    {
+        var normalizedEmail = Email.Create(email);
+        var orders = await _dbContext.Orders.Include(o => o.Items)
+            .Where(o => o.CustomerEmail == normalizedEmail)
+            .ToListAsync(ct);
+
+        // Guid.ToString() isn't translatable to SQL by the SQLite provider, so the short-id
+        // prefix match happens in memory — fine since a single customer's order count is small.
+        return orders.FirstOrDefault(o => o.Id.ToString().StartsWith(shortId, StringComparison.OrdinalIgnoreCase));
+    }
 
     public async Task<(IReadOnlyList<Order> Items, int TotalItems)> ListAsync(OrderStatus? status, PaymentStatus? paymentStatus, int page, int pageSize, CancellationToken ct = default)
     {

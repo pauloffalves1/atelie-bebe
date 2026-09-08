@@ -188,6 +188,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/public/wishlist/wishlist-page').then((m) => m.WishlistPage),
       },
       {
+        path: 'rastrear-pedido',
+        title: `Rastrear pedido — ${SITE_NAME}`,
+        loadComponent: () => import('./features/public/track-order/track-order').then((m) => m.TrackOrder),
+      },
+      {
         path: 'pedido/:id',
         title: `Confirmação de pedido — ${SITE_NAME}`,
         loadComponent: () =>

@@ -24,6 +24,10 @@ export class OrderService {
     return this.http.get<Order>(`${this.baseUrl}/${id}`);
   }
 
+  lookup(orderNumber: string, email: string): Observable<Order> {
+    return this.http.get<Order>(`${this.baseUrl}/lookup`, { params: { orderNumber, email } });
+  }
+
   listMine(): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.baseUrl}/mine`);
   }

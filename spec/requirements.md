@@ -944,3 +944,44 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 3. O arquivo `index.html` NÃO DEVE ser cacheado, para que uma nova versão do site seja sempre servida corretamente após um deploy.
 4. A instalação da configuração de cache é um passo manual documentado (a configuração do Nginx na VPS não é gerenciada por este repositório), assim como o backup do banco (Requisito 33).
 5. Uma CDN (ex. Cloudflare) na frente do domínio é uma melhoria opcional adicional, documentada mas não aplicada automaticamente — exige trocar os servidores de nome do domínio, uma decisão e execução do ateliê, não do sistema.
+
+---
+
+## Requisito 64: Botão de WhatsApp, rastreamento de pedido e selos de segurança
+
+**User Story:** Como ateliê, quero reduzir a fricção de contato e reforçar a confiança do visitante durante a compra, para converter mais visitas em pedidos.
+
+**Rastreamento:** RF74, RF75, RF76.
+
+**Acceptance Criteria**
+1. Toda página pública DEVE exibir um botão flutuante que abre uma conversa no WhatsApp do ateliê.
+2. Um visitante NÃO autenticado DEVE poder consultar o status de um pedido informando o e-mail usado na compra e o número do pedido.
+3. A consulta de pedido DEVE exigir que os dois dados (e-mail e número do pedido) correspondam ao mesmo pedido — informar só o número não é suficiente.
+4. O checkout DEVE exibir informações reforçando a segurança da compra (criptografia, dados de pagamento não armazenados no servidor, dados pessoais não compartilhados).
+
+---
+
+## Requisito 65: PWA (aplicativo instalável)
+
+**User Story:** Como ateliê, quero que o site possa ser instalado como aplicativo no celular do cliente, para facilitar o acesso em visitas futuras.
+
+**Rastreamento:** RNF12.
+
+**Acceptance Criteria**
+1. O site DEVE ser instalável pelo navegador como aplicativo, com ícone e nome próprios.
+2. O build de produção DEVE gerar um service worker que cacheia o shell da aplicação e assets estáticos.
+3. O service worker NÃO DEVE ser ativado em ambiente de desenvolvimento (`ng serve`).
+4. Dados de catálogo (produtos) cacheados pelo service worker DEVEM sempre priorizar a rede quando disponível, usando o cache só como último recurso.
+
+---
+
+## Requisito 66: Compressão HTTP
+
+**User Story:** Como ateliê, quero que as respostas do site sejam comprimidas, para reduzir o tempo de carregamento para o visitante.
+
+**Rastreamento:** RNF13.
+
+**Acceptance Criteria**
+1. O SISTEMA DEVE fornecer a configuração de compressão gzip para tipos de conteúdo textuais (HTML, CSS, JS, JSON, SVG).
+2. A instalação dessa configuração é um passo manual documentado (mesmo padrão dos Requisitos 33 e 63) — não é gerenciada automaticamente por este repositório.
+3. Compressão Brotli é documentada como alternativa opcional de melhor taxa de compressão, condicionada à instalação de um módulo adicional do Nginx.
