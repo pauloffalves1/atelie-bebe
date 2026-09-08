@@ -48,15 +48,19 @@ public static class OrderEndpoints
 
         adminGroup.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, HttpContext http, IOrderService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.ChangeStatusAsync(id, request, ct);
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "OrderStatusChanged", $"Pedido #{id.ToString()[..8]} mudou para {updated.Status}", ct);
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "OrderStatusChanged", $"Pedido #{id.ToString()[..8]}: {before.Status} → {updated.Status}", ct);
             return Results.Ok(updated);
         });
 
         adminGroup.MapPatch("/{id:guid}/tracking-code", async (Guid id, SetTrackingCodeRequest request, HttpContext http, IOrderService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.SetTrackingCodeAsync(id, request, ct);
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "OrderTrackingCodeSet", $"Código de rastreio do pedido #{id.ToString()[..8]} definido", ct);
+            var oldCode = string.IsNullOrWhiteSpace(before.TrackingCode) ? "(vazio)" : before.TrackingCode;
+            var newCode = string.IsNullOrWhiteSpace(updated.TrackingCode) ? "(vazio)" : updated.TrackingCode;
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "OrderTrackingCodeSet", $"Pedido #{id.ToString()[..8]}: {oldCode} → {newCode}", ct);
             return Results.Ok(updated);
         });
 

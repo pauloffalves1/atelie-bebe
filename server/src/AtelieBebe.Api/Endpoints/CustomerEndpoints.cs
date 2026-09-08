@@ -18,8 +18,14 @@ public static class CustomerEndpoints
 
         adminGroup.MapPut("/{id:guid}", async (Guid id, UpdateCustomerRequest request, HttpContext http, ICustomerAdminService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.UpdateAsync(id, request, ct);
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "CustomerUpdated", $"Cliente '{updated.Name}' editado", ct);
+            var diff = AuditDiff.Join(
+                AuditDiff.Field("Nome", before.Name, updated.Name),
+                AuditDiff.Field("E-mail", before.Email, updated.Email),
+                AuditDiff.Field("CPF", before.Cpf, updated.Cpf),
+                AuditDiff.Field("Telefone", before.Phone, updated.Phone));
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "CustomerUpdated", $"Cliente '{updated.Name}' — {diff}", ct);
             return Results.Ok(updated);
         });
     }

@@ -3,6 +3,7 @@ namespace AtelieBebe.Application.Coupons;
 public interface ICouponService
 {
     Task<IReadOnlyList<CouponDto>> ListAsync(CancellationToken ct = default);
+    Task<CouponDto> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<CouponDto> CreateAsync(CreateCouponRequest request, CancellationToken ct = default);
     Task<CouponDto> SetActiveAsync(Guid id, bool active, CancellationToken ct = default);
 

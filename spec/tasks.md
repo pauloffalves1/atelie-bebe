@@ -567,6 +567,7 @@ Use esta seção para novas funcionalidades planejadas. Nenhuma tarefa abaixo fo
   - [x] 60.4 `GET /api/admin/audit-log` (paginado); `AdminAuditLog` (`/admin/auditoria`, reaproveitando `<app-pagination>`); link na sidebar
   - [x] 60.5 Verificado via curl e no navegador: ações registradas na ordem certa, com admin/ação/detalhes corretos
   - [x] 60.6 `README.md` (RF71) e `spec/requirements.md`/`spec/design.md` (Requisito 59) atualizados
+  - [x] 60.7 **Melhoria pedida pelo usuário** (o log só mostrava "o quê", não os valores antes/depois): `AuditDiff` (`Api/Common/`, comparação explícita campo a campo, não reflection); aplicado em `ProductUpdated`/`ProductActiveChanged`/`ProductPromotionChanged`/`OrderStatusChanged`/`OrderTrackingCodeSet`/`CustomerUpdated`/`CouponActiveChanged` — cada um busca o registro antes da escrita para ter o "antes". `ICouponService.GetByIdAsync` adicionado para viabilizar isso no endpoint de cupom. `dotnet test` (184 Domain + 20 Application) sem regressão; verificado via curl e no navegador (`/admin/auditoria` mostrando "Nome: X → Y", "Status: ativo → inativo", "Recebido → EmProducao" etc.). Requisito 59 (critérios 4-5) e `spec/design.md` atualizados
 
 - [x] 61. Autenticação de dois fatores para administrador (Requisito 60 / RF72, design em `spec/design.md`)
   - Backend

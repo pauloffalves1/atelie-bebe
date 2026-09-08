@@ -886,6 +886,8 @@ Quatro atores participam do sistema: **Visitante** (não autenticado), **Cliente
 1. O SISTEMA DEVE registrar quem (qual admin), o quê (que ação) e quando, para as principais ações administrativas: alterações de produto, mudança de status de pedido, criação/ativação de cupom, edição de cliente e login administrativo.
 2. O administrador DEVE poder consultar esse histórico, paginado, do mais recente para o mais antigo.
 3. O registro de auditoria NÃO DEVE poder ser editado ou apagado pela interface administrativa.
+4. QUANDO uma ação altera o valor de um ou mais campos de um registro (produto, pedido, cupom, cliente), o registro de auditoria DEVE mostrar o valor de cada campo antes e depois da alteração, não apenas que uma alteração ocorreu.
+5. Campos que não mudaram em uma operação de edição NÃO DEVEM aparecer no registro de auditoria dessa operação.
 
 ---
 

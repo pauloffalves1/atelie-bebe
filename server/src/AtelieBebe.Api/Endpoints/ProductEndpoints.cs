@@ -42,15 +42,24 @@ public static class ProductEndpoints
 
         adminGroup.MapPut("/{id:guid}", async (Guid id, UpdateProductRequest request, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.UpdateAsync(id, request, ct);
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductUpdated", $"Produto '{updated.Name}' atualizado", ct);
+            var diff = AuditDiff.Join(
+                AuditDiff.Field("Nome", before.Name, updated.Name),
+                AuditDiff.Field("Descrição", before.Description, updated.Description),
+                AuditDiff.Field("Preço", before.Price, updated.Price),
+                AuditDiff.Field("Categoria", before.Category, updated.Category),
+                AuditDiff.Field("Destaque", before.Featured, updated.Featured));
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductUpdated", $"Produto '{updated.Name}' — {diff}", ct);
             return Results.Ok(updated);
         });
 
         adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.SetActiveAsync(id, active, ct);
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductActiveChanged", $"Produto '{updated.Name}' marcado como {(active ? "ativo" : "inativo")}", ct);
+            var diff = AuditDiff.Field("Status", before.Active ? "ativo" : "inativo", active ? "ativo" : "inativo") ?? "sem alterações";
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductActiveChanged", $"Produto '{updated.Name}' — {diff}", ct);
             return Results.Ok(updated);
         });
 
@@ -62,9 +71,11 @@ public static class ProductEndpoints
 
         adminGroup.MapPatch("/{id:guid}/promotion", async (Guid id, SetPromotionRequest request, HttpContext http, IProductService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.SetPromotionAsync(id, request, ct);
-            var summary = request.DiscountPercentage is null ? $"Promoção removida de '{updated.Name}'" : $"Promoção de {request.DiscountPercentage}% aplicada a '{updated.Name}'";
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductPromotionChanged", summary, ct);
+            var oldPromo = before.DiscountPercentage is { } bd ? $"{bd}%" : "sem promoção";
+            var newPromo = request.DiscountPercentage is { } nd ? $"{nd}%" : "sem promoção";
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "ProductPromotionChanged", $"Produto '{updated.Name}': {oldPromo} → {newPromo}", ct);
             return Results.Ok(updated);
         });
 

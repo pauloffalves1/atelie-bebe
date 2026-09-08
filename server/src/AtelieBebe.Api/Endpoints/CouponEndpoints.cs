@@ -28,8 +28,10 @@ public static class CouponEndpoints
 
         adminGroup.MapPatch("/{id:guid}/active", async (Guid id, bool active, HttpContext http, ICouponService service, IAuditLogService auditLog, CancellationToken ct) =>
         {
+            var before = await service.GetByIdAsync(id, ct);
             var updated = await service.SetActiveAsync(id, active, ct);
-            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "CouponActiveChanged", $"Cupom '{updated.Code}' marcado como {(active ? "ativo" : "inativo")}", ct);
+            var diff = AuditDiff.Field("Status", before.Active ? "ativo" : "inativo", active ? "ativo" : "inativo") ?? "sem alterações";
+            await auditLog.RecordAsync(http.User.GetUserId(), http.User.GetName(), "CouponActiveChanged", $"Cupom '{updated.Code}' — {diff}", ct);
             return Results.Ok(updated);
         });
     }

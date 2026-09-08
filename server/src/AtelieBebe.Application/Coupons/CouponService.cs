@@ -27,6 +27,13 @@ public sealed class CouponService : ICouponService
         return ToDto(coupon);
     }
 
+    public async Task<CouponDto> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var coupon = await _unitOfWork.Coupons.GetByIdAsync(id, ct)
+            ?? throw new NotFoundException("Cupom", id);
+        return ToDto(coupon);
+    }
+
     public async Task<CouponDto> SetActiveAsync(Guid id, bool active, CancellationToken ct = default)
     {
         var coupon = await _unitOfWork.Coupons.GetByIdAsync(id, ct)
