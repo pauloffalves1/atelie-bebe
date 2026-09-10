@@ -1,9 +1,0 @@
-**/bin/
-**/obj/
-**/*.db
-**/*.db-shm
-**/*.db-wal
-keys/
-frontend/node_modules/
-frontend/**/dist/
-.git/

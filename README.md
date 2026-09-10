@@ -12,6 +12,12 @@
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=flat&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![Vitest](https://img.shields.io/badge/Tests-Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)](https://vitest.dev/)
 
+> **Este repositório contém só o monólito** — mantido congelado como rollback desde a migração de
+> 2026-09-08 para uma arquitetura de microsserviços, que roda em produção
+> (layettebaby.com.br) e vive em
+> [`pauloffalves1/atelie-layette-baby-microservicos`](https://github.com/pauloffalves1/atelie-layette-baby-microservicos).
+> Todo trabalho novo entra lá; este repo não recebe mais mudanças.
+
 Plataforma de e-commerce e gestão de encomendas para um ateliê especializado em **fraldas de ombro e boca bordadas** (individuais ou em kit) — a técnica de bordado (à mão ou computadorizado) varia por produto e é descrita individualmente no catálogo. O sistema cobre a jornada completa: vitrine pública com catálogo e carrinho, checkout com ou sem cadastro, pedidos personalizados sob medida, área do cliente, e um painel administrativo para gestão de produtos, encomendas e mensagens de contato.
 
 Monorepo com dois projetos independentes:

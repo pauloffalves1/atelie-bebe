@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**This repo holds only the old monolith, frozen as a rollback since 2026-09-08.** Production
+(layettebaby.com.br) now runs a microservices architecture, extracted on 2026-09-10 into its own
+repo: [`pauloffalves1/atelie-layette-baby-microservicos`](https://github.com/pauloffalves1/atelie-layette-baby-microservicos)
+(full commit history for that subtree preserved there). Any new feature work belongs there, not
+here — this repo receives no further changes.
+
 ## Repository layout
 
 This is a monorepo with two independent projects, no shared tooling or root package manifest:
