@@ -1,7 +1,7 @@
 name: microservices-ci
 
-# Only microservices/ has a real test suite today (dotnet test + Playwright e2e); the old
-# server/client/ monolith is kept as a rollback and isn't wired into CI. See
+# Only microservices/ has a real test suite today (dotnet test + Playwright e2e + k6 smoke); the
+# old server/client/ monolith is kept as a rollback and isn't wired into CI. See
 # microservices/README.md's "Estratégia de testes" section for what each job below covers.
 on:
   push:
@@ -89,6 +89,17 @@ jobs:
       # specs compile chunks on demand, and parallel workers made the first navigation flaky.
       - working-directory: microservices/frontend/shell
         run: npm run test:e2e
+
+      # Same stack the e2e specs just used, still up — reuse it instead of paying for a second
+      # docker compose build/up. --network host works here because GitHub's ubuntu runners are the
+      # Docker host directly (no Docker Desktop VM layer), so localhost:5100 reaches the Gateway
+      # exactly like it does when someone runs this by hand.
+      - name: Run k6 load test (browsing scenario; login is skipped — no LOAD_TEST_CUSTOMER_* set)
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}/microservices/load-tests:/scripts" \
+            -e BASE_URL=http://localhost:5100 \
+            grafana/k6 run /scripts/gateway-smoke.js
 
       - if: always()
         run: docker compose down -v
